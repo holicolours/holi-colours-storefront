@@ -1,0 +1,6 @@
+[build]
+  publish = "_site/"
+
+[functions]
+  directory = "functions"
+  included_files = ["emails/order-confirmation/**"]

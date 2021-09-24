@@ -1,0 +1,306 @@
+---
+layout: base.html
+title: "Holi Colours Jewellery"
+---
+
+<div>
+	<div class="container" x-data x-init="collectionSliders">
+		<div class="hero-slider relative">
+			<div class="glide__track" data-glide-el="track">
+				<div class="glide__slides">
+					<div class="glide__slide">
+						<div class="bg-left sm:bg-center bg-no-repeat bg-cover"
+							style="height: 44em; background-image:url(/assets/img/57eb4945-2840-492a-9371-eabed832a728.jpg)">
+							<div
+								class="py-48 px-5 sm:px-10 md:px-12 xl:px-24 text-center sm:text-left sm:w-5/6 lg:w-3/4 xl:w-2/3">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="py-20 md:py-24 lg:py-32">
+			<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
+				<div class="text-center sm:text-left">
+					<h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">New Arrivals</h2>
+					<p class="font-hk text-secondary-lighter text-lg md:text-xl pt-2">Be styling, no matter the season!
+					</p>
+				</div>
+				<a href="/collections/date_new_to_old/"
+					class="flex items-center group pt-1 sm:pt-0 border-b border-primary transition-colors hover:border-primary-light font-hk text-xl text-primary">
+					Show more
+					<i
+						class="bx bx-chevron-right text-primary transition-colors group-hover:text-primary-light pl-3 pt-2 text-xl"></i>
+				</a>
+			</div>
+			<div class="product-slider relative" x-data x-init="
+				new Glide($el, {
+					type: 'carousel',
+					startAt: 0,
+					perView: 4,
+					gap: 0,
+					peek: {
+						before: 50,
+						after: 50,
+					},
+					breakpoints: {
+						1024: {
+							perView: 3,
+							peek: {
+								before: 20,
+								after: 20,
+							},
+						},
+						768: {
+							perView: 2,
+							peek: {
+								before: 10,
+								after: 10,
+							},
+						},
+						600: {
+							perView: 1,
+							peek: {
+								before: 0,
+								after: 0,
+							},
+						},
+					},
+				}).mount();
+				">
+				<div class="glide__track" data-glide-el="track">
+					<div class="pt-12 relative glide__slides">
+						{%- for product in data.newArrivals %}
+						<div class="relative group glide__slide pt-16 md:pt-0">
+							<div class="sm:px-5 lg:px-4">
+								<div class="relative rounded flex justify-center items-center">
+									<div class="aspect-w-1 aspect-h-1 w-full">
+										<img src="{{ product.image }}" alt="product image" class="object-cover" />
+									</div>
+									{%- if product.salePercentage %}
+									<div class="absolute top-0 right-0 bg-white px-5 py-1 m-4 rounded-full">
+										<p class="text-v-green font-hk font-bold text-sm uppercase tracking-wide">
+											{{product.salePercentage}}% OFF
+										</p>
+									</div>
+									{% endif -%}
+									<div
+										class="absolute inset-0 opacity-0 group-hover:opacity-100 flex justify-center items-center bg-secondary bg-opacity-85 transition-opacity">
+										<button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
+											class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+											<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
+												alt="icon cart" />
+										</button>
+										<a href="products/{{ product.name | slug }}"
+											class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+											<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
+												alt="icon search" />
+										</a>
+										<button @click="addToWishList({{ product.id }})"
+											class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
+											<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
+												alt="icon heart" />
+										</button>
+									</div>
+								</div>
+								<a href="/product" class="flex justify-between items-center pt-6">
+									<div>
+										<h3 class="font-hk text-base text-secondary">{{ product.name }}</h3>
+									</div>
+									<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice }}</span>
+								</a>
+							</div>
+						</div>
+						{% endfor %}
+					</div>
+				</div>
+				<div data-glide-el="controls">
+					<div class="transition-all shadow-md rounded-full absolute left-25 sm:left-35 md:left-0 top-0 md:top-50 transform -translate-y-1/2 bg-grey hover:bg-primary border border-grey-dark z-30 cursor-pointer group"
+						data-glide-dir="<">
+						<div class="h-12 w-12 flex items-center justify-center">
+							<i
+								class="bx bx-chevron-left text-primary transition-colors group-hover:text-white text-3xl leading-none"></i>
+						</div>
+					</div>
+					<div class="transition-all shadow-md rounded-full absolute right-25 sm:right-35 md:right-0 top-0 md:top-50 transform -translate-y-1/2 bg-grey hover:bg-primary border border-grey-dark z-30 cursor-pointer group"
+						data-glide-dir=">">
+						<div class="h-12 w-12 flex items-center justify-center">
+							<i
+								class="bx bx-chevron-right text-primary transition-colors group-hover:text-white text-3xl leading-none"></i>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="w-full relative">
+		<div class="absolute inset-y-0 right-0 w-full bg-center bg-no-repeat bg-cover"
+			style="background-image:url(/assets/img/bg-products.png)"></div>
+		<div
+			class="md:max-w-screen-sm pb-16 w-5/6 lg:max-w-full xl:w-5/6 2xl:max-w-screen-xxl mx-auto lg:ml-auto lg:mr-10 xl:mr-16 2xl:mx-auto relative z-10">
+			{%- for category in data.categories %}
+			{%- if category and category.featured and category.noOfProducts > 0 and category.featuredCollections %}
+			{% capture currentCycle %}{% cycle 'odd', 'even' %}{% endcapture %}
+			<div
+				class="pt-16 flex {%- if currentCycle == 'odd' %} flex-col-reverse {% else %} flex-col {% endif -%} lg:flex-row items-center">
+				{%- if currentCycle == 'odd' %}
+				<div
+					class="w-full lg:w-3/5 2xl:w-3/4 bg-white pt-8 pb-6 px-4 relative mt-8 lg:mt-0">
+					<div class="collection-slider">
+						<div class="glide__track" data-glide-el="track">
+							<div class="glide__slides">
+								{%- for product in category.featuredCollections %}
+								<div class="glide__slide">
+									<div class="group flex flex-col mx-auto">
+										<div class="relative rounded">
+											<div class="aspect-w-1 aspect-h-1">
+												<img src="{{ product.image }}" alt="" class=" object-cover" />
+											</div>
+											{%- if product.salePercentage %}
+											<span
+												class="text-v-green absolute top-0 right-0 bg-white px-5 py-1 my-4 mx-4 rounded-full font-hk font-bold text-sm uppercase tracking-wide">{{product.salePercentage}}% OFF</span>
+											{% endif -%}
+											<div
+												class="absolute inset-0 opacity-0 group-hover:opacity-100 flex justify-center items-center bg-secondary bg-opacity-85 transition-opacity">
+												<button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+													<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
+														alt="icon cart" />
+												</button>
+												<a href="/products/{{ product.name | slug }}"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+													<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
+														alt="icon search" />
+												</a>
+												<button @click="addToWishList({{ product.id }})"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
+													<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
+														alt="icon heart" />
+												</button>
+											</div>
+										</div>
+										<div class="flex justify-between items-center pt-6">
+											<div>
+												<p class="font-hk text-base text-secondary">{{ product.name }}</p>
+											</div>
+											<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice
+												}}</span>
+										</div>
+									</div>
+								</div>
+								{% endfor %}
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="w-full lg:w-1/3 2xl:w-1/4 lg:pl-6 xl:pl-8">
+					<div class="text-center lg:text-right">
+						<h2 class="font-hkbold text-white text-2xl lg:text-xl xl:text-2xl  2xl:text-3xl tracking-wide">
+							{{ category.name }}</h2>
+						<p class="font-hk text-secondary-lighter text-lg pt-1">Featured Collection</p>
+						<div class="block lg:hidden">
+							<a href="/collections/{{ category.name | slug }}"
+								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide mt-4">View
+								All Products
+							</a>
+						</div>
+					</div>
+					<div class="relative group hidden lg:block">
+						<div class="h-56 xl:h-68 2xl:h-88 ml-auto mb-auto bg-center bg-no-repeat bg-cover mt-8 xl:mt-10 2xl:mt-14"
+							style="background-image:url( {{category.image}} )">
+						</div>
+						<div
+							class="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-75 pointer-events-none group-hover:pointer-events-auto   transition-all overflow-hidden">
+						</div>
+						<div
+							class="absolute opacity-0 group-hover:opacity-100 flex justify-center items-center inset-0 mx-auto group transition-opacity">
+							<a href="/collections/{{ category.name | slug }}"
+								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide">View
+								All Products</a>
+						</div>
+					</div>
+				</div>
+				{% else %}
+				<div class="w-full lg:w-1/3 2xl:w-1/4 lg:pr-6 xl:pr-8">
+					<div class="text-center lg:text-right">
+						<h2 class="font-hkbold text-white text-2xl lg:text-xl xl:text-2xl 2xl:text-3xl tracking-wide">{{
+							category.name }}</h2>
+						<p class="font-hk text-secondary-lighter text-lg pt-1">Featured Collection</p>
+						<div class="block lg:hidden">
+							<a href="/collections/{{ category.name | slug }}"
+								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide mt-4">View
+								All Products
+							</a>
+						</div>
+					</div>
+					<div class="relative group hidden lg:block">
+						<div class="h-56 xl:h-68 2xl:h-88 ml-auto mb-auto bg-center bg-no-repeat bg-cover mt-8 xl:mt-10 2xl:mt-14"
+							style="background-image:url( {{category.image}} )">
+						</div>
+						<div
+							class="absolute inset-0 bg-secondary opacity-0 group-hover:opacity-75 pointer-events-none group-hover:pointer-events-auto  transition-all overflow-hidden">
+						</div>
+						<div
+							class="absolute opacity-0 group-hover:opacity-100 flex justify-center items-center inset-0 mx-auto group transition-opacity">
+							<a href="/collections/{{ category.name | slug }}"
+								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide">View
+								All Products</a>
+						</div>
+					</div>
+				</div>
+				<div
+					class="w-full lg:w-3/5 2xl:w-3/4 bg-white pt-8 pb-6 px-4 relative mt-8 lg:mt-0 lg:ml-auto">
+					<div class="collection-slider">
+						<div class="glide__track" data-glide-el="track">
+							<div class="glide__slides">
+								{%- for product in category.featuredCollections %}
+								<div class="glide__slide">
+									<div class="group flex flex-col mx-auto">
+										<div class="relative rounded">
+											<div class="aspect-w-1 aspect-h-1">
+												<img src="{{ product.image }}" alt="" class=" object-cover" />
+											</div>
+											{%- if product.salePercentage %}
+											<span
+												class="text-v-green absolute top-0 right-0 bg-white px-5 py-1 my-4 mx-4 rounded-full font-hk font-bold text-sm uppercase tracking-wide">{{product.salePercentage}}% OFF</span>
+											{% endif -%}
+											<div
+												class="absolute inset-0 opacity-0 group-hover:opacity-100 flex justify-center items-center bg-secondary bg-opacity-85 transition-opacity">
+												<button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+													<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
+														alt="icon cart" />
+												</button>
+												<a href="/products/{{ product.name | slug }}"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+													<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
+														alt="icon search" />
+												</a>
+												<button @click="addToWishList({{ product.id }})"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
+													<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
+														alt="icon heart" />
+												</button>
+											</div>
+										</div>
+										<div class="flex justify-between items-center pt-6">
+											<div>
+												<p class="font-hk text-base text-secondary">{{ product.name }}</p>
+											</div>
+											<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice
+												}}</span>
+										</div>
+									</div>
+								</div>
+								{% endfor %}
+							</div>
+						</div>
+					</div>
+				</div>
+				{% endif -%}
+			</div>
+			{% endif -%}
+			{% endfor %}
+		</div>
+	</div>
+</div>

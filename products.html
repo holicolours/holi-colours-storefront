@@ -1,0 +1,6 @@
+---
+permalink: /api/products.json
+---
+{
+{%- for product in data.products -%}"{{product.id}}": {"id":"{{product.id}}","name":"{{product.generalInfo.name}}","image":"{{product.variants[product.generalInfo.defaultVariant].image}}","regularPrice":"{{product.variants[product.generalInfo.defaultVariant].regularPrice}}","salePrice":"{{product.variants[product.generalInfo.defaultVariant].salePrice}}","salePercentage":"{{product.variants[product.generalInfo.defaultVariant].salePercentage}}","saleCount":"{{product.saleCount}}","slug":"{{product.generalInfo.name | slug}}","defaultVariant":"{{product.generalInfo.defaultVariant}}"}{%- unless forloop.last -%},{%- endunless -%}	
+{%- endfor -%}}

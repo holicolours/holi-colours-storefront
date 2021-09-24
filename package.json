@@ -1,0 +1,26 @@
+{
+  "name": "holi-colours-netlify",
+  "version": "1.0.0",
+  "description": "Holi Colours Website",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npx @11ty/eleventy --serve",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Magesh S",
+  "license": "ISC",
+  "devDependencies": {
+    "@11ty/eleventy": "^0.12.1"
+  },
+  "dependencies": {
+    "elasticlunr": "^0.9.5",
+    "email-templates": "^8.0.8",
+    "firebase-admin": "^9.11.0",
+    "googleapis": "^39.2.0",
+    "node-fetch": "^2.6.1",
+    "nodemailer": "^6.6.3",
+    "paytm-pg-node-sdk": "^1.0.4",
+    "paytmchecksum": "^1.5.0",
+    "pug": "^3.0.2"
+  }
+}

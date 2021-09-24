@@ -1,0 +1,8 @@
+---
+pagination:
+    data: data.products
+    size: 1
+    alias: product
+permalink: "api/products/{{ product.id }}.json"
+---
+{{ product | dump | safe }}

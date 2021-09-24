@@ -1,0 +1,347 @@
+---
+layout: base.html
+title: "Checkout | Holi Colours Jewellery"
+---
+
+<div x-data="checkoutModule()" x-init="loadCart()">
+    <div class="container border-t border-grey-dark">
+        <div class="flex flex-wrap items-center justify-center lg:justify-start pt-10 sm:pt-12">
+            <a href="/cart/"
+                class="transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
+                Cart
+            </a>
+            <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+            <a @click="page = 'customer-info'"
+                class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk"
+                :class="[ page == 'customer-info' ? 'font-bold' : '' ]">
+                Billing
+            </a>
+            <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+            <a @click="goToShipping()"
+                class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk"
+                :class="[ page == 'shipping-method' ? 'font-bold' : '' ]">
+                Delivery
+            </a>
+            <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+            <a @click="goToPayment()"
+                class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk"
+                :class="[ page == 'payment-method' ? 'font-bold' : '' ]">
+                Payment
+            </a>
+        </div>
+        <div class="flex justify-center items-center py-40" x-show="isLoading">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+        </div>
+        <div class="flex flex-col lg:flex-row-reverse pb-16 sm:pb-0" x-show="!isLoading">
+            <div class="flex-1 pt-10 md:pt-12">
+                <button type="button"
+                    class="relative w-full bg-white border border-grey-darker rounded-md pl-5 pr-10 py-4 text-left cursor-default lg:hidden focus:outline-none sm:text-sm"
+                    @click="showSummary = !showSummary">
+                    <span class="flex items-center">
+                        <span class="block truncate font-bold mr-1">Order Summary</span>
+                        <span class="flex-1 block truncate" x-text="' (' + quantity + ' items)'"></span>
+                        <span class="" x-text="'₹' + total"></span>
+                    </span>
+                    <span class="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20"
+                            fill="currentColor" x-show="!showSummary">
+                            <path fill-rule="evenodd"
+                                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20"
+                            fill="currentColor" x-show="showSummary">
+                            <path fill-rule="evenodd"
+                                d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </span>
+                </button>
+                <table class="w-full leading-normal mt-5 lg:mt-0 border border-grey-darker rounded-md lg:table"
+                    :class="[ showSummary ? '' : 'hidden' ]">
+                    <tbody>
+                        <template x-for="(product, index) in cart" :key="index">
+                            <tr>
+                                <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 w-12">
+                                            <img class="w-full h-full" :src="product.image" alt="" />
+                                        </div>
+                                        <div class="ml-3">
+                                            <p class="text-gray-900 whitespace-no-wrap" x-text="product.name">
+                                            </p>
+                                            <div class="text-sm text-gray-500"
+                                                x-text="'Variant: ' + product.variantName" x-show="product.variantName">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                                    <p class="text-gray-900 whitespace-no-wrap" x-text="'x' + product.quantity">
+                                    </p>
+                                </td>
+                                <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm text-right">
+                                    <span x-text="'₹' + product.quantity * product.price"></span>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap"
+                                    x-text="'Subtotal (' + quantity + ' items)'"></p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm text-right">
+                                <span x-text="'₹' + subTotal"></span>
+                            </td>
+                        </tr>
+                        <tr x-show="shippingInfo.name">
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap"
+                                    x-text="'Shipping (' + shippingInfo.name + ')'"></p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm text-right">
+                                <span x-text="'₹' + shippingInfo.price"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">Discount</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm text-right">
+                                <span x-text="'-₹' + discount"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                                <p class="text-gray-900 whitespace-no-wrap">Total</p>
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm">
+                            </td>
+                            <td class="px-5 py-5 border-b border-grey-darker bg-white text-sm text-right">
+                                <span x-text="'₹' + total"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="lg:w-2/3 lg:pr-16 xl:pr-20 mb-auto pt-10 md:pt-12">
+                <div class="border border-grey-darker rounded px-4 sm:px-5" x-show="page != 'customer-info'">
+                    <div class="flex flex-col sm:flex-row justify-between py-2 border-b border-grey-dark"
+                        x-show="page == 'shipping-method' || page == 'payment-method'">
+                        <div class="w-full sm:w-1/5">
+                            <p class="font-hk text-secondary font-bold">Contact</p>
+                        </div>
+                        <div class="w-full sm:w-3/5">
+                            <p class="font-hk text-secondary" x-text="account.userInfo.displayName"></p>
+                            <p class="font-hk text-secondary" x-text="account.userInfo.email"></p>
+                            <p class="font-hk text-secondary" x-text="account.userInfo.phoneNumber"></p>
+                        </div>
+                        <div class="w-full sm:w-1/5 sm:text-right">
+                            <a @click="page = 'customer-info'"
+                                class="cursor-pointer font-hk text-primary underline">Change</a>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between py-2 border-b border-grey-dark"
+                        x-show="page == 'shipping-method' || page == 'payment-method'">
+                        <div class="w-full sm:w-1/5">
+                            <p class="font-hk text-secondary font-bold">Address</p>
+                        </div>
+                        <div class="w-full sm:w-3/5">
+                            <p class="font-hk text-secondary" x-text="printShippingAddress()"></p>
+                        </div>
+                        <div class="w-full sm:w-1/5 sm:text-right">
+                            <a @click="page = 'customer-info'"
+                                class="cursor-pointer font-hk text-primary underline">Change</a>
+                        </div>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between py-2" x-show="page == 'payment-method'">
+                        <div class="w-full sm:w-1/5">
+                            <p class="font-hk text-secondary font-bold">Delivery</p>
+                        </div>
+                        <div class="w-full sm:w-3/5">
+                            <p class="font-hk text-secondary" x-text="shippingInfo.name + ' - ₹' + shippingInfo.price">
+                            </p>
+                        </div>
+                        <div class="w-full sm:w-1/5 sm:text-right">
+                            <a @click="page = 'shipping-method'"
+                                class="cursor-pointer font-hk text-primary underline">Change</a>
+                        </div>
+                    </div>
+                </div>
+                <template x-if="page == 'customer-info'">
+                    <form @submit.prevent="goToShipping()">
+                        <div class="">
+                            <div class="flex flex-col-reverse lg:flex-row items-center justify-between">
+                                <h1 class="font-hk font-medium text-secondary text-xl md:text-2xl">Contact
+                                    information
+                                </h1>
+                                <p class="font-hk text-secondary mb-4 lg:mb-0"
+                                    x-show="!(getCookie('uid') && !getCookie('isAnonymous'))">
+                                    Already have an account?
+                                    <a href="/login" class="font-hk text-primary">Log in</a>
+                                </p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="pt-4 md:pt-5">
+                                <input type="text" placeholder="Name" class="form-input mb-4 sm:mb-5" id="display_name"
+                                    x-model="account.userInfo.displayName" required>
+                                <div class="flex flex-col lg:flex-row justify-between">
+                                    <input type="email" placeholder="Email Address"
+                                        class="form-input mb-4 sm:mb-5 sm:mr-3" id="email"
+                                        x-model="account.userInfo.email" required
+                                        :readonly="getCookie('uid') && !getCookie('isAnonymous')">
+                                    <input type="tel" id="phone" placeholder="Phone" required
+                                        class="form-input mb-4 sm:mb-5" x-model="account.userInfo.phoneNumber"
+                                        pattern="[0-9]{10}">
+                                </div>
+                                <h4
+                                    class="font-hk font-medium text-secondary text-xl md:text-2xl text-center sm:text-left mb-4 sm:mb-5">
+                                    Shipping address</h4>
+                                <input type="text" placeholder="Address Line 1" class="form-input mb-4 sm:mb-5"
+                                    id="address1" x-model="account.shipToAddress.address1" required>
+                                <input type="text" placeholder="Address Line 2" class="form-input mb-4 sm:mb-5"
+                                    id="address2" x-model="account.shipToAddress.address2" required>
+                                <div class="flex flex-col sm:flex-row justify-between">
+                                    <input type="text" placeholder="City" class="form-input mb-4 sm:mb-5 sm:mr-3"
+                                        id="city" x-model="account.shipToAddress.city" required>
+                                    <input type="number" placeholder="Postal code" class="form-input mb-4 sm:mb-5"
+                                        id="post_code" x-model="account.shipToAddress.postalCode" required>
+                                </div>
+                                <div class="flex flex-col sm:flex-row justify-between">
+                                    <select id="country" class="form-input mb-4 sm:mb-5 sm:mr-3"
+                                        x-model="account.shipToAddress.country" required @change="account.shipToAddress.state = ''">
+                                        <option value="" selected hidden>Country</option>
+                                        <template x-if="shippingZones" x-for="cc in Object.keys(shippingZones)">
+                                            <option :value="cc" x-text="shippingZones[cc].name"></option>
+                                        </template>
+                                    </select>
+                                    <select id="state" class="form-input mb-4 sm:mb-5"
+                                        x-model="account.shipToAddress.state" required>
+                                        <option value="" selected hidden>State</option>
+                                        <template x-if="account.shipToAddress.country" x-for="sc in Object.keys(shippingZones[account.shipToAddress.country].states)">
+                                            <option :value="sc" x-text="shippingZones[account.shipToAddress.country].states[sc].name" :selected="account.shipToAddress.state == sc"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="flex items-start pt-2 mb-4 sm:mb-5"
+                                    x-show="getCookie('uid') && !getCookie('isAnonymous')">
+                                    <div class="flex items-center h-5">
+                                        <input type="checkbox" class="form-checkbox h-4 w-4 border-grey-darker rounded"
+                                            id="save_info" name="save_info" x-model="saveCustomerInfo">
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="save_info" class="cursor-pointer font-medium text-gray-700">
+                                            Save this information for next time
+                                        </label>
+                                    </div>
+                                </div>
+                                <h4
+                                    class="font-hk font-medium text-secondary text-xl md:text-2xl text-center sm:text-left mb-4 sm:mb-5">
+                                    Additional Information</h4>
+                                <textarea rows="5"
+                                    placeholder="Notes about your order, e.g. special notes for delivery."
+                                    class="form-textarea" x-model="orderNote"></textarea>
+                            </div>
+                            <div class="flex flex-col sm:flex-row pt-8 sm:pt-12 justify-between">
+                                <a href="/cart"
+                                    class="flex items-center mb-3 sm:mb-0 font-hk group-hover:font-bold text-sm text-secondary hover:text-primary group transition-colors">
+                                    <i
+                                        class="bx bx-chevron-left text-secondary group-hover:text-primary pr-2 text-2xl -mb-1 transition-colors"></i>
+                                    Back to Cart
+                                </a>
+                                <button type="submit"
+                                    class="btn btn-primary fixed left-0 bottom-0 w-full z-10 sm:static sm:z-auto sm:w-auto">Continue
+                                    to Delivery</button>
+                            </div>
+                        </div>
+                    </form>
+                </template>
+                <template x-if="page == 'shipping-method'">
+                    <form @submit.prevent="goToPayment()">
+                        <div class="pt-8 md:pt-10">
+                            <h1 class="font-hk font-medium text-secondary text-xl md:text-2xl text-center sm:text-left">
+                                Shipping method</h1>
+                            <div class="mt-5 md:mt-6 border border-grey-darker rounded px-4 sm:px-5">
+                                <template x-if="shippingMethodsList == null ">
+                                    <span class="p-2">Loading shipping methods...</span>
+                                </template>
+                                <template x-if="shippingMethodsList && shippingMethodsList.length == 0">
+                                    <span class="p-2">No shipping methods available!</span>
+                                </template>
+                                <template x-if="shippingMethodsList != null"
+                                    x-for="(shippingMethod, index) in shippingMethodsList" :key="index">
+                                    <div class="flex justify-between border-b border-grey-dark py-2">
+                                        <div class="flex items-center">
+                                            <input type="radio" class="form-radio rounded-full" id="shippingMethod"
+                                                name="shippingMethod" x-model="shippingInfo.key"
+                                                :id="shippingMethod.key" :value="shippingMethod.key" required
+                                                @click="selectShippingMethod(shippingMethod)">
+                                            <label :for="shippingMethod.key"
+                                                class="cursor-pointer ml-3 font-hk text-secondary"
+                                                x-text="shippingMethod.name"></label>
+                                        </div>
+                                        <p class="font-hk uppercase text-secondary" x-text="'₹' + shippingMethod.price">
+                                        </p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="flex flex-col-reverse sm:flex-row pt-8 sm:pt-12 justify-between">
+                            <a @click="page = 'customer-info'"
+                                class="cursor-pointer flex items-center mb-3 sm:mb-0 font-hk group-hover:font-bold text-sm text-secondary hover:text-primary group transition-colors">
+                                <i
+                                    class="bx bx-chevron-left text-secondary group-hover:text-primary pr-2 text-2xl -mb-1 transition-colors"></i>
+                                Back
+                            </a>
+                            <button type="submit"
+                                class="btn btn-primary fixed left-0 bottom-0 w-full z-10 sm:static sm:z-auto sm:w-auto">Continue
+                                to Payment</button>
+                        </div>
+                    </form>
+                </template>
+                <template x-if="page == 'payment-method'">
+                    <div>
+                        <div class="pt-8 md:pt-10">
+                            <h4 class="font-hk font-medium text-secondary text-xl md:text-2xl text-center sm:text-left">
+                                Payment method</h4>
+                            <div class="mt-6 border border-grey-darker rounded px-4 sm:px-5 py-3">
+                                <div>
+                                    <div class="flex items-center">
+                                        <input type="radio" class="form-radio rounded-full" id="payment_method_paytm"
+                                            checked>
+                                        <label for="payment_method_paytm"
+                                            class="cursor-pointer ml-3 font-hk text-secondary">PayTM</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col sm:flex-row pt-8 sm:pt-12 justify-between">
+                            <a @click="page = 'shipping-method'"
+                                class="cursor-pointer flex items-center mb-3 sm:mb-0 font-hk group-hover:font-bold text-sm text-secondary hover:text-primary group transition-colors">
+                                <i
+                                    class="bx bx-chevron-left text-secondary group-hover:text-primary pr-2 text-2xl -mb-1 transition-colors"></i>
+                                Back
+                            </a>
+                            <form method="post" name="paytm" x-ref="paytmForm">
+                                <input type="hidden" name="mid">
+                                <input type="hidden" name="orderId">
+                                <input type="hidden" name="txnToken">
+                                <button type="button"
+                                    class="btn btn-primary fixed left-0 bottom-0 w-full z-10 sm:static sm:z-auto sm:w-auto"
+                                    @click="initiatePayment($refs.paytmForm)"
+                                    x-text="isPGLoading ? 'Loading...' : 'Place Order'">Place Order</button>
+                            </form>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>

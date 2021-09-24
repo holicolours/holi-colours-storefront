@@ -1,0 +1,278 @@
+---
+pagination:
+    data: data.products
+    size: 1
+    alias: product
+permalink: "products/{{ product.generalInfo.name | slug }}/"
+layout: base.html
+---
+<div>
+	<div class="container" x-data="productModule()" x-init="loadProduct({{product.id}})">
+		<div class="flex justify-center items-center pt-16" x-show="isLoading">
+			<div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+		</div>
+		<template x-if="product">
+			<div>
+				<div class="flex flex-wrap items-center justify-center lg:justify-start pt-10 sm:pt-12">
+                    <a href="/"
+                        class="transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
+                        Home
+                    </a>
+					{%- for cid in product.categories -%}
+					{%- if forloop.first == true -%}
+                    <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>					
+					{%- endif -%}
+                    <a href="/collections/{{ data.categories[cid].name | slug }}"
+                        class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
+                        {{ data.categories[cid].name }}
+                    </a>
+					{%- if forloop.last != true and forloop.length > 1 -%} &nbsp; | &nbsp; {%- endif -%}
+					{%- endfor -%}
+                    <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+                    <span
+                        class="text-sm text-secondary font-hk">
+                        {{ product.generalInfo.name }}
+					</span>
+                </div>
+				<div class="pt-10 sm:pt-12 pb-10 sm:pb-12 flex flex-col lg:flex-row justify-between -mx-5">
+					<div class="lg:w-1/2 flex flex-col-reverse sm:flex-row-reverse lg:flex-row justify-between px-5">
+						<div class="sm:pl-5 md:pl-4 lg:pl-0 lg:pr-2 xl:pr-3 flex flex-row sm:flex-col">
+							{%- for variant in product.variants %}
+							<div class="w-28 sm:w-32 lg:w-24 xl:w-28 relative pb-5 mr-3 sm:pr-0">
+								<div
+									class="bg-v-pink border border-grey relative rounded flex items-center justify-center w-full">
+									<img class="cursor-pointer object-cover" @click="selectedImage = '{{ variant.image }}'" alt="product image" src="{{ variant.image }}">
+								</div>
+							</div>
+							{% endfor %}
+							{%- for image in product.gallery %}
+							<div class="w-28 sm:w-32 lg:w-24 xl:w-28 relative pb-5 mr-3 sm:pr-0">
+								<div
+									class="bg-v-pink border border-grey relative rounded flex items-center justify-center w-full">
+									<img class="cursor-pointer object-cover" @click="selectedImage = '{{ image }}'" alt="product image" src="{{ image }}">
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						<div class="w-full relative pb-5 sm:pb-0">
+							<div
+								class="bg-v-pink border border-grey relative rounded flex items-center justify-center">
+								<!-- aspect-w-1 aspect-h-1 -->
+								<img class="object-cover" alt="product image" :src="selectedImage"
+									src="{{ product.variants[product.generalInfo.defaultVariant].image }}">
+							</div>
+						</div>
+					</div>
+					<div class="lg:w-1/2 pt-8 lg:pt-0 px-5">
+						<div class="border-b border-grey-dark mb-8">
+							<div class="flex items-center">
+								<h2 class=" font-butler text-3xl md:text-4xl lg:text-4.5xl">{{ product.generalInfo.name }}</h2>
+							</div>
+							<div class="flex items-center pt-3">
+								<span class="font-hk text-secondary text-2xl" x-text="'₹' + product.variants[selectedVariant].salePrice">₹{{
+									product.variants[product.generalInfo.defaultVariant].salePrice }}</span>
+								<span class="font-hk text-grey-darker text-xl line-through pl-5" x-show="product.variants[selectedVariant]['salePercentage']" x-text="'₹' + product.variants[selectedVariant].regularPrice"></span>
+								<span class="bg-primary rounded-full ml-8 px-5 py-2 leading-none font-hk font-bold text-white uppercase text-sm" x-show="product.variants[selectedVariant]['salePercentage']" x-text="product.variants[selectedVariant]['salePercentage'] + '% off'"></span>
+							</div>
+							<p class="font-hk text-secondary pt-3 pb-8">Shipping charges calculated at checkout.</p>
+						</div>
+						<div class="flex pb-5">
+							<p class="font-hk text-secondary">Availability:</p>
+							<template x-if="stockStatus">
+								<p class="text-secondary pl-3" :class="'text-' + stockStatuses[stockStatus]['color'] + '-900'" x-text="stockStatuses[stockStatus]['name']"></p>
+							</template>
+							<template x-if="!stockStatus">
+								<p class="font-hk pl-3">Checking...</p>
+							</template>
+						</div>
+						{%- if product.variants.length != 1 -%}
+						<div class="flex items-center justify-between pb-4">
+							<div class="w-1/3 sm:w-1/5">
+								<p class="font-hk text-secondary">Variant</p>
+							</div>
+							<div class="w-2/3 sm:w-5/6">
+								<select class="w-2/3 form-select" x-model="selectedVariant" @change="changeVariant()">
+									{%- for variant in product.variants %}
+									<option value="{{variant.id}}">{{variant.name}}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+						{%- endif -%}
+						<div class="flex items-center justify-between pb-8">
+							<div class="w-1/3 sm:w-1/5">
+								<p class="font-hk text-secondary">Quantity</p>
+							</div>
+							<div class="w-2/3 sm:w-5/6 flex">
+								<label for="quantity-form" class="block relative h-0 w-0 overflow-hidden">Quantity form</label>
+								<input type="number" id="quantity-form" name="quantity-form"
+									class="form-input form-quantity rounded-r-none w-16 py-0 px-2 text-center"
+									x-model="quantity" min="1" :max="stockQuantity" readonly>
+								<div class="flex flex-col">
+									<span
+										class="px-1 bg-white border border-l-0 border-grey-darker flex-1 rounded-tr cursor-pointer"
+										@click="quantity < stockQuantity ? quantity++ : null">
+										<i class="bx bxs-up-arrow text-xs text-primary pointer-events-none"></i>
+									</span>
+									<span
+										class="px-1 bg-white flex-1 border border-t-0 border-l-0 rounded-br border-grey-darker cursor-pointer"
+										@click="quantity> 1 ? quantity-- : null">
+										<i class="bx bxs-down-arrow text-xs text-primary pointer-events-none"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div class="flex pb-8 group">
+							<a class="btn btn-outline mr-4 md:mr-6 cursor-pointer" @click="addToCart()">Add to
+								cart</a>
+							<a class="rounded-full btn btn-outline cursor-pointer" @click="addToWishList({{ product.id }})">
+								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+									<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+								</svg>
+							</a>
+						</div>
+						{%- if product.generalInfo.description != '' -%}
+						<p class="font-hk text-secondary pb-5 whitespace-pre-line">{{ product.generalInfo.description }}</p>
+						{%- endif -%}
+						<div class="flex pb-4">
+							<p class="font-hk text-secondary">SKU:</p>
+							<p class="font-hkbold text-secondary pl-3">{{ product.id }}</p>
+						</div>
+						<p class="font-hk text-secondary pb-4" x-show="product.categories">
+							<span class="pr-2">
+								{%- for cid in product.categories -%}
+								{%- if forloop.first == true -%} Categories: &nbsp; {%- endif -%}
+								<a href="/collections/{{ data.categories[cid].name | slug}}" class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-secondary hover:text-primary font-hk">{{ data.categories[cid].name }}</a>
+								{%- if forloop.last != true and forloop.length > 1 -%} , &nbsp; {%- endif -%}
+								{%- endfor -%}
+							</span>
+						</p>
+						<p class="font-hk text-secondary pb-4" x-show="product.tags">
+							<span class="pr-2">
+								Tags:
+							</span>
+							<template x-if="product.tags" x-for="(tag, index) in Object.keys(product.tags)">
+								<a :href="'/search/?tag=' + tag" class="bg-gray-100 px-3 py-1 rounded-full mr-2" x-text="'#' + tag"></a>
+							</template>
+						</p>
+					</div>
+				</div>
+				<div class="">
+					<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
+						<div class="text-center sm:text-left">
+							<h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">Related Products</h2>
+						</div>
+					</div>
+					<div class="product-slider relative"
+						x-data
+						x-init="
+						new Glide($el, {
+							type: 'carousel',
+							startAt: 0,
+							perView: 4,
+							gap: 0,
+							peek: {
+								before: 50,
+								after: 50,
+							},
+							breakpoints: {
+								1024: {
+									perView: 3,
+									peek: {
+										before: 20,
+										after: 20,
+									},
+								},
+								768: {
+									perView: 2,
+									peek: {
+										before: 10,
+										after: 10,
+									},
+								},
+								600: {
+									perView: 1,
+									peek: {
+										before: 0,
+										after: 0,
+									},
+								},
+							},
+						}).mount();
+						">
+						<div class="glide__track"
+							data-glide-el="track">
+							<div class="pt-12 relative glide__slides">
+								{%- for cid in product.categories %}
+								{%- for relatedProduct in data.categories[cid].featuredCollections %}
+								{%- if relatedProduct.id != product.id %}
+								<div class="relative group glide__slide pt-16 md:pt-0">
+									<div class="sm:px-5 lg:px-4">
+										<div class="relative rounded flex justify-center items-center">
+											<div class="aspect-w-1 aspect-h-1 w-full">
+												<img src="{{ relatedProduct.image }}"
+													alt="product image"
+													class="object-cover"/>
+											</div>
+											{%- if relatedProduct.salePercentage %}
+											<div class="absolute top-0 right-0 bg-white px-5 py-1 m-4 rounded-full">
+												<p class="text-v-green font-hk font-bold text-sm uppercase tracking-wide">
+													{{relatedProduct.salePercentage}}% OFF
+												</p>
+											</div>
+											{% endif -%}
+											<div class="absolute inset-0 opacity-0 group-hover:opacity-100 flex justify-center items-center bg-secondary bg-opacity-85 transition-opacity">
+												<button @click="addToCart({{ relatedProduct.id }}, 1)"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+												<img src="/assets/img/icons/icon-cart.svg "
+													class="h-6 w-6"
+													alt="icon cart"/>
+												</button>
+												<a href="/products/{{ relatedProduct.name | slug }}"
+													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+												<img src="/assets/img/icons/icon-search.svg"
+													class="h-6 w-6"
+													alt="icon search"/>
+												</a>
+												<button @click="addToWishList({{ relatedProduct.id }})"
+												class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
+												<img src="/assets/img/icons/icon-heart.svg"
+													class="h-6 w-6"
+													alt="icon heart"/>
+												</button>
+											</div>
+										</div>
+										<a href="/products/{{ relatedProduct.name | slug }}"
+											class="flex justify-between items-center pt-6">
+											<div>
+												<h3 class="font-hk text-base text-secondary">{{ relatedProduct.name }}</h3>
+											</div>
+											<span class="font-hkbold text-primary text-xl">₹{{ relatedProduct.salePrice }}</span>
+										</a>
+									</div>
+								</div>
+								{% endif -%}
+								{% endfor %}
+								{% endfor %}
+							</div>
+						</div>
+						<div data-glide-el="controls">
+							<div class="transition-all shadow-md rounded-full absolute left-25 sm:left-35 md:left-0 top-0 md:top-50 transform -translate-y-1/2 bg-grey hover:bg-primary border border-grey-dark z-30 cursor-pointer group"
+								data-glide-dir="<">
+								<div class="h-12 w-12 flex items-center justify-center">
+									<i class="bx bx-chevron-left text-primary transition-colors group-hover:text-white text-3xl leading-none"></i>
+								</div>
+							</div>
+							<div class="transition-all shadow-md rounded-full absolute right-25 sm:right-35 md:right-0 top-0 md:top-50 transform -translate-y-1/2 bg-grey hover:bg-primary border border-grey-dark z-30 cursor-pointer group"
+								data-glide-dir=">">
+								<div class="h-12 w-12 flex items-center justify-center">
+									<i class="bx bx-chevron-right text-primary transition-colors group-hover:text-white text-3xl leading-none"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</template>
+	</div>
+</div>

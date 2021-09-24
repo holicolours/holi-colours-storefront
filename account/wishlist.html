@@ -1,0 +1,72 @@
+---
+layout: base.html
+title: "Wishlist | Holi Colours Jewellery"
+---
+<div x-data="wishListModule()" x-init="loadWishList()">
+	<div class="container border-t border-grey-dark">
+		<div class="pt-10 sm:pt-12 pb-16 sm:pb-20 lg:pb-24 flex flex-col lg:flex-row justify-between">
+			<div class="lg:w-1/4">
+				<p class="font-butler text-secondary text-2xl sm:text-3xl lg:text-4xl pb-6">My Account</p>
+				<div class="pl-3 flex flex-col">
+					<a href="/account/" class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Account Details</a>
+					<a href="/account/orders" class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Orders</a>
+					<a href="/account/wishlist" class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk font-bold text-primary border-primary ">Wishlist</a>
+				</div>
+				<button @click="logOut()" class="transition-all border hover:bg-primary hover:text-white border-primary rounded px-8 py-3 mt-8 inline-block font-hk font-bold text-primary">Log Out</button>
+			</div>
+			<div class="lg:w-3/4 mt-12 lg:mt-0">
+				<div class="bg-grey-light py-8 px-5 md:px-8">
+					<h1 class="font-hkbold text-secondary text-2xl text-center sm:text-left" x-text="isLoading ? 'Loading Wishlist' : 'My Wishlist'">Loading Wishlist</h1>
+					<div class="pt-6" :class="[ !isLoading && empty ? '' : 'hidden' ]">
+						<span class="font-hkbold text-secondary text-2xl">Your Wishlist is currently empty!</span>
+						<div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-4 sm:pt-10">
+							<a href="/collections" class="btn btn-outline">Continue Shopping</a>
+						</div>
+					</div>			
+					<template x-if="!isLoading && !empty">
+						<div class="pt-6">
+							<div class="hidden sm:block">
+								<div class="flex justify-between pb-3">
+									<div class="w-1/3 md:w-2/5 pl-4">
+										<span class="font-hkbold text-secondary text-sm uppercase">Product Name</span>
+									</div>
+									<div class="w-1/6 md:w-1/5 text-center mr-3">
+										<span class="font-hkbold text-secondary text-sm uppercase">Price</span>
+									</div>
+									<div class="w-1/4 xl:w-1/5 text-center">
+										<span class="font-hkbold text-secondary text-sm uppercase">Stock Status</span>
+									</div>
+									<div class="w-3/10 md:w-1/5 text-center">
+										<span class="font-hkbold text-secondary text-sm uppercase pr-8 md:pr-16 xl:pr-8">Action</span>
+									</div>
+								</div>
+							</div>
+							<template x-for="product in wishlist">
+								<div class="bg-white shadow px-4 py-5 sm:py-4 rounded mb-3 flex flex-col sm:flex-row justify-between items-center">
+									<div class="w-full sm:w-1/3 md:w-2/5 flex flex-col md:flex-row md:items-center border-b sm:border-b-0 border-grey-dark pb-4 sm:pb-0 text-center sm:text-left">
+										<span class="font-hkbold text-secondary text-sm uppercase text-center pb-2 block sm:hidden">Product Name</span>
+										<div class="w-20 mx-auto sm:mx-0 relative sm:mr-3 sm:pr-0">
+											<div class="aspect-w-1 aspect-h-1 w-full">
+												<img :src="product.image" alt="product image" class="object-cover">
+											</div>
+										</div>
+										<span class="font-hk text-secondary text-base mt-2" x-text="product.name"></span>
+									</div>
+									<div class="w-full sm:w-1/6 xl:w-1/5 text-center sm:text-right sm:pr-6 xl:pr-16 pb-4 sm:pb-0">
+										<span class="font-hkbold text-secondary text-sm uppercase text-center pt-3 pb-2 block sm:hidden">Price</span>
+										<span class="font-hk text-secondary" x-text="'₹' + product.price"></span>
+									</div>
+									<div class="w-full sm:w-1/6 md:w-1/6 xl:w-1/5 text-center border-b sm:border-b-0 border-grey-dark pb-4 sm:pb-0">
+										<span class="font-hkbold text-secondary text-sm uppercase text-center pt-3 pb-2 block sm:hidden">Stock Status</span>
+										<span class="font-hk text-secondary">In Stock</span>
+									</div>
+									<button @click="addToCart(product.id, 1)" class="btn btn-primary whitespace-nowrap">Add to Cart</button>
+								</div>
+							</template>
+						</div>
+					</template>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

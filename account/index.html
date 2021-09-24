@@ -1,0 +1,120 @@
+---
+layout: base.html
+title: "Account Details | Holi Colours Jewellery"
+---
+<div x-data="accountModule()" x-init="loadAccount()">
+    <div class="container border-t border-grey-dark">
+        <div class="pt-10 sm:pt-12 flex flex-col lg:flex-row justify-between">
+            <div class="lg:w-1/4">
+                <p class="font-butler text-secondary text-2xl sm:text-3xl lg:text-4xl pb-6">My Account</p>
+                <div class="pl-3 flex flex-col">
+                    <a href="/account/"
+                        class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk font-bold text-primary border-primary ">Account
+                        Details</a>
+                    <a href="/account/orders"
+                        class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Orders</a>
+                    <a href="/wishlist"
+                        class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Wishlist</a>
+                </div>
+                <button @click="logOut()"
+                    class="transition-all border hover:bg-primary hover:text-white border-primary rounded px-8 py-3 mt-8 inline-block font-hk font-bold text-primary">Log
+                    Out</button>
+            </div>
+            <div class="lg:w-3/4 mt-12 lg:mt-0">
+                <div class="bg-grey-light py-10 px-6 sm:px-10">
+                    <h1 class="font-hkbold text-secondary text-2xl sm:text-left">Account Details</h1>
+                    <div class="flex justify-center items-center pt-10 sm:pt-12" x-show="isLoading">
+                        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+                    </div>
+                    <template x-if="!isLoading">
+                        <form class="mt-8" @submit.prevent="saveAccount()">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div class="">
+                                    <label for="name_displayed" class="font-hk text-secondary block mb-2">Display
+                                        Name</label>
+                                    <input type="text" class="form-input" id="name_displayed"
+                                        x-model="account.userInfo.displayName" required>
+                                </div>
+                                <div class="">
+                                    <label for="email" class="font-hk text-secondary block mb-2">Email Address</label>
+                                    <input type="email" class="form-input" id="email" x-model="account.userInfo.email"
+                                        readonly>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                                <div class="">
+                                    <label for="phone_number" class="font-hk text-secondary block mb-2">Phone
+                                        Number</label>
+                                    <input type="tel" class="form-input" id="phone_number"
+                                        x-model="account.userInfo.phoneNumber" required pattern="[0-9]{10}">
+                                </div>
+                            </div>
+                            <div class="my-8">
+                                <div>
+                                    <h4 class="font-hkbold text-secondary text-xl sm:text-left mb-5">Shipping Address
+                                    </h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div class="w-full">
+                                            <label for="street" class="font-hk text-secondary block mb-2">Address Line
+                                                1</label>
+                                            <input type="text" class="form-input" id="street"
+                                                x-model="account.shipToAddress.address1">
+                                        </div>
+                                        <div class="w-full">
+                                            <label for="street2" class="font-hk text-secondary block mb-2">Address Line
+                                                2</label>
+                                            <input type="text" class="form-input" id="street2"
+                                                x-model="account.shipToAddress.address2">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                                        <div class="">
+                                            <label for="city" class="font-hk text-secondary block mb-2">City</label>
+                                            <input type="text" class="form-input" id="city"
+                                                x-model="account.shipToAddress.city">
+                                        </div>
+                                        <div class="">
+                                            <label for="zip" class="font-hk text-secondary block mb-2">Zip
+                                                Code</label>
+                                            <input type="text" class="form-input" id="zip"
+                                                x-model="account.shipToAddress.postalCode">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                                        <div class="">
+                                            <label for="country"
+                                                class="font-hk text-secondary block mb-2">Country</label>
+                                            <select class="form-input" id="country"
+                                                x-model="account.shipToAddress.country"
+                                                @change="account.shipToAddress.state = ''">
+                                                <option value="" selected hidden>Country</option>
+                                                <template x-if="shippingZones" x-for="cc in Object.keys(shippingZones)">
+                                                    <option :value="cc" x-text="shippingZones[cc].name"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                        <div class="">
+                                            <label for="state" class="font-hk text-secondary block mb-2">State</label>
+                                            <select class="form-input" id="state" x-model="account.shipToAddress.state">
+                                                <option value="" selected hidden>State</option>
+                                                <template x-if="shippingZones && account.shipToAddress.country"
+                                                    x-for="sc in Object.keys(shippingZones[account.shipToAddress.country].states)">
+                                                    <option :value="sc"
+                                                        x-text="shippingZones[account.shipToAddress.country].states[sc].name"
+                                                        :selected="account.shipToAddress.state == sc"></option>
+                                                </template>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary" x-text="saving ? 'Saving...' : 'Save'">Save</button>
+                            </div>
+                        </form>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

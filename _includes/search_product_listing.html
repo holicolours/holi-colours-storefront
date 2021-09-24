@@ -1,0 +1,107 @@
+<div>
+    <div class="container flex flex-col-reverse md:flex-row" x-data="searchModule()" x-init="loadProducts({{search}}, '{{category.id}}')">
+        <div class="w-full md:w-1/4">
+            <div class="pt-10 flex flex-col justify-start">
+                <p class="font-hk text-secondary text-xl md:text-2xl leading-none block">Categories</p>
+                <ul class="pt-8 list-reset">
+                    {%- for productCategory in data.categories %} {%- if productCategory and productCategory.noOfProducts > 0 %}
+                    <li class="pb-3 block">
+                        <a href="/collections/{{ productCategory.name | slug }}" class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">{{productCategory.name}} ({{productCategory.noOfProducts}})</a>
+                    </li>
+                    {% endif -%} {% endfor %}
+                </ul>
+                <p class="pt-8 font-hk text-secondary text-xl md:text-2xl leading-none block">Product Tags</p>
+                <ul class="pt-8 list-reset">
+                    {%- for tag in data.productTags %} {%- if tag %}
+                    <li class="pb-3 block">
+                        <a href="/search/?tag={{ tag }}" class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">#{{tag}}</a>
+                    </li>
+                    {% endif -%} {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="w-full md:w-3/4">
+            <div class="py-10 flex flex-col sm:flex-row justify-between">
+                <div class="flex items-center justify-start">
+                    <p class="font-hk text-secondary text-2xl md:text-3xl leading-none block" x-show="searchPage && searchTerm" x-text="'Search results: “' + searchTerm + '”'"></p>
+                    <p class="font-hk text-secondary text-2xl md:text-3xl leading-none block" x-show="searchPage && tag" x-text="'#' + tag"></p>
+                    <p class="font-hk text-secondary text-2xl md:text-3xl leading-none block" x-show="!searchPage">
+                        {{category.name}}</p>
+                </div>
+                <div class="flex items-center justify-start sm:justify-end mt-6 sm:mt-0 w-80" x-show="!isLoading && results.length != 0">
+                    <span class="font-hk text-secondary md:text-lg mr-2 my-auto inline-block">Sort by:</span>
+                    <select class="w-2/3 form-select" x-model="sort" @change="sortProducts(); loadPage()">
+                        <option value="">
+                            Best Seller
+                        </option>
+                        <option value="price_low_to_high">
+                            Price: Low - High
+                        </option>
+                        <option value="price_high_to_low">
+                            Price: High - Low
+                        </option>
+                        <option value="date_old_to_new">
+                            Date: Old to New
+                        </option>
+                        <option value="date_new_to_old">
+                            Date: New to Old
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <p class="font-hk text-secondary text-lg md:text-xl leading-none hidden" x-show="!isLoading && results.length == 0">No products were found matching your search.</p>
+            <div class="flex justify-center items-center pt-16" x-show="isLoading">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <template x-for="product in products">
+                    <div class="w-full relative group lg:last:hidden xl:last:block">
+                        <div class="relative rounded flex justify-center items-center">
+                            <div class="w-full h-68 bg-center bg-no-repeat bg-cover"
+                                :style="'background-image:url(' + product.image + ')'">
+                            </div>
+                            <span
+                                class="absolute top-0 right-0 bg-white px-5 py-1 mt-4 mr-4 rounded-full font-hk font-bold  text-v-green text-sm uppercase tracking-wide"
+                                x-show="product.salePercentage" x-text="product.salePercentage + '% off'"></span>
+                            <div
+                                class="absolute opacity-0 transition-opacity group-hover:opacity-100 flex justify-center items-center py-28 inset-0 group bg-secondary bg-opacity-85">
+                                <button @click="addToCart(product.id, product.defaultVariant, 1)"
+                                    class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+                                    <img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6" alt="icon cart">
+                                </button>
+                                <a :href="'/products/' + product.slug"
+                                    class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+                                    <img src="/assets/img/icons/icon-search.svg" class="h-6 w-6" alt="icon search">
+                                </a>
+                                <button @click="addToWishList(product.id)"
+                                    class="bg-white hover:bg-primary-light  rounded-full px-3 py-3 flex items-center transition-all ">
+                                    <img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6" alt="icon heart">
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center pt-6">
+                            <div>
+                                <h3 class="font-hk text-base text-secondary" x-text="product.name"></h3>
+                            </div>
+                            <span class="font-hk font-bold text-primary text-xl"
+                                x-text="'₹' + product.salePrice"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="pt-16 flex justify-center mx-auto" x-show="noOfItemsPerPage < results.length" x-cloak>
+                <a @click="loadPage(currentPage - 1)" x-show="currentPage != 1" class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pr-5 cursor-pointer">Previous</a>
+                <a @click="loadPage(currentPage - 1)" x-show="currentPage != 1" class="font-hk font-semibold text-black transition-colors hover:text-white text-sm hover:bg-primary h-6 w-6 rounded-full flex items-center justify-center mr-3 cursor-pointer" x-text="currentPage - 1"></a>
+                <a @click="" class="font-hk font-semibold text-white text-sm bg-primary h-6 w-6 rounded-full flex items-center justify-center mr-3" x-text="currentPage"></a>
+                <a @click="loadPage(currentPage + 1)" x-show="currentPage != noOfPages" class="font-hk font-semibold text-black transition-colors hover:text-white text-sm hover:bg-primary h-6 w-6 rounded-full flex items-center justify-center mr-3 cursor-pointer" x-text="currentPage + 1"></a>
+                <a @click="loadPage(currentPage + 1)" x-show="currentPage != noOfPages" class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pl-2 cursor-pointer">Next</a>
+            </div>
+        </div>
+    </div>
+</div>
+{%- if search == false %}
+<script type="text/javascript">
+    document.title = "{{category.name}} - Collections | Holi Colours Jewellery"
+</script>
+{% endif -%}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js" integrity="sha512-0QarUp4p9r5IqUgSRyP89BHga45OpEd7VR8lbRkJkf48p/EhcU742fWUpKpoDyu9N6XYAEq/vz6m6z1OolnsDw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
