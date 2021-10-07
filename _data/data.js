@@ -41,6 +41,9 @@ module.exports = async function () {
 
     console.log(new Date());
     console.log(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" }));
+    console.log(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })));
+    console.log(new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })).getTime());
+    console.log(new Date().getTime());
 
     for (var coupon in discountCoupons) {
         let currentTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })).getTime();
