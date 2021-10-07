@@ -37,6 +37,25 @@ if (!firebase.apps.length) {
     });
 }
 
+statuses = {
+    'OH': {
+        name: 'On hold',
+        color: 'yellow',
+        emailSubject: 'Your Holi Colours Jewellery order has been put on hold!',
+        emailHeader: 'Your order is on hold',
+        emailContent: 'Your order details are shown below for your reference.',
+        emailAdditionalContent: 'We look forward to fulfilling your order soon.'
+    },
+    'PR': {
+        name: 'Processing',
+        color: 'green',
+        emailSubject: 'Your Holi Colours Jewellery order has been received!',
+        emailHeader: 'Thank you for your order',
+        emailContent: 'Your order has been received and is now being processed. Your order details are shown below for your reference.',
+        emailAdditionalContent: 'Thanks for shopping with us.'
+    }
+}
+
 exports.handler = async (event, context) => {
     try {
         paymentResult = Object.fromEntries(new URLSearchParams(event.body));
@@ -44,7 +63,10 @@ exports.handler = async (event, context) => {
         let status = '';
         let errorMessage = '';
 
-        let order = await firebase.database().ref().child("orders").child(orderId).once('value').then((snapshot) => {
+        var db = firebase.database();
+        var dbRef = db.ref();
+
+        let order = await dbRef.child("orders").child(orderId).once('value').then((snapshot) => {
             return snapshot.val();
         });
 
@@ -70,10 +92,15 @@ exports.handler = async (event, context) => {
                 }
             ]
 
-            let cartList = await firebase.database().ref().child("carts").child(order.customer.uid).once('value').then((snapshot) => { return snapshot.val(); });
+            let cartList = await dbRef.child("carts").child(order.customer.uid).once('value').then((snapshot) => { return snapshot.val(); });
+
+            let isOnSale = false;
 
             for (var productId in order.cart.products) {
-                await firebase.database().ref().child("products").child(productId).once('value')
+                if (!isOnSale && order.cart.products[productId].couponCode) {
+                    isOnSale = true;
+                }
+                await dbRef.child("products").child(productId).once('value')
                     .then(async (snapshot) => {
                         let productId = snapshot.key;
                         let product = snapshot.val();
@@ -82,7 +109,7 @@ exports.handler = async (event, context) => {
                         updates[`products/${productId}/saleCount`] = firebase.database.ServerValue.increment(1);
                         updates[`products/${productId}/variants/${selectedVariant}/saleCount`] = firebase.database.ServerValue.increment(1);
 
-                        let stockQuantity = await firebase.database().ref().child("stock").child(productId).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+                        let stockQuantity = await dbRef.child("stock").child(productId).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
 
                         if (stockQuantity >= order.cart.products[productId].quantity) {
                             updates[`products/${productId}/variants/${selectedVariant}/stockQuantity`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);
@@ -109,7 +136,7 @@ exports.handler = async (event, context) => {
                             })
                         }
 
-                        if (cartList[productId]) {
+                        if (cartList && cartList[productId]) {
                             if (cartList[productId].quantity == order.cart.products[productId].quantity) {
                                 updates[`carts/${order.customer.uid}/${productId}`] = null;
                             } else {
@@ -117,6 +144,22 @@ exports.handler = async (event, context) => {
                             }
                         }
                     });
+            }
+
+            let configEnableCreditPoints = await dbRef.child("config").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+            let creditPointsPerOrder = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
+            let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+            let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
+
+            if (configEnableCreditPoints) {
+                updates[`users/${order.customer.uid}/userInfo/enableCreditPoints`] = true;
+                userEnableCreditPoints = true;
+            }
+
+            if (!isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
+                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(-(order.cart.redeemCreditPoints - order.cart.rewardCreditPoints));
+            } else if (userEnableCreditPoints) {
+                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(order.cart.rewardCreditPoints);
             }
 
             const mailClient = createMailClient();
@@ -127,9 +170,9 @@ exports.handler = async (event, context) => {
                 .render('email-templates/html', {
                     orderId: orderId,
                     order: order,
-                    header: 'Thank you for your order',
-                    content: 'Your order has been received and is now being processed. Your order details are shown below for your reference.',
-                    additionalContent: 'Thanks for shopping with us'
+                    header: statuses[order.generalInfo.status].emailHeader,
+                    content: statuses[order.generalInfo.status].emailContent,
+                    additionalContent: statuses[order.generalInfo.status].emailAdditionalContent
                 })
                 .then((data) => {
                     return data;
@@ -139,7 +182,7 @@ exports.handler = async (event, context) => {
             const gmailResponse = await mailClient.sendMail({
                 from: '"Holi Colours Jewellery" <holicoloursit@gmail.com>',
                 to: `${order.customer.displayName} <${order.customer.email}>`,
-                subject: "Your Holi Colours Jewellery order has been received!",
+                subject: statuses[order.generalInfo.status].emailSubject,
                 html: htmlMessage
             });
 
@@ -171,7 +214,7 @@ exports.handler = async (event, context) => {
         updates[`orders/${orderId}/generalInfo/lastUpdatedOn`] = order.generalInfo.lastUpdatedOn;
         updates[`orders/${orderId}/notes`] = order.notes;
 
-        await firebase.database().ref().update(updates);
+        await dbRef.update(updates);
 
         return {
             statusCode: 302,

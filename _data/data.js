@@ -1,4 +1,4 @@
-var admin = require('firebase-admin');
+var firebase = require('firebase-admin');
 
 const serviceAccount = {
     "type": "service_account",
@@ -13,30 +13,51 @@ const serviceAccount = {
     "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-anxtl%40holi-colours-jewellery.iam.gserviceaccount.com"
 };
 
-module.exports = async function (categoryId) {
+module.exports = async function () {
     console.log("Fetching data from Firebase Realtime Database...");
 
-    if (!admin.apps.length) {
-        admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
+    let app;
+
+    if (!firebase.apps.length) {
+        app = firebase.initializeApp({
+            credential: firebase.credential.cert(serviceAccount),
             databaseURL: "https://holi-colours-jewellery-default-rtdb.asia-southeast1.firebasedatabase.app/"
         });
     }
 
-    var db = admin.database();
-    var dbRef = db.ref();
+    let discountCoupons = await firebase.database().ref().child("discount").child("coupons").once('value').then((snapshot) => { return snapshot.val() });
+    let products = await firebase.database().ref().child("products").orderByChild("publish/status").equalTo("P").once('value').then((snapshot) => { return snapshot.val() });
+    let categories = await firebase.database().ref().child("categories").once('value').then((snapshot) => { return snapshot.val() });
+    let tags = await firebase.database().ref().child("tags").once('value').then((snapshot) => { return snapshot.val() });
+    let shippingZones = await firebase.database().ref().child("shipping").once('value').then((snapshot) => { return snapshot.val() });
+    let shippingMethods = await firebase.database().ref().child("shippingMethods").once('value').then((snapshot) => { return snapshot.val() });
+    let banner = await firebase.database().ref().child("config").child("banner").once('value').then((snapshot) => { return snapshot.val() });
 
-    let products = await dbRef.child("products").orderByChild("publish/status").equalTo("P").once('value').then((snapshot) => { return snapshot.val() });
-    let categories = await dbRef.child("categories").once('value').then((snapshot) => { return snapshot.val() });
-    let tags = await dbRef.child("tags").once('value').then((snapshot) => { return snapshot.val() });
-    let shippingZones = await dbRef.child("shipping").once('value').then((snapshot) => { return snapshot.val() });
-    let shippingMethods = await dbRef.child("shippingMethods").once('value').then((snapshot) => { return snapshot.val() });
+    if (banner.message == undefined) {
+        banner.message = '';
+    }
+
+    let onSaleCoupons = [];
+
+    for (var coupon in discountCoupons) {
+        let currentTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })).getTime();
+        if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
+            onSaleCoupons.push(coupon);
+        }
+    }
+
+    onSaleCoupons.sort(function (a, b) {
+        return discountCoupons[a].createdOn - discountCoupons[b].createdOn;
+    });
+
+    console.log(onSaleCoupons);
 
     let bestSellerList = [];
     let priceLowToHighList = [];
     let priceHighToLowList = [];
     let dateOldToNewList = [];
     let dateNewToOldList = [];
+    let onSaleList = [];
 
     for (var pid in products) {
         products[pid].id = pid;
@@ -44,13 +65,38 @@ module.exports = async function (categoryId) {
             products[pid].saleCount = 0;
         }
 
+        let salePercentage = null;
+        let freeshipping = false;
+        let couponCode = null;
+
+        for (var i in onSaleCoupons) {
+            let coupon = onSaleCoupons[i];
+            if (discountCoupons[coupon].products[pid]) {
+                salePercentage = discountCoupons[coupon].discountPercentage;
+                freeshipping = discountCoupons[coupon].freeShipping;
+                couponCode = coupon;
+                break;
+            }
+        }
+
+        if (freeshipping) {
+            products[pid].freeshipping = freeshipping;
+        }
+
+        if (couponCode) {
+            products[pid].couponCode = couponCode;
+        }
+
         for (var vid in products[pid].variants) {
             products[pid].variants[vid].id = vid;
-            if (!products[pid].variants[vid]['salePrice']) {
-                products[pid].variants[vid].salePrice = products[pid].variants[vid].regularPrice;
+
+            if (salePercentage) {
+                products[pid].variants[vid].salePrice = Math.round(products[pid].variants[vid].regularPrice * (1 - salePercentage / 100));
+                products[pid].variants[vid].salePercentage = salePercentage;
             } else {
-                products[pid].variants[vid].salePercentage = Math.round(((products[pid].variants[vid].regularPrice - products[pid].variants[vid].salePrice) / products[pid].variants[vid].regularPrice) * 100)
+                products[pid].variants[vid].salePrice = products[pid].variants[vid].regularPrice;
             }
+
             if (!products[pid].variants[vid]['saleCount']) {
                 products[pid].variants[vid].saleCount = 0;
             }
@@ -73,11 +119,16 @@ module.exports = async function (categoryId) {
             saleCount: products[pid]['saleCount'] ? products[pid]['saleCount'] : 0,
             defaultVariant: dv
         };
+
         bestSellerList.push(product);
         priceLowToHighList.push(product);
         priceHighToLowList.push(product);
         dateOldToNewList.push(product);
         dateNewToOldList.push(product);
+
+        if (salePercentage) {
+            onSaleList.push(product);
+        }
     }
 
     bestSellerList = bestSellerList.filter(p => p);
@@ -136,11 +187,15 @@ module.exports = async function (categoryId) {
         }
     }
 
+    firebase.database().goOffline();
+    app.delete();
+
     return {
         products: products,
         categories: categories,
         tags: tags,
         productTags: Object.keys(tags),
+        onSaleList: onSaleList,
         newArrivals: newArrivals,
         bestSellerList: bestSellerList,
         priceLowToHighList: priceLowToHighList,
@@ -148,6 +203,8 @@ module.exports = async function (categoryId) {
         dateOldToNewList: dateOldToNewList,
         dateNewToOldList: dateNewToOldList,
         shippingZones: shippingZones,
-        shippingMethods: shippingMethods
+        shippingMethods: shippingMethods,
+        banner: banner,
+        currentYear: new Date().getFullYear()
     };
 };

@@ -3123,6 +3123,10 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     grid-template-columns: repeat(2, minmax(0, 1fr))
 }
 
+.grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr))
+}
+
 .grid-cols-8 {
     grid-template-columns: repeat(8, minmax(0, 1fr));
 }
@@ -4005,6 +4009,9 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     .md\:mt-12 {
         margin-top: 3rem
     }
+    .md\:mb-0 {
+        margin-bottom: 0
+    }
     .md\:mb-12 {
         margin-bottom: 3rem
     }
@@ -4178,6 +4185,9 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     .md\:grid-cols-3 {
         grid-template-columns: repeat(3, minmax(0, 1fr))
     }
+    .md\:grid-cols-8 {
+        grid-template-columns: repeat(8, minmax(0, 1fr));
+    }    
 }
 
 @media (min-width:1024px) {

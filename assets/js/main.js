@@ -1,3 +1,5 @@
+let checkoutPendingLogin = false;
+
 var firebaseConfig = {
     apiKey: "AIzaSyAVKIXxd68CdLlJfzCcPtw47-dkJh2xJm0",
     authDomain: "holi-colours-jewellery.firebaseapp.com",
@@ -38,6 +40,7 @@ var uiConfig = {
     callbacks: {
         signInSuccessWithAuthResult: function (authResult, redirectUrl) {
             if (authResult.user) {
+                console.log('signInSuccessWithAuthResult');
                 handleSignedInUser(authResult.user);
             }
             return false;
@@ -76,7 +79,10 @@ var uiConfig = {
             provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
             clientId: '423060301267-jn2bv7am136sv43m4mbll9i1o736f67u.apps.googleusercontent.com'
         },
-        firebase.auth.EmailAuthProvider.PROVIDER_ID
+        {
+            provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            requireDisplayName: true
+        }
     ],
     autoUpgradeAnonymousUsers: true,
     credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
@@ -84,7 +90,6 @@ var uiConfig = {
     privacyPolicyUrl: '<your-privacy-policy-url>'
 };
 
-// Initialize the FirebaseUI Widget using Firebase.
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
 ui.disableAutoSignIn();
 
@@ -95,11 +100,16 @@ var handleAnonymousUser = async function (user) {
     if (window.location.pathname.startsWith("/account/")) {
         window.location.href = '/';
     }
-    ui.start('#firebaseui-container', uiConfig);
+    document.getElementById('firebaseui-loading').style.display = 'none';
+    document.getElementById('firebaseui-container').style.display = 'block';
 };
 
 var handleSignedInUser = async function (user) {
+    document.getElementById('firebaseui-loading').style.display = 'none';
+    document.getElementById('firebaseui-container').style.display = 'block';
     console.log('User is signed in: ' + user.uid);
+    console.log('User is signed in: ' + user.displayName);
+    console.log(user);
     if (getCookie('isAnonymous')) {
         setCookie('uid', '', 365);
         setCookie('isAnonymous', '', 365);
@@ -115,11 +125,20 @@ var handleSignedInUser = async function (user) {
                 if (error) {
                     console.log(error);
                     alert('Error creating user! Please clear your browser cache and retry again.');
+                } else {
+                    setCookie('uid', user.uid, 365);
                 }
             });
+        } else {
+            setCookie('uid', user.uid, 365);
+            if (window.location.pathname == '/checkout/') {
+                window.location.reload();
+            }
         }
-        setCookie('uid', user.uid, 365);
-        setCookie('isAnonymous', '', 365);
+    }
+    document.getElementById('login-modal').style.display = 'none';
+    if (checkoutPendingLogin) {
+        window.location.href = '/checkout/';
     }
 };
 
@@ -130,28 +149,27 @@ var handleSignedOutUser = function () {
     if (window.location.pathname.startsWith("/account/")) {
         window.location.href = '/';
     }
+    firebase.auth().signInAnonymously();
 };
 
 firebase.auth().onAuthStateChanged(async function (user) {
+    console.log('onAuthStateChanged');
     if (user) {
         user.isAnonymous ? handleAnonymousUser(user) : await handleSignedInUser(user);
     } else {
         handleSignedOutUser();
     }
-    document.getElementById('firebaseui-loading').style.display = 'none';
-    document.getElementById('firebaseui-container').style.display = 'block';
-    document.getElementById('login-modal-close').click();
 });
 
-initApp = function () {
-    if (!getCookie('uid')) {
-        firebase.auth().signInAnonymously();
+function logIn(title = 'Login or Create an Account') {
+    if (getCookie('uid') && !getCookie('isAnonymous')) {
+        window.location.href = '/account/';
+    } else {
+        ui.start('#firebaseui-container', uiConfig);
+        document.getElementById('login-modal').style.display = 'flex';
+        document.getElementById('login-modal-title').innerText = title;
     }
-};
-
-window.addEventListener('load', function () {
-    initApp();
-});
+}
 
 function logOut() {
     firebase.auth().signOut().then(() => {
@@ -347,6 +365,7 @@ function searchModule() {
 function productModule() {
     return {
         product: null,
+        productId: null,
         selectedImage: null,
         selectedVariant: null,
         quantity: 1,
@@ -367,12 +386,29 @@ function productModule() {
         },
         stockQuantity: null,
         stockStatus: null,
+        activeTab: 'additional-information',
+        displayName: null,
+        email: null,
+        reviews: null,
+        newReview: {
+            name: '',
+            email: '',
+            title: '',
+            message: '',
+            images: [],
+            createdOn: ''
+        },
+        reviewsEmpty: false,
+        reviewsLoading: false,
+        submittingReview: false,
         async loadProduct(productId) {
+            this.productId = productId;
             fetch(`/api/products/${productId}.json`).then((res) =>
                 res.json().then(async (product) => {
+                    this.product = product;
+                    console.log(this.product);
                     this.selectedImage = product.variants[product.generalInfo.defaultVariant].image;
                     this.selectedVariant = product.generalInfo.defaultVariant;
-                    this.product = product;
                     document.title = this.product.generalInfo.name + " | Holi Colours Jewellery"
                     this.isLoading = false;
                     this.stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(this.selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
@@ -396,6 +432,99 @@ function productModule() {
             } else {
                 alert('Product is not in stock!');
             }
+        },
+        async loadReview() {
+            this.reviewsLoading = true;
+            this.reviews = {};
+            this.product['reviews'] = await firebase.database().ref().child("products").child(this.productId).child("reviews").once('value')
+                .then((snapshot) => {
+                    return snapshot.val();
+                });
+            if (this.product.reviews) {
+                Object.keys(this.product.reviews).forEach(async (reviewId) => {
+                    this.reviews[reviewId] = await firebase.database().ref().child("reviews").child(reviewId).once('value')
+                        .then((snapshot) => {
+                            return snapshot.val();
+                        });
+                    if (this.reviews[reviewId].images == undefined) {
+                        this.reviews[reviewId].images = [];
+                    }
+                });
+            } else {
+                this.reviewsEmpty = true;
+            }
+            if (!getCookie('isAnonymous')) {
+                await firebase.database().ref().child("users").child(getCookie('uid')).once('value')
+                    .then((snapshot) => {
+                        if (snapshot.val()) {
+                            if (snapshot.val()['userInfo']) {
+                                this.displayName = snapshot.val()['userInfo']['displayName'];
+                                this.email = snapshot.val()['userInfo']['email'];
+                                this.newReview.name = this.displayName;
+                                this.newReview.email = this.email;
+                            }
+                        }
+                    });
+            }
+            this.reviewsLoading = false;
+        },
+        uploadImages($event) {
+            this.newReview.images = [];
+            files = Object.values($event.target.files);
+            files.forEach(file => {
+                this.newReview.images.push(URL.createObjectURL(file));
+            });
+        },
+        async uploadImageToStorage(imageURL) {
+            let imageBLOB = await fetch(imageURL).then(r => r.blob());
+            return await firebase.storage().ref()
+                .child(`products/${this.productId}/reviews/${imageURL.substr(imageURL.lastIndexOf('/') + 1)}`)
+                .put(imageBLOB)
+                .then(function (snapshot) {
+                    return snapshot.ref.getDownloadURL();
+                });
+        },
+        async submitReview() {
+            this.submittingReview = true;
+
+            var newReviewKey = firebase.database().ref().child('reviews').push().key;
+
+            for (let i in this.newReview.images) {
+                if (this.newReview.images[i].startsWith("blob:")) {
+                    this.newReview.images[i] = await this.uploadImageToStorage(this.newReview.images[i]);
+                }
+            }
+
+            this.newReview.createdOn = new Date().getTime();
+
+            var updates = {};
+
+            updates[`reviews/${newReviewKey}`] = this.newReview;
+            updates[`products/${this.productId}/reviews/${newReviewKey}`] = true;
+
+            await firebase.database().ref().update(updates, (error) => {
+                if (error) {
+                    console.log(error);
+                    alert('Error submitting review! Please try again after sometime.');
+                } else {
+                    alert('Thank you for reviewing!');
+                    this.reviewsEmpty = false;
+                    this.reviews[newReviewKey] = this.newReview;
+                    document.querySelector("#new_review_form").reset();
+                    this.newReview = {
+                        name: '',
+                        email: '',
+                        title: '',
+                        message: '',
+                        images: [],
+                        createdOn: ''
+                    };
+                    this.newReview.name = this.displayName;
+                    this.newReview.email = this.email;
+                }
+            });
+
+            this.submittingReview = false;
         }
     }
 }
@@ -435,9 +564,10 @@ function cartModule() {
                                 .then(async (product) => {
                                     let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
                                     let stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+                                    let productName = product.variants[selectedVariant].salePercentage ? product.generalInfo.name + ' (' + product.variants[selectedVariant].salePercentage + '% OFF)' : product.generalInfo.name;
                                     let productObject = {
                                         id: product.id,
-                                        name: product.generalInfo.name,
+                                        name: productName,
                                         image: product.variants[selectedVariant].image,
                                         price: product.variants[selectedVariant].salePrice,
                                         quantity: cartList[product.id].quantity,
@@ -511,7 +641,12 @@ function cartModule() {
                     return;
                 }
             }
-            window.location.href = '/checkout';
+            if (getCookie('uid') && !getCookie('isAnonymous')) {
+                window.location.href = '/checkout';
+            } else {
+                checkoutPendingLogin = true;
+                logIn('Login or Create an Account to Checkout');
+            }
         }
     }
 }
@@ -665,9 +800,11 @@ function checkoutModule() {
         },
         saveCustomerInfo: getCookie('uid') && !getCookie('isAnonymous'),
         orderNote: '',
+        freeShipping: false,
         shippingZones: [],
         shippingMethodsList: null,
         shippingInfo: { name: '', key: '', price: '' },
+        redeemCreditPoints: null,
         paytmTxn: {
             gateway: '',
             mid: '',
@@ -675,8 +812,9 @@ function checkoutModule() {
             txnToken: ''
         },
         isPGLoading: false,
+        isOnSale: false,
         async loadCart() {
-            if (getCookie('uid')) {
+            if (getCookie('uid') && !getCookie('isAnonymous')) {
                 this.cart = [];
                 this.isLoading = true;
                 this.quantity = 0;
@@ -684,6 +822,8 @@ function checkoutModule() {
                 this.discount = 0;
                 this.total = 0;
                 this.weight = 0;
+                this.freeShipping = false;
+                this.isOnSale = false;
                 await firebase.database().ref().child("carts").child(getCookie('uid')).once('value')
                     .then(async (snapshot) => {
                         let cartList = snapshot.val();
@@ -702,21 +842,30 @@ function checkoutModule() {
                                 })
                                 .then(async (product) => {
                                     let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
+                                    let productName = product.variants[selectedVariant].salePercentage ? product.generalInfo.name + ' (' + product.variants[selectedVariant].salePercentage + '% OFF)' : product.generalInfo.name;
                                     let productObject = {
                                         id: product.id,
-                                        name: product.generalInfo.name,
+                                        name: productName,
                                         image: product.variants[selectedVariant].image,
                                         price: product.variants[selectedVariant].salePrice,
                                         variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
                                         quantity: cartList[product.id].quantity,
                                         selectedVariant: selectedVariant,
-                                        weight: product.variants[selectedVariant].weight
+                                        weight: product.variants[selectedVariant].weight,
+                                        couponCode: product.couponCode
                                     };
                                     this.cart.push(productObject);
                                     this.quantity += cartList[product.id].quantity;
                                     this.subTotal += cartList[product.id].quantity * productObject.price;
                                     this.total = this.subTotal - this.discount;
                                     this.weight += productObject.weight;
+                                    if (!this.isOnSale && product.couponCode) {
+                                        this.isOnSale = true;
+                                    }
+                                    console.log(product['freeshipping']);
+                                    if (product['freeshipping']) {
+                                        this.freeShipping = true;
+                                    }
                                 })
                                 .catch((error) => {
                                     console.log(error)
@@ -747,6 +896,7 @@ function checkoutModule() {
                         this.isLoading = false;
                     });
             } else {
+                window.location.href = '/cart';
                 this.isLoading = false;
             }
         },
@@ -784,30 +934,40 @@ function checkoutModule() {
         async loadShippingMethods() {
             this.shippingMethodsList = null;
 
-            let shippingMethods = this.shippingZones[this.account.shipToAddress.country].states[this.account.shipToAddress.state].methods;
+            if (!this.freeShipping) {
+                let shippingMethods = this.shippingZones[this.account.shipToAddress.country].states[this.account.shipToAddress.state].methods;
 
-            if (shippingMethods) {
-                let allShippingMethods;
+                if (shippingMethods) {
+                    let allShippingMethods;
 
-                await fetch('/api/shipping-methods.json')
-                    .then(response => response.json())
-                    .then((data) => {
-                        allShippingMethods = data;
-                    });
+                    await fetch('/api/shipping-methods.json')
+                        .then(response => response.json())
+                        .then((data) => {
+                            allShippingMethods = data;
+                        });
 
-                let shippingMethodsList = []
-                for (var method in shippingMethods) {
-                    let shippingMethodDetails = allShippingMethods[method];
-                    shippingMethodDetails['key'] = method;
-                    shippingMethodDetails['price'] = shippingMethodDetails.baseCost;
-                    if (shippingMethodDetails.weightRate.overKg < this.weight) {
-                        shippingMethodDetails['price'] += ((Math.ceil(this.weight) - shippingMethodDetails.weightRate.overKg) / shippingMethodDetails.weightRate.perKg) * shippingMethodDetails.weightRate.charge;
+                    let shippingMethodsList = []
+                    for (var method in shippingMethods) {
+                        let shippingMethodDetails = allShippingMethods[method];
+                        shippingMethodDetails['key'] = method;
+                        shippingMethodDetails['price'] = shippingMethodDetails.baseCost;
+                        if (shippingMethodDetails.weightRate.overKg < this.weight) {
+                            shippingMethodDetails['price'] += ((Math.ceil(this.weight) - shippingMethodDetails.weightRate.overKg) / shippingMethodDetails.weightRate.perKg) * shippingMethodDetails.weightRate.charge;
+                        }
+                        shippingMethodsList.push(shippingMethodDetails);
                     }
-                    shippingMethodsList.push(shippingMethodDetails);
+                    this.shippingMethodsList = shippingMethodsList;
+                } else {
+                    this.shippingMethodsList = [];
                 }
-                this.shippingMethodsList = shippingMethodsList;
             } else {
-                this.shippingMethodsList = [];
+                this.shippingMethodsList = [
+                    {
+                        key: 'freeShipping',
+                        name: 'Free Delivery',
+                        price: 0
+                    }
+                ];
             }
         },
         selectShippingMethod(shippingMethod) {
@@ -820,6 +980,11 @@ function checkoutModule() {
             if (this.shippingInfo.key) {
                 this.page = 'payment-method';
             }
+        },
+        redeemCP(redeem) {
+            this.redeemCreditPoints = redeem ? this.account.userInfo['creditPoints'] : 0;
+            this.discount = this.redeemCreditPoints;
+            this.total = this.subTotal + this.shipping - this.discount;
         },
         async initiatePayment(paytmForm) {
             this.isPGLoading = true;
@@ -842,6 +1007,7 @@ function checkoutModule() {
             this.order = {
                 cart: {
                     note: this.orderNote,
+                    redeemCreditPoints: this.redeemCreditPoints,
                     products: {}
                 },
                 customer: {
@@ -878,7 +1044,7 @@ function checkoutModule() {
                     if (response.ok) {
                         return response.json();
                     } else {
-                        throw new Error(response);
+                        throw response.json();
                     }
                 })
                 .then(data => {
@@ -894,7 +1060,7 @@ function checkoutModule() {
                     }
                 })
                 .catch((error) => {
-                    console.error(error);
+                    console.log(error);
                     this.isPGLoading = false;
                     if (error['resultMsg']) {
                         alert(error['resultMsg']);
@@ -912,7 +1078,8 @@ function accountModule() {
             userInfo: {
                 displayName: '',
                 email: '',
-                phoneNumber: ''
+                phoneNumber: '',
+                creditPoints: null
             },
             shipToAddress: {
                 address1: '',

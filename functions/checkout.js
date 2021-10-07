@@ -33,6 +33,9 @@ exports.handler = async (event, context) => {
     try {
         let order = JSON.parse(event.body);
 
+        var db = firebase.database();
+        var dbRef = db.ref();
+
         order.generalInfo = {
             "createdOn": new Date().getTime(),
             "lastUpdatedOn": null,
@@ -45,55 +48,128 @@ exports.handler = async (event, context) => {
         order.cart.quantity = 0;
         order.cart.subTotal = 0;
         order.cart.weight = 0;
+
+        let discountCoupons = await dbRef.child("discount").child("coupons").once('value').then((snapshot) => { return snapshot.val() });
+
+        let onSaleCoupons = [];
+
+        for (var coupon in discountCoupons) {
+            let currentTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })).getTime();
+            console.log(currentTime);
+            if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
+                onSaleCoupons.push(coupon);
+            }
+        }
+
+        onSaleCoupons.sort(function (a, b) {
+            return discountCoupons[a].createdOn - discountCoupons[b].createdOn;
+        });
+
+        console.log(onSaleCoupons);
+
+        let isOnSale = false;
+        let freeshipping = false;
+
         const updates = {};
 
         for (var productId in order.cart.products) {
-            await firebase.database().ref().child("products").child(productId).once('value')
+            await dbRef.child("products").child(productId).once('value')
                 .then((snapshot) => {
                     let productId = snapshot.key;
                     let product = snapshot.val();
-                    order.cart.products[productId].name = product.generalInfo.name;
+
                     let selectedVariant = order.cart.products[productId].selectedVariant;
                     let variant = product.variants[selectedVariant];
                     let productName = order.cart.products[productId].variant ? `${product.generalInfo.name} [${order.cart.products[productId].variant}]` : product.generalInfo.name;
+
+                    if (product.publish.status != 'P') {
+                        throw { resultMsg: productName + ' cannot be ordered now. Please try again later!' };
+                    }
+
                     if (variant.stockQuantity == 0) {
                         throw { resultMsg: productName + ' is not in stock!' };
                     } else if (order.cart.products[productId].quantity > variant.stockQuantity) {
                         throw { resultMsg: 'Only ' + stockQuantity + ' item(s) are in stock for ' + productName };
                     }
-                    order.cart.products[productId].image = variant.image;
-                    if (!variant['salePrice']) {
+
+                    let salePercentage = null;
+                    let couponCode = null;
+
+                    for (var i in onSaleCoupons) {
+                        let coupon = onSaleCoupons[i];
+                        if (discountCoupons[coupon].products[productId]) {
+                            isOnSale = true;
+                            couponCode = coupon;
+                            salePercentage = discountCoupons[coupon].discountPercentage;
+                            if (!freeshipping && discountCoupons[coupon].freeShipping) {
+                                freeshipping = discountCoupons[coupon].freeShipping;
+                                order.shipping.charge = 0;
+                                order.shipping.coupon = coupon;
+                            }
+                            break;
+                        }
+                    }
+
+                    if (salePercentage) {
+                        variant.salePrice = Math.round(variant.regularPrice * (1 - salePercentage / 100));
+                    } else {
                         variant.salePrice = variant.regularPrice;
                     }
+
+                    order.cart.products[productId].name = product.generalInfo.name;
+                    order.cart.products[productId].image = variant.image;
                     order.cart.products[productId].price = variant.salePrice;
+                    order.cart.products[productId].couponCode = couponCode;
+                    order.cart.products[productId].salePercentage = salePercentage;
+
                     order.cart.weight += parseFloat(variant.weight);
                     order.cart.quantity += order.cart.products[productId].quantity;
                     order.cart.subTotal += order.cart.products[productId].quantity * order.cart.products[productId].price;
                 });
         }
 
-        await firebase.database().ref().child("shipping").child(order.customer.shipToAddress.country).child("states").child(order.customer.shipToAddress.state).child("methods").once('value')
-            .then(async (snapshot) => {
-                let shippingMethods = snapshot.val();
-                for (var method in shippingMethods) {
-                    await firebase.database().ref().child("shippingMethods").child(method).once('value')
-                        .then((snapshot) => {
-                            let shippingMethodDetails = snapshot.val();
-                            if (snapshot.key == order.shipping.methodKey) {
-                                shippingMethodDetails['key'] = snapshot.key;
-                                shippingMethodDetails['price'] = shippingMethodDetails.baseCost;
-                                if (shippingMethodDetails.weightRate.overKg < order.cart.weight) {
-                                    shippingMethodDetails['price'] += ((Math.ceil(order.cart.weight) - shippingMethodDetails.weightRate.overKg) / shippingMethodDetails.weightRate.perKg) * shippingMethodDetails.weightRate.charge;
+        if (!freeshipping) {
+            await dbRef.child("shipping").child(order.customer.shipToAddress.country).child("states").child(order.customer.shipToAddress.state).child("methods").once('value')
+                .then(async (snapshot) => {
+                    let shippingMethods = snapshot.val();
+                    for (var method in shippingMethods) {
+                        await dbRef.child("shippingMethods").child(method).once('value')
+                            .then((snapshot) => {
+                                let shippingMethodDetails = snapshot.val();
+                                if (snapshot.key == order.shipping.methodKey) {
+                                    shippingMethodDetails['key'] = snapshot.key;
+                                    shippingMethodDetails['price'] = shippingMethodDetails.baseCost;
+                                    if (shippingMethodDetails.weightRate.overKg < order.cart.weight) {
+                                        shippingMethodDetails['price'] += ((Math.ceil(order.cart.weight) - shippingMethodDetails.weightRate.overKg) / shippingMethodDetails.weightRate.perKg) * shippingMethodDetails.weightRate.charge;
+                                    }
+                                    order.shipping.charge = shippingMethodDetails['price'];
                                 }
-                                order.shipping.charge = shippingMethodDetails['price'];
-                            }
-                        });
-                }
-            });
+                            });
+                    }
+                });
+        }
+
+        let configEnableCreditPoints = await dbRef.child("config").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+        let creditPointsPerOrder = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
+        let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+        let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
+
+        if (configEnableCreditPoints) {
+            userEnableCreditPoints = true;
+        }
+
+        if (!isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
+            order.cart.discount = order.cart.redeemCreditPoints;
+            order.cart.rewardCreditPoints = creditPointsPerOrder;
+        } else if (userEnableCreditPoints) {
+            order.cart.rewardCreditPoints = creditPointsPerOrder;
+        }
+
+        console.log(order.cart);
 
         order.cart.total = order.cart.subTotal + order.shipping.charge - order.cart.discount;
 
-        let orderSequence = await firebase.database().ref().child("sequence").child("orders")
+        let orderSequence = await dbRef.child("sequence").child("orders")
             .transaction(function (currentValue) {
                 return (currentValue || 0) + 1;
             });
@@ -172,7 +248,7 @@ exports.handler = async (event, context) => {
             txnToken: txnToken
         }
 
-        await firebase.database().ref().update(updates);
+        await dbRef.update(updates);
 
         return {
             statusCode: 200,

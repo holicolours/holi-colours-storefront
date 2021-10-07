@@ -48,6 +48,12 @@ title: "Account Details | Holi Colours Jewellery"
                                     <input type="tel" class="form-input" id="phone_number"
                                         x-model="account.userInfo.phoneNumber" required pattern="[0-9]{10}">
                                 </div>
+                                <div class="" x-show="account.userInfo['enableCreditPoints']">
+                                    <label for="credit_points" class="font-hk text-secondary block mb-2">Credit
+                                        Points</label>
+                                    <input type="number" class="form-input" id="credit_points"
+                                        x-model="account.userInfo.creditPoints" readonly>
+                                </div>
                             </div>
                             <div class="my-8">
                                 <div>
@@ -109,7 +115,8 @@ title: "Account Details | Holi Colours Jewellery"
                                 </div>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn-primary" x-text="saving ? 'Saving...' : 'Save'">Save</button>
+                                <button type="submit" class="btn btn-primary"
+                                    x-text="saving ? 'Saving...' : 'Save'">Save</button>
                             </div>
                         </form>
                     </template>

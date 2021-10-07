@@ -142,6 +142,13 @@ title: "Cart | Holi Colours Jewellery"
                 </table>
                 <div class="flex flex-col md:flex-row w-full mt-12 justify-between">
                     <div class="flex-1"></div>
+                    <!-- <div class="flex-1 my-auto mb-4 md:mb-0">
+                            <div class="flex">
+                            <input type="text" placeholder="Discount code" class="md:w-2/5 form-input" id="discount_code" autocomplete="off">
+                            <button class="ml-4 lg:ml-2 xl:ml-4 btn btn-outline btn-sm"
+                                aria-label="Apply button">Apply</button>
+                        </div>
+                    </div> -->
                     <a @click="checkout()" class="btn btn-primary cursor-pointer">
                         <span x-text="checkoutLoading ? 'Loading...' : 'Checkout'">Checkout</span>
                     </a>

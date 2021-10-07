@@ -8,7 +8,7 @@ layout: base.html
 ---
 <div>
 	<div class="container" x-data="productModule()" x-init="loadProduct({{product.id}})">
-		<div class="flex justify-center items-center pt-16" x-show="isLoading">
+		<div class="flex justify-center items-center py-40" x-show="isLoading">
 			<div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
 		</div>
 		<template x-if="product">
@@ -74,7 +74,11 @@ layout: base.html
 								<span class="font-hk text-grey-darker text-xl line-through pl-5" x-show="product.variants[selectedVariant]['salePercentage']" x-text="'₹' + product.variants[selectedVariant].regularPrice"></span>
 								<span class="bg-primary rounded-full ml-8 px-5 py-2 leading-none font-hk font-bold text-white uppercase text-sm" x-show="product.variants[selectedVariant]['salePercentage']" x-text="product.variants[selectedVariant]['salePercentage'] + '% off'"></span>
 							</div>
+							{%- if product.freeshipping -%}
+							<p class="font-hk text-secondary pt-3 pb-8">This product will be shipped for free!</p>
+							{%- else -%}
 							<p class="font-hk text-secondary pt-3 pb-8">Shipping charges calculated at checkout.</p>
+							{%- endif -%}
 						</div>
 						<div class="flex pb-5">
 							<p class="font-hk text-secondary">Availability:</p>
@@ -147,14 +151,105 @@ layout: base.html
 								{%- endfor -%}
 							</span>
 						</p>
-						<p class="font-hk text-secondary pb-4" x-show="product.tags">
+						<p class="font-hk text-secondary pb-4 flex flex-wrap" x-show="product.tags">
 							<span class="pr-2">
 								Tags:
 							</span>
 							<template x-if="product.tags" x-for="(tag, index) in Object.keys(product.tags)">
-								<a :href="'/search/?tag=' + tag" class="bg-gray-100 px-3 py-1 rounded-full mr-2" x-text="'#' + tag"></a>
+								<a :href="'/search/?tag=' + tag" class="bg-gray-100 px-3 py-1 rounded-full mr-2 mb-2" x-text="'#' + tag"></a>
 							</template>
 						</p>
+					</div>
+				</div>
+				<div class="pb-10 sm:pb-12">
+					<div class="tabs flex flex-col sm:flex-row" role="tablist">
+				
+						<span @click="activeTab = 'additional-information'"
+							class="tab-item bg-white hover:bg-grey-light px-10 py-5 text-center sm:text-left border-t-2 border-transparent font-hk font-bold text-secondary cursor-pointer transition-colors active"
+							:class="{ 'active': activeTab=== 'additional-information' }">
+							Additional Information
+						</span>
+				
+						<span @click="activeTab = 'reviews'; reviews ? null : loadReview()"
+							class="tab-item bg-white hover:bg-grey-light px-10 py-5 text-center sm:text-left border-t-2 border-transparent font-hk font-bold text-secondary cursor-pointer transition-colors"
+							:class="{ 'active': activeTab=== 'reviews' }">
+							Reviews
+						</span>
+				
+					</div>
+					<div class="tab-content relative">
+						<div x-show="activeTab === 'additional-information'" :class="{ 'active': activeTab === 'additional-information' }"
+							class="tab-pane bg-grey-light py-10 md:py-16 transition-opacity active" role="tabpanel">
+							<div class="w-5/6 mx-auto">
+								<div class="font-hk text-secondary text-base">
+									Dimensions (L×W×H) (cm): <span x-text="product.variants[selectedVariant].length + ' x ' + product.variants[selectedVariant].width + ' x ' + product.variants[selectedVariant].height"></span> 
+									<br>
+									Weight (kg): <span x-text="product.variants[selectedVariant].weight"></span>
+								</div>
+							</div>
+						</div>
+						<div x-show="activeTab === 'reviews'" :class="{ 'active': activeTab === 'reviews' }"
+							class="tab-pane bg-grey-light py-10 md:py-16 transition-opacity" role="tabpanel">
+				
+							<div class="flex justify-center items-center py-10" x-show="reviewsLoading">
+								<div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+							</div>
+							
+							<p class="w-5/6 mx-auto" x-show="reviewsEmpty">There are no reviews yet.</p>
+							
+							<template x-if="reviews" x-for="index in Object.keys(reviews).sort().reverse()">
+								<div class="w-5/6 mx-auto border-b border-grey-darker pb-4 mb-4 text-center sm:text-left">
+									<p class="font-semibold text-secondary text-lg pt-4" x-text="reviews[index].title"></p>
+									<p class="font-hk text-secondary pt-4 whitespace-pre-line" x-text="reviews[index].message"></p>
+									<div class="container grid grid-cols-3 md:grid-cols-8 gap-5 mx-auto pt-3">
+										<template x-for="image in reviews[index].images">
+											<div class="w-full rounded">
+												<article tabindex="0"
+													class="group w-full h-full rounded-md focus:outline-none focus:shadow-outline bg-gray-100 cursor-pointer relative text-transparent hover:text-white shadow-sm">
+													<img class="w-full h-full sticky object-cover rounded-md bg-fixed" :src="image">
+												</article>
+											</div>
+										</template>
+									</div>
+									<div class="flex justify-center sm:justify-start items-center pt-3">
+										<p class="font-hk text-grey-darkest text-sm" x-text="'By ' + reviews[index].name"></p>
+										<span class="font-hk text-grey-darkest text-sm block px-4">.</span>
+										<p class="font-hk text-grey-darkest text-sm" x-text="new Date(reviews[index].createdOn).toLocaleTimeString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })"></p>
+									</div>
+								</div>
+							</template>
+				
+							<form class="w-5/6 mx-auto" id="new_review_form" @submit.prevent="submitReview()">
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 pt-10">
+									<div class="w-full">
+										<label class="font-hk text-secondary text-sm block mb-2" for="name">Name</label>
+										<input type="text" placeholder="Enter your Name" class="form-input" id="name" x-model="newReview.name" required>
+									</div>
+									<div class="w-full pt-10 sm:pt-0">
+										<label class="font-hk text-secondary text-sm block mb-2" for="email">Email address</label>
+										<input type="email" placeholder="Enter your email" class="form-input " id="email" x-model="newReview.email" required :readonly="getCookie('uid') && !getCookie('isAnonymous')">
+									</div>
+								</div>
+								<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 pt-10">
+									<div class="w-full">
+										<label class="font-hk text-secondary text-sm block mb-2" for="review_title">Review Title</label>
+										<input type="text" placeholder="Enter your review title" class="form-input " id="review_title" x-model="newReview.title" required>
+									</div>
+									<div class="w-full pt-10 sm:pt-0">
+										<label class="font-hk text-secondary text-sm block mb-2">Images</label>
+										<input type="file" multiple class="form-input bg-white" id="review_images" @change="uploadImages($event)">
+									</div>
+								</div>
+								<div class="sm:w-12/25 pt-10">
+									<label for="message" class="font-hk text-secondary text-sm block mb-2">Review Message</label>
+									<textarea placeholder="Write your review here" class="form-textarea h-28" id="message"
+										spellcheck="false" x-model="newReview.message" required></textarea>
+								</div>
+								<div class="w-5/6 pt-8 md:pt-10 pb-4 text-center sm:text-left">
+									<button type="submit" class="btn btn-primary" x-text="submittingReview ? 'Submitting...' : 'Submit Review'">Submit Review</button>
+								</div>
+							</form>
+						</div>
 					</div>
 				</div>
 				<div class="">

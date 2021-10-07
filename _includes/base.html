@@ -11,10 +11,11 @@
     <link rel="stylesheet" href="/assets/styles/fonts.css" media="screen" crossorigin="anonymous" />
     <link rel="stylesheet" href="/assets/styles/main.min.css" media="screen" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/hk-grotesk.min.css">
-    <script src="https://www.gstatic.com/firebasejs/8.8.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.8.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.8.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.css" />
 </head>
 
@@ -23,8 +24,12 @@
 		mobileMenu: false,
 		mobileSearch: false,
 		mobileCart: false,
-        showLoginModal: false,
 		}" :class="{ 'overflow-hidden max-h-screen': modal || mobileMenu }" @keydown.escape="modal = false">
+    {%- if data.banner.message != '' -%}
+    <div class="text-center bg-primary">
+        <p class="text-white font-semibold px-8 py-4">{{ data.banner.message }}</p>
+    </div>
+    {%- endif -%}
     <div id="main">
         <div class="container relative">
             <div class="shadow-xs py-6 lg:py-10 z-50 relative">
@@ -55,7 +60,7 @@
                         <img src="/assets/img/logo.png" class="w-28 sm:w-48 h-auto" alt="logo" />
                     </a>
                     <div class="flex items-center">
-                        <a @click="getCookie('uid') && !getCookie('isAnonymous') ? window.location.href = '/account/' : showLoginModal = true"
+                        <a @click="logIn()"
                             class="cursor-pointer border-2 transition-all border-transparent hover:border-primary rounded-full p-2 sm:p-4 group">
                             <img src="/assets/img/icons/icon-user.svg"
                                 class="w-5 sm:w-6 md:w-8 h-5 sm:h-6 md:h-8 block group-hover:hidden" alt="icon user" />
@@ -126,7 +131,7 @@
                     :class="[!(getCookie('uid') && !getCookie('isAnonymous')) ? 'border-b border-grey-dark' : '']">Contact
                 </a>
                 <div class="mt-4 mb-2" x-show="!(getCookie('uid') && !getCookie('isAnonymous'))">
-                    <a @click="getCookie('uid') && !getCookie('isAnonymous') ? window.location.href = '/account/' : showLoginModal = true" class="btn btn-primary w-full" aria-label="Login button">Login Account</a>
+                    <a @click="logIn()" class="btn btn-primary w-full" aria-label="Login button">Login Account</a>
                 </div>
             </div>
         </div>
@@ -146,17 +151,17 @@
             </div>
         </div>
         {{ content | safe }}
-        <div class="" style="background-color: rgba(0,0,0,0.5)" x-show="showLoginModal"
-            :class="{ 'fixed inset-0 z-100 flex justify-center': showLoginModal }">
+        <div id="login-modal" class="fixed inset-0 z-100 flex justify-center hidden"
+            style="background-color: rgba(0,0,0,0.5)" x-ref="loginModal" x-cloak>
             <!--Dialog-->
-            <div class="bg-white w-11/12 md:max-w-2xl m-auto rounded shadow-lg px-6 py-6 text-left"
-                x-show="showLoginModal" @click.away="showLoginModal = false">
+            <div class="bg-white w-11/12 md:max-w-2xl m-auto rounded shadow-lg px-6 py-6 text-left">
 
                 <!--Title-->
                 <div class="flex justify-between pb-3">
-                    <div class="flex-1 font-hkbold text-secondary text-2xl text-center py-4">Login or Create an Account
+                    <div id="login-modal-title" class="flex-1 font-hkbold text-secondary text-2xl text-center py-4">Login or Create an Account
                     </div>
-                    <div id="login-modal-close" class="cursor-pointer z-50" @click="showLoginModal = false">
+                    <div class="cursor-pointer z-50"
+                        @click="$refs.loginModal.style.display = 'none'">
                         <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
                             viewBox="0 0 18 18">
                             <path
@@ -179,7 +184,7 @@
         <div
             class="mt-16 container py-8 border-t border-grey-darker {% if title == 'Checkout | Holi Colours Jewellery' %}hidden{% endif %} sm:block">
             <p class="font-hk text-secondary text-base text-center">
-                All rights reserved © 2021. Designed & Developed by
+                All rights reserved © {{data.currentYear}}. Designed & Developed by
                 <a href="" target="_blank" class="text-primary">Magesh S</a>.
             </p>
         </div>

@@ -184,7 +184,7 @@ title: "Checkout | Holi Colours Jewellery"
                                 <p class="font-hk text-secondary mb-4 lg:mb-0"
                                     x-show="!(getCookie('uid') && !getCookie('isAnonymous'))">
                                     Already have an account?
-                                    <a href="/login" class="font-hk text-primary">Log in</a>
+                                    <a @click="logIn()" class="font-hk text-primary cursor-pointer">Log in</a>
                                 </p>
                             </div>
                         </div>
@@ -216,7 +216,8 @@ title: "Checkout | Holi Colours Jewellery"
                                 </div>
                                 <div class="flex flex-col sm:flex-row justify-between">
                                     <select id="country" class="form-input mb-4 sm:mb-5 sm:mr-3"
-                                        x-model="account.shipToAddress.country" required @change="account.shipToAddress.state = ''">
+                                        x-model="account.shipToAddress.country" required
+                                        @change="account.shipToAddress.state = ''">
                                         <option value="" selected hidden>Country</option>
                                         <template x-if="shippingZones" x-for="cc in Object.keys(shippingZones)">
                                             <option :value="cc" x-text="shippingZones[cc].name"></option>
@@ -225,8 +226,11 @@ title: "Checkout | Holi Colours Jewellery"
                                     <select id="state" class="form-input mb-4 sm:mb-5"
                                         x-model="account.shipToAddress.state" required>
                                         <option value="" selected hidden>State</option>
-                                        <template x-if="account.shipToAddress.country" x-for="sc in Object.keys(shippingZones[account.shipToAddress.country].states)">
-                                            <option :value="sc" x-text="shippingZones[account.shipToAddress.country].states[sc].name" :selected="account.shipToAddress.state == sc"></option>
+                                        <template x-if="account.shipToAddress.country"
+                                            x-for="sc in Object.keys(shippingZones[account.shipToAddress.country].states)">
+                                            <option :value="sc"
+                                                x-text="shippingZones[account.shipToAddress.country].states[sc].name"
+                                                :selected="account.shipToAddress.state == sc"></option>
                                         </template>
                                     </select>
                                 </div>
@@ -320,6 +324,17 @@ title: "Checkout | Holi Colours Jewellery"
                                             class="cursor-pointer ml-3 font-hk text-secondary">PayTM</label>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="pt-8 md:pt-10 flex"
+                            x-show="!isOnSale && account.userInfo['enableCreditPoints'] && account.userInfo['creditPoints'] >= 100">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 border-grey-darker rounded"
+                                    id="redeem_credit_points" name="redeem_credit_points" @change="redeemCP($event.target.checked)">
+                            </div>
+                            <div class="ml-3">
+                                <label for="redeem_credit_points" class="cursor-pointer font-medium text-gray-700"
+                                    x-text="'Redeem ' + account.userInfo['creditPoints'] + ' Credit Points for a discount of Rs.' + account.userInfo['creditPoints'] + ' on this order.'"></label>
                             </div>
                         </div>
                         <div class="flex flex-col sm:flex-row pt-8 sm:pt-12 justify-between">
