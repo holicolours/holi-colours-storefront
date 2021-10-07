@@ -54,7 +54,7 @@ exports.handler = async (event, context) => {
         let onSaleCoupons = [];
 
         for (var coupon in discountCoupons) {
-            let currentTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })).getTime();
+            let currentTime = new Date().getTime();
             console.log(currentTime);
             if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
                 onSaleCoupons.push(coupon);
