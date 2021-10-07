@@ -19,7 +19,8 @@ title: "Holi Colours Jewellery"
 				</div>
 			</div>
 		</div>
-		<div class="pt-20 md:pt-24 lg:pt-32">
+		{%- if data.onSaleList.length >= 5 %}
+		<div class="pt-20">
 			<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
 				<div class="text-center sm:text-left">
 					<h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">On Sale</h2>
@@ -132,7 +133,8 @@ title: "Holi Colours Jewellery"
 				</div>
 			</div>
 		</div>
-		<div class="py-20 md:py-24 lg:py-32">
+		{% endif -%}
+		<div class="pt-20">
 			<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
 				<div class="text-center sm:text-left">
 					<h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">New Arrivals</h2>
@@ -246,7 +248,7 @@ title: "Holi Colours Jewellery"
 			</div>
 		</div>
 	</div>
-	<div class="w-full relative">
+	<div class="w-full relative mt-20">
 		<div class="absolute inset-y-0 right-0 w-full bg-center bg-no-repeat bg-cover"
 			style="background-image:url(/assets/img/bg-products.png)"></div>
 		<div

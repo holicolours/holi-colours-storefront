@@ -39,8 +39,12 @@ module.exports = async function () {
 
     let onSaleCoupons = [];
 
+    console.log(new Date());
+    console.log(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" }));
+
     for (var coupon in discountCoupons) {
         let currentTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Calcutta" })).getTime();
+        console.log('currentTime: ' + currentTime);
         if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
             onSaleCoupons.push(coupon);
         }

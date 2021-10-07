@@ -1954,8 +1954,16 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     margin-top: .25rem
 }
 
+.mt-2 {
+    margin-top: .5rem
+}
+
 .mt-4 {
     margin-top: 1rem
+}
+
+.mt-20 {
+    margin-top: 5rem
 }
 
 .mr-1 {
@@ -1964,10 +1972,6 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 .ml-1 {
     margin-left: .25rem
-}
-
-.mt-2 {
-    margin-top: .5rem
 }
 
 .mr-2 {
