@@ -147,19 +147,26 @@ exports.handler = async (event, context) => {
             }
 
             let configEnableCreditPoints = await dbRef.child("config").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
-            let creditPointsPerOrder = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
+            let configMaxCreditPoints = await dbRef.child("config").child("maxCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+            let configCreditPointsPerOrder  = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
+            let userRegistered = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("email").once('value').then((snapshot) => { return snapshot.val() });
             let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
             let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
 
-            if (configEnableCreditPoints) {
-                updates[`users/${order.customer.uid}/userInfo/enableCreditPoints`] = true;
-                userEnableCreditPoints = true;
+            if (userRegistered != null && configEnableCreditPoints) {
+                let configNumberOfCPUsers = await dbRef.child("config").child("numberOfCPUsers").once('value').then((snapshot) => { return snapshot.val() });
+                if (configNumberOfCPUsers > 0) {
+                    updates[`users/${order.customer.uid}/userInfo/enableCreditPoints`] = true;
+                    updates[`config/numberOfCPUsers`] = firebase.database.ServerValue.increment(-1);
+                    userEnableCreditPoints = true;
+                }
             }
 
-            if (!isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
-                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(-(order.cart.redeemCreditPoints - order.cart.rewardCreditPoints));
-            } else if (userEnableCreditPoints) {
-                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(order.cart.rewardCreditPoints);
+            if (userRegistered != null && !isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
+                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(-order.cart.redeemCreditPoints);
+            } else if (userRegistered != null && userEnableCreditPoints && configMaxCreditPoints > userCreditPoints) {
+                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(configCreditPointsPerOrder);
+                updates[`orders/${orderId}/cart/rewardCreditPoints`] = configCreditPointsPerOrder;
             }
 
             const mailClient = createMailClient();
@@ -187,6 +194,30 @@ exports.handler = async (event, context) => {
             });
 
             console.log(gmailResponse);
+
+            const adminEmail = new Email();
+
+            let adminHtmlMessage = await adminEmail
+                .render('email-templates/html', {
+                    orderId: orderId,
+                    order: order,
+                    header: `New order #${orderId}`,
+                    content: 'You have received a new order. The order details are shown below for your reference.',
+                    additionalContent: 'Congratulations on the sale.'
+                })
+                .then((data) => {
+                    return data;
+                })
+                .catch(console.error);
+
+            const adminGmailResponse = await mailClient.sendMail({
+                from: '"Holi Colours Jewellery" <holicoloursit@gmail.com>',
+                to: '"Holi Colours Jewellery" <holicoloursit@gmail.com>',
+                subject: `Holi Colours Jewellery: New order #${orderId}`,
+                html: adminHtmlMessage
+            });
+
+            console.log(adminGmailResponse);
         } else {
             status = 'Error';
             errorMessage = `${paymentResult["RESPMSG"]} Transaction ID: ${paymentResult["TXNID"]}. Paytm Order ID: ${paymentResult["ORDERID"]}.`;

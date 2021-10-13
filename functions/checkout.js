@@ -149,23 +149,15 @@ exports.handler = async (event, context) => {
                 });
         }
 
-        let configEnableCreditPoints = await dbRef.child("config").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
-        let creditPointsPerOrder = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
+        let userRegistered = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("email").once('value').then((snapshot) => { return snapshot.val() });
         let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
         let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
 
-        if (configEnableCreditPoints) {
-            userEnableCreditPoints = true;
-        }
-
-        if (!isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
+        if (userRegistered != null && !isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
             order.cart.discount = order.cart.redeemCreditPoints;
-            order.cart.rewardCreditPoints = creditPointsPerOrder;
-        } else if (userEnableCreditPoints) {
-            order.cart.rewardCreditPoints = creditPointsPerOrder;
+        } else {
+            order.cart.redeemCreditPoints = 0;
         }
-
-        console.log(order.cart);
 
         order.cart.total = order.cart.subTotal + order.shipping.charge - order.cart.discount;
 
@@ -176,7 +168,9 @@ exports.handler = async (event, context) => {
 
         let orderId = orderSequence.snapshot.val().toString();
 
-        updates[`users/${order.customer.uid}/orders/${orderId}`] = true;
+        if (userRegistered != null) {
+            updates[`users/${order.customer.uid}/orders/${orderId}`] = true;
+        }
         updates[`orders/${orderId}`] = order;
 
         // For Staging 

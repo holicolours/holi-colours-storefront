@@ -93,7 +93,7 @@ title: "Account Details | Holi Colours Jewellery"
                                             <select class="form-input" id="country"
                                                 x-model="account.shipToAddress.country"
                                                 @change="account.shipToAddress.state = ''">
-                                                <option value="" selected hidden>Country</option>
+                                                <option value="" selected hidden></option>
                                                 <template x-if="shippingZones" x-for="cc in Object.keys(shippingZones)">
                                                     <option :value="cc" x-text="shippingZones[cc].name"></option>
                                                 </template>
@@ -102,7 +102,7 @@ title: "Account Details | Holi Colours Jewellery"
                                         <div class="">
                                             <label for="state" class="font-hk text-secondary block mb-2">State</label>
                                             <select class="form-input" id="state" x-model="account.shipToAddress.state">
-                                                <option value="" selected hidden>State</option>
+                                                <option value="" selected hidden></option>
                                                 <template x-if="shippingZones && account.shipToAddress.country"
                                                     x-for="sc in Object.keys(shippingZones[account.shipToAddress.country].states)">
                                                     <option :value="sc"

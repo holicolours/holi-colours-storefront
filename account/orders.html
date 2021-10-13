@@ -273,7 +273,7 @@ title: "Orders | Holi Colours Jewellery"
 											</span>
 											<span x-text="order.customer.phoneNumber"></span>
 										</p>
-										<p class="text-gray-900 whitespace-pre-line" x-text="'Customer provided note: ' + order.cart.note"></p>
+										<p class="text-gray-900 whitespace-pre-line" x-show="order.cart.note" x-text="'Customer provided note: ' + order.cart.note"></p>
 									</div>
 								</div>
 								<div class="w-full lg:w-1/3 mt-6 pl-0 lg:pl-3" x-show="order.notes.length != 0">
