@@ -196,6 +196,7 @@ module.exports = async function () {
         categories: categories,
         tags: tags,
         productTags: Object.keys(tags),
+        onSale: {id: 'on-sale', name: 'On Sale'},
         onSaleList: onSaleList,
         newArrivals: newArrivals,
         bestSellerList: bestSellerList,

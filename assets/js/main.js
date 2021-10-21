@@ -278,7 +278,8 @@ function searchModule() {
                 }
             } else {
                 this.searchPage = false;
-                await fetch("/api/categories.json").then((res) =>
+                if (cid != 'on-sale') {
+                    await fetch("/api/categories.json").then((res) =>
                     res.json().then((categories) => {
                         for (var i in categories[cid].products) {
                             this.results.push({
@@ -288,6 +289,18 @@ function searchModule() {
                             })
                         }
                     }));
+                } else {
+                    await fetch("/api/on_sale_products.json").then((res) =>
+                    res.json().then((onSaleProducts) => {
+                        Object.keys(onSaleProducts).forEach(pid => {
+                            this.results.push({
+                                doc: {
+                                    id: pid
+                                }
+                            });
+                        });
+                    }));
+                }
             }
 
             if (this.results) {
@@ -295,6 +308,7 @@ function searchModule() {
                 fetch("/api/products.json").then((res) =>
                     res.json().then((products) => {
                         this.productsObject = products;
+                        console.log(this.productsObject);
                         this.sortProducts();
                         this.loadPage(page);
                     }));
