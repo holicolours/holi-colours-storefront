@@ -327,7 +327,7 @@ title: "Checkout | Holi Colours Jewellery"
                             </div>
                         </div>
                         <div class="pt-8 md:pt-10 flex"
-                            x-show="!isOnSale && account.userInfo['enableCreditPoints'] && account.userInfo['creditPoints'] >= 100">
+                            x-show="!isOnSale && !freeShipping && account.userInfo['enableCreditPoints'] && account.userInfo['creditPoints'] >= 100">
                             <div class="flex items-center h-5">
                                 <input type="checkbox" class="form-checkbox h-4 w-4 border-grey-darker rounded"
                                     id="redeem_credit_points" name="redeem_credit_points" @change="redeemCP($event.target.checked)">

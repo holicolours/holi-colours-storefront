@@ -95,9 +95,14 @@ exports.handler = async (event, context) => {
             let cartList = await dbRef.child("carts").child(order.customer.uid).once('value').then((snapshot) => { return snapshot.val(); });
 
             let isOnSale = false;
+            let freeshipping = false;
+
+            if (order.shipping.coupon != null && order.shipping.charge == 0) {
+                freeshipping = true;
+            }
 
             for (var productId in order.cart.products) {
-                if (!isOnSale && order.cart.products[productId].couponCode) {
+                if (!isOnSale && order.cart.products[productId]['salePercentage']) {
                     isOnSale = true;
                 }
                 await dbRef.child("products").child(productId).once('value')
@@ -146,27 +151,29 @@ exports.handler = async (event, context) => {
                     });
             }
 
-            let configEnableCreditPoints = await dbRef.child("config").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
-            let configMaxCreditPoints = await dbRef.child("config").child("maxCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
-            let configCreditPointsPerOrder  = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
-            let userRegistered = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("email").once('value').then((snapshot) => { return snapshot.val() });
-            let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
-            let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
+            if (!isOnSale && !freeshipping) {
+                let configEnableCreditPoints = await dbRef.child("config").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+                let configMaxCreditPoints = await dbRef.child("config").child("maxCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+                let configCreditPointsPerOrder = await dbRef.child("config").child("creditPointsPerOrder").once('value').then((snapshot) => { return snapshot.val() });
+                let userRegistered = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("email").once('value').then((snapshot) => { return snapshot.val() });
+                let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
+                let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
 
-            if (userRegistered != null && configEnableCreditPoints) {
-                let configNumberOfCPUsers = await dbRef.child("config").child("numberOfCPUsers").once('value').then((snapshot) => { return snapshot.val() });
-                if (configNumberOfCPUsers > 0) {
-                    updates[`users/${order.customer.uid}/userInfo/enableCreditPoints`] = true;
-                    updates[`config/numberOfCPUsers`] = firebase.database.ServerValue.increment(-1);
-                    userEnableCreditPoints = true;
+                if (userRegistered != null && configEnableCreditPoints) {
+                    let configNumberOfCPUsers = await dbRef.child("config").child("numberOfCPUsers").once('value').then((snapshot) => { return snapshot.val() });
+                    if (configNumberOfCPUsers > 0) {
+                        updates[`users/${order.customer.uid}/userInfo/enableCreditPoints`] = true;
+                        updates[`config/numberOfCPUsers`] = firebase.database.ServerValue.increment(-1);
+                        userEnableCreditPoints = true;
+                    }
                 }
-            }
 
-            if (userRegistered != null && !isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
-                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(-order.cart.redeemCreditPoints);
-            } else if (userRegistered != null && userEnableCreditPoints && configMaxCreditPoints > userCreditPoints) {
-                updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(configCreditPointsPerOrder);
-                updates[`orders/${orderId}/cart/rewardCreditPoints`] = configCreditPointsPerOrder;
+                if (userRegistered != null && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
+                    updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(-order.cart.redeemCreditPoints);
+                } else if (userRegistered != null && userEnableCreditPoints && configMaxCreditPoints > userCreditPoints) {
+                    updates[`users/${order.customer.uid}/userInfo/creditPoints`] = firebase.database.ServerValue.increment(configCreditPointsPerOrder);
+                    updates[`orders/${orderId}/cart/rewardCreditPoints`] = configCreditPointsPerOrder;
+                }
             }
 
             const mailClient = createMailClient();
@@ -250,7 +257,7 @@ exports.handler = async (event, context) => {
         return {
             statusCode: 302,
             headers: {
-                "Location": "/paymentStatus/?orderId=" + orderId + '&status=' + status + '&errorMessage=' + errorMessage
+                "Location": "/payment_status/?orderId=" + orderId + '&status=' + status + '&errorMessage=' + errorMessage
             }
         };
     } catch (error) {

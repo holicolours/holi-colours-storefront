@@ -146,11 +146,11 @@ title: "Payment Status | Holi Colours Jewellery"
                                             </div>
                                             <div class="ml-3">
                                                 <p class="text-gray-900 whitespace-no-wrap"
-                                                    x-show="!order.cart.products[i].couponCode"
+                                                    x-show="!order.cart.products[i].salePercentage"
                                                     x-text="order.cart.products[i].name">
                                                 </p>
                                                 <p class="text-gray-900 whitespace-no-wrap"
-                                                    x-show="order.cart.products[i].couponCode"
+                                                    x-show="order.cart.products[i].salePercentage"
                                                     x-text="order.cart.products[i].name + ' (' + order.cart.products[i].salePercentage + '% OFF)'">
                                                 </p>
                                                 <div class="text-sm text-gray-500"

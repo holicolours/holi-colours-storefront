@@ -67,25 +67,20 @@ module.exports = async function () {
         }
 
         let salePercentage = null;
-        let freeshipping = false;
-        let couponCode = null;
 
         for (var i in onSaleCoupons) {
             let coupon = onSaleCoupons[i];
-            if (discountCoupons[coupon].products[pid]) {
-                salePercentage = discountCoupons[coupon].discountPercentage;
-                freeshipping = discountCoupons[coupon].freeShipping;
-                couponCode = coupon;
+            if ((discountCoupons[coupon].products && discountCoupons[coupon].products[pid]) || discountCoupons[coupon].applyShippingFor == 'all') {
+                if (discountCoupons[coupon].couponType == 'discount') {
+                    salePercentage = discountCoupons[coupon].discountPercentage;
+                    products[pid].salePercentage = salePercentage;
+                } else if (discountCoupons[coupon].couponType == 'shipping') {
+                    products[pid].freeshipping = true;
+                    products[pid].minNumberOfItems = discountCoupons[coupon].minNumberOfItems;
+                }
+                products[pid].couponCode = coupon;
                 break;
             }
-        }
-
-        if (freeshipping) {
-            products[pid].freeshipping = freeshipping;
-        }
-
-        if (couponCode) {
-            products[pid].couponCode = couponCode;
         }
 
         for (var vid in products[pid].variants) {
@@ -196,7 +191,7 @@ module.exports = async function () {
         categories: categories,
         tags: tags,
         productTags: Object.keys(tags),
-        onSale: {id: 'on-sale', name: 'On Sale'},
+        onSale: { id: 'on-sale', name: 'On Sale' },
         onSaleList: onSaleList,
         newArrivals: newArrivals,
         bestSellerList: bestSellerList,

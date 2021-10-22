@@ -97,14 +97,19 @@ exports.handler = async (event, context) => {
 
                     for (var i in onSaleCoupons) {
                         let coupon = onSaleCoupons[i];
-                        if (discountCoupons[coupon].products[productId]) {
-                            isOnSale = true;
-                            couponCode = coupon;
-                            salePercentage = discountCoupons[coupon].discountPercentage;
-                            if (!freeshipping && discountCoupons[coupon].freeShipping) {
-                                freeshipping = discountCoupons[coupon].freeShipping;
-                                order.shipping.charge = 0;
-                                order.shipping.coupon = coupon;
+                        if ((discountCoupons[coupon].products && discountCoupons[coupon].products[productId]) || discountCoupons[coupon].applyShippingFor == 'all') {
+                            if (discountCoupons[coupon].couponType == 'discount') {
+                                couponCode = coupon;
+                                salePercentage = discountCoupons[coupon].discountPercentage;
+                                isOnSale = true;
+                                freeshipping = false;
+                                order.shipping.coupon = null;
+                            } else if (discountCoupons[coupon].couponType == 'shipping') {
+                                if (!isOnSale && !freeshipping && Object.keys(order.cart.products).length >= discountCoupons[coupon].minNumberOfItems) {
+                                    couponCode = coupon;
+                                    freeshipping = true;
+                                    order.shipping.coupon = coupon;
+                                }
                             }
                             break;
                         }
@@ -147,13 +152,16 @@ exports.handler = async (event, context) => {
                             });
                     }
                 });
+            order.shipping.coupon = null;
+        } else {
+            order.shipping.charge = 0;
         }
 
         let userRegistered = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("email").once('value').then((snapshot) => { return snapshot.val() });
         let userEnableCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("enableCreditPoints").once('value').then((snapshot) => { return snapshot.val() });
         let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
 
-        if (userRegistered != null && !isOnSale && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
+        if (userRegistered != null && !isOnSale && !freeshipping && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
             order.cart.discount = order.cart.redeemCreditPoints;
         } else {
             order.cart.redeemCreditPoints = 0;

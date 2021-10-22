@@ -280,26 +280,26 @@ function searchModule() {
                 this.searchPage = false;
                 if (cid != 'on-sale') {
                     await fetch("/api/categories.json").then((res) =>
-                    res.json().then((categories) => {
-                        for (var i in categories[cid].products) {
-                            this.results.push({
-                                doc: {
-                                    id: categories[cid].products[i]
-                                }
-                            })
-                        }
-                    }));
+                        res.json().then((categories) => {
+                            for (var i in categories[cid].products) {
+                                this.results.push({
+                                    doc: {
+                                        id: categories[cid].products[i]
+                                    }
+                                })
+                            }
+                        }));
                 } else {
                     await fetch("/api/on_sale_products.json").then((res) =>
-                    res.json().then((onSaleProducts) => {
-                        Object.keys(onSaleProducts).forEach(pid => {
-                            this.results.push({
-                                doc: {
-                                    id: pid
-                                }
+                        res.json().then((onSaleProducts) => {
+                            Object.keys(onSaleProducts).forEach(pid => {
+                                this.results.push({
+                                    doc: {
+                                        id: pid
+                                    }
+                                });
                             });
-                        });
-                    }));
+                        }));
                 }
             }
 
@@ -405,6 +405,7 @@ function productModule() {
         email: null,
         reviews: null,
         newReview: {
+            uid: getCookie('uid'),
             name: '',
             email: '',
             title: '',
@@ -526,6 +527,7 @@ function productModule() {
                     this.reviews[newReviewKey] = this.newReview;
                     document.querySelector("#new_review_form").reset();
                     this.newReview = {
+                        uid: getCookie('uid'),
                         name: '',
                         email: '',
                         title: '',
@@ -577,7 +579,12 @@ function cartModule() {
                                 })
                                 .then(async (product) => {
                                     let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
-                                    let stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+
+                                    console.log(`${firebaseConfig.databaseURL}stock/${product.id}/${selectedVariant}.json`);
+                                    let stockQuantity = await fetch(`${firebaseConfig.databaseURL}stock/${product.id}/${selectedVariant}.json`)
+                                        .then(res => res.json());
+
+                                    // let stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
                                     let productName = product.variants[selectedVariant].salePercentage ? product.generalInfo.name + ' (' + product.variants[selectedVariant].salePercentage + '% OFF)' : product.generalInfo.name;
                                     let productObject = {
                                         id: product.id,
@@ -816,6 +823,7 @@ function checkoutModule() {
         saveCustomerInfo: getCookie('uid') && !getCookie('isAnonymous'),
         orderNote: '',
         freeShipping: false,
+        minNumberOfItems: 0,
         shippingZones: [],
         shippingMethodsList: null,
         shippingInfo: { name: '', key: '', price: '' },
@@ -838,6 +846,7 @@ function checkoutModule() {
                 this.total = 0;
                 this.weight = 0;
                 this.freeShipping = false;
+                this.minNumberOfItems = 0;
                 this.isOnSale = false;
                 await firebase.database().ref().child("carts").child(getCookie('uid')).once('value')
                     .then(async (snapshot) => {
@@ -874,12 +883,17 @@ function checkoutModule() {
                                     this.subTotal += cartList[product.id].quantity * productObject.price;
                                     this.total = this.subTotal - this.discount;
                                     this.weight += productObject.weight;
-                                    if (!this.isOnSale && product.couponCode) {
+                                    if (!this.isOnSale && product['salePercentage']) {
                                         this.isOnSale = true;
                                     }
-                                    console.log(product['freeshipping']);
-                                    if (product['freeshipping']) {
-                                        this.freeShipping = true;
+                                    if (!this.isOnSale && product['freeshipping']) {
+                                        this.minNumberOfItems += 1;
+                                        if (!this.freeShipping && this.minNumberOfItems >= product['minNumberOfItems']) {
+                                            this.freeShipping = true;
+                                        }
+                                    }
+                                    if (this.isOnSale) {
+                                        this.freeShipping = false;
                                     }
                                 })
                                 .catch((error) => {
