@@ -273,6 +273,13 @@ function searchModule() {
                                 bool: "OR",
                                 expand: true,
                             });
+
+                            for (let r in this.results) {
+                                if (this.results[r].doc.id == this.searchTerm) {
+                                    this.results = [this.results[r]];
+                                    break;
+                                }
+                            };
                         })
                     );
                 }
@@ -305,12 +312,13 @@ function searchModule() {
 
             if (this.results) {
                 this.noOfPages = Math.ceil(this.results.length / this.noOfItemsPerPage);
-                fetch("/api/products.json").then((res) =>
+                await fetch("/api/products.json").then((res) =>
                     res.json().then((products) => {
                         this.productsObject = products;
                         console.log(this.productsObject);
                         this.sortProducts();
                         this.loadPage(page);
+                        this.isLoading = false;
                     }));
             } else {
                 this.isLoading = false;
@@ -406,6 +414,7 @@ function productModule() {
         reviews: null,
         newReview: {
             uid: getCookie('uid'),
+            pid: '',
             name: '',
             email: '',
             title: '',
@@ -418,6 +427,7 @@ function productModule() {
         submittingReview: false,
         async loadProduct(productId) {
             this.productId = productId;
+            this.newReview.pid = this.productId;
             fetch(`/api/products/${productId}.json`).then((res) =>
                 res.json().then(async (product) => {
                     this.product = product;
@@ -528,6 +538,7 @@ function productModule() {
                     document.querySelector("#new_review_form").reset();
                     this.newReview = {
                         uid: getCookie('uid'),
+                        pid: this.projectId,
                         name: '',
                         email: '',
                         title: '',
@@ -580,18 +591,16 @@ function cartModule() {
                                 .then(async (product) => {
                                     let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
 
-                                    console.log(`${firebaseConfig.databaseURL}stock/${product.id}/${selectedVariant}.json`);
                                     let stockQuantity = await fetch(`${firebaseConfig.databaseURL}stock/${product.id}/${selectedVariant}.json`)
                                         .then(res => res.json());
 
-                                    // let stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
-                                    let productName = product.variants[selectedVariant].salePercentage ? product.generalInfo.name + ' (' + product.variants[selectedVariant].salePercentage + '% OFF)' : product.generalInfo.name;
                                     let productObject = {
                                         id: product.id,
-                                        name: productName,
+                                        name: product.generalInfo.name,
+                                        slug: product.generalInfo.slug,
                                         image: product.variants[selectedVariant].image,
                                         price: product.variants[selectedVariant].salePrice,
-                                        quantity: cartList[product.id].quantity,
+                                        salePercentage: product.variants[selectedVariant].salePercentage, quantity: cartList[product.id].quantity,
                                         variants: product.variants,
                                         defaultVariant: product.generalInfo.defaultVariant,
                                         selectedVariant: selectedVariant,
@@ -617,6 +626,7 @@ function cartModule() {
             const selectedVariant = product.selectedVariant;
             product.image = product.variants[selectedVariant].image;
             product.price = product.variants[selectedVariant].salePrice;
+            product.salePercentage = product.variants[selectedVariant].salePercentage;
             product.stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
             if (product.quantity > product.stockQuantity) {
                 product.quantity = product.stockQuantity;
@@ -712,8 +722,8 @@ function wishlistModule() {
                                     let stockStatus = stockQuantity > 0 ? 'IS' : 'OS';
                                     let productObject = {
                                         id: product.id,
-                                        slug: product.slug,
                                         name: product.generalInfo.name,
+                                        slug: product.generalInfo.slug,
                                         image: product.variants[selectedVariant].image,
                                         price: product.variants[selectedVariant].salePrice,
                                         variants: product.variants,
@@ -866,12 +876,13 @@ function checkoutModule() {
                                 })
                                 .then(async (product) => {
                                     let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
-                                    let productName = product.variants[selectedVariant].salePercentage ? product.generalInfo.name + ' (' + product.variants[selectedVariant].salePercentage + '% OFF)' : product.generalInfo.name;
                                     let productObject = {
                                         id: product.id,
-                                        name: productName,
+                                        name: product.generalInfo.name,
+                                        slug: product.generalInfo.slug,
                                         image: product.variants[selectedVariant].image,
                                         price: product.variants[selectedVariant].salePrice,
+                                        salePercentage: product.variants[selectedVariant].salePercentage,
                                         variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
                                         quantity: cartList[product.id].quantity,
                                         selectedVariant: selectedVariant,
@@ -1180,40 +1191,6 @@ function accountModule() {
             await firebase.database().ref().update(updates);
             this.saving = false;
             alert('Saved!');
-        }
-    }
-}
-
-function wishListModule() {
-    return {
-        wishlist: [],
-        isLoading: true,
-        empty: true,
-        loadWishList() {
-            this.wishlist = [];
-            this.isLoading = true;
-            firebase.database().ref().child("wishlist").child(getCookie('uid')).once('value')
-                .then((snapshot) => {
-                    wishlistSnapshot = snapshot.val();
-                    this.empty = wishlistSnapshot ? false : true;
-                    for (var productId in wishlistSnapshot) {
-                        firebase.database().ref().child("products").child(productId).once('value')
-                            .then((snapshot) => {
-                                let productId = snapshot.key;
-                                let product = snapshot.val();
-                                console.log(productId);
-                                console.log(product);
-                                let productObject = {
-                                    id: productId,
-                                    name: product.generalInfo.name,
-                                    image: product.variants[product.generalInfo.defaultVariant].image,
-                                    price: product.variants[product.generalInfo.defaultVariant].regularPrice
-                                };
-                                this.wishlist.push(productObject);
-                            });
-                    }
-                    this.isLoading = false;
-                });
         }
     }
 }

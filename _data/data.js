@@ -33,25 +33,32 @@ module.exports = async function () {
     let shippingMethods = await firebase.database().ref().child("shippingMethods").once('value').then((snapshot) => { return snapshot.val() });
     let banner = await firebase.database().ref().child("config").child("banner").once('value').then((snapshot) => { return snapshot.val() });
 
+    let categoryList = [];
+
+    for (var cid in categories) {
+        categoryList[cid] = categories[cid];
+    }
+
+    categories = categoryList;
+
     if (banner.message == undefined) {
         banner.message = '';
     }
 
-    let onSaleCoupons = [];
+    let coupons = [];
 
     for (var coupon in discountCoupons) {
         let currentTime = new Date().getTime();
-        console.log('currentTime: ' + currentTime);
         if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
-            onSaleCoupons.push(coupon);
+            coupons.push(coupon);
         }
     }
 
-    onSaleCoupons.sort(function (a, b) {
+    coupons.sort(function (a, b) {
         return discountCoupons[a].createdOn - discountCoupons[b].createdOn;
     });
 
-    console.log(onSaleCoupons);
+    console.log('Available Coupons: ' + coupons);
 
     let bestSellerList = [];
     let priceLowToHighList = [];
@@ -62,16 +69,20 @@ module.exports = async function () {
 
     for (var pid in products) {
         products[pid].id = pid;
+        let dv = products[pid].generalInfo.defaultVariant;
+
         if (!products[pid]['saleCount']) {
             products[pid].saleCount = 0;
         }
 
+        let isOnSale = false;
         let salePercentage = null;
 
-        for (var i in onSaleCoupons) {
-            let coupon = onSaleCoupons[i];
+        for (var i in coupons) {
+            let coupon = coupons[i];
             if ((discountCoupons[coupon].products && discountCoupons[coupon].products[pid]) || discountCoupons[coupon].applyShippingFor == 'all') {
                 if (discountCoupons[coupon].couponType == 'discount') {
+                    isOnSale = true;
                     salePercentage = discountCoupons[coupon].discountPercentage;
                     products[pid].salePercentage = salePercentage;
                 } else if (discountCoupons[coupon].couponType == 'shipping') {
@@ -83,20 +94,32 @@ module.exports = async function () {
             }
         }
 
+        products[pid].variantImages = [];
+
         for (var vid in products[pid].variants) {
             products[pid].variants[vid].id = vid;
 
-            if (salePercentage) {
+            if (isOnSale && salePercentage) {
                 products[pid].variants[vid].salePrice = Math.round(products[pid].variants[vid].regularPrice * (1 - salePercentage / 100));
                 products[pid].variants[vid].salePercentage = salePercentage;
             } else {
-                products[pid].variants[vid].salePrice = products[pid].variants[vid].regularPrice;
+                if (!products[pid].variants[vid].salePrice) {
+                    products[pid].variants[vid].salePrice = products[pid].variants[vid].regularPrice;
+                } else {
+                    products[pid].variants[vid].salePercentage = Math.round(((products[pid].variants[vid].regularPrice - products[pid].variants[vid].salePrice) / products[pid].variants[vid].regularPrice) * 100);
+                }
             }
 
             if (!products[pid].variants[vid]['saleCount']) {
                 products[pid].variants[vid].saleCount = 0;
             }
+            if (!products[pid].variants[vid]['image']) {
+                products[pid].variants[vid].image = products[pid].variants[dv].image;
+            }
+            products[pid].variantImages.push(products[pid].variants[vid].image);
         }
+
+        products[pid].variantImages = [...new Set(products[pid].variantImages)];
 
         if (products[pid]['categories']) {
             products[pid].categories = Object.keys(products[pid].categories);
@@ -104,10 +127,21 @@ module.exports = async function () {
             products[pid].categories = [];
         }
 
-        let dv = products[pid].generalInfo.defaultVariant;
+        let relatedProducts = [];
+        for (var i in products[pid].categories) {
+            let cid = products[pid].categories[i];
+            for (var relatedPID in categories[cid].products) {
+                if (pid != relatedPID) {
+                    relatedProducts.push(relatedPID);
+                }
+            }
+        }
+        products[pid].relatedProducts = [...new Set(relatedProducts)];
+
         let product = {
             id: pid,
             name: products[pid].generalInfo.name,
+            slug: products[pid].generalInfo.slug,
             image: products[pid].variants[dv].image,
             regularPrice: products[pid].variants[dv].regularPrice,
             salePrice: products[pid].variants[dv].salePrice,
@@ -115,6 +149,8 @@ module.exports = async function () {
             saleCount: products[pid]['saleCount'] ? products[pid]['saleCount'] : 0,
             defaultVariant: dv
         };
+
+        products[pid].info = product;
 
         bestSellerList.push(product);
         priceLowToHighList.push(product);
@@ -163,9 +199,10 @@ module.exports = async function () {
         categories[cid].noOfProducts = Object.keys(categories[cid].products).length;
 
         let featuredCollections = [];
-        for (var pid in categories[cid].products) {
-            if (categories[cid].featured) {
-                featuredCollections.push(bestSellerList[pid]);
+        for (var i in categories[cid].products) {
+            let pid = categories[cid].products[i];
+            if (products[pid] && categories[cid].featured) {
+                featuredCollections.push(products[pid].info);
             }
         }
         featuredCollections = featuredCollections.filter(p => p);

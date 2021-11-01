@@ -54,7 +54,16 @@ title: "Cart | Holi Colours Jewellery"
                                 <td class="md:px-5 py-5 bg-white text-sm order-1 col-span-4 m-auto">
                                     <div class="flex items-center">
                                         <div class="ml-3">
-                                            <p class="text-gray-900 whitespace-normal font-bold" x-text="product.name">
+                                            <p>
+                                                <a :href="'/products/' + product.slug"
+                                                    class="text-gray-900 whitespace-normal font-bold"
+                                                    x-text="product.name">
+                                                </a>
+                                                <span
+                                                    class="bg-primary rounded-full px-2 leading-none font-hk font-bold text-white uppercase text-xs"
+                                                    x-show="product.salePercentage"
+                                                    x-text="product.salePercentage + '% off'">
+                                                </span>
                                             </p>
                                             <div class="flex text-sm text-gray-500 items-center mt-2"
                                                 x-show="product.variants.length > 1">
@@ -66,7 +75,7 @@ title: "Cart | Holi Colours Jewellery"
                                                     <template x-for="(variant, index) in product.variants" :key="index">
                                                         <option :value="index"
                                                             :selected="index == product.selectedVariant"
-                                                            x-text="variant.name"></option>
+                                                            x-show="variant['enabled']" x-text="variant.name"></option>
                                                     </template>
                                                 </select>
                                             </div>

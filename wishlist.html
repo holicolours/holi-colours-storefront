@@ -54,8 +54,8 @@ title: "Wishlist | Holi Colours Jewellery"
                                 <td class="md:px-5 py-5 bg-white text-sm col-span-4 m-auto">
                                     <div class="flex items-center">
                                         <div class="ml-3">
-                                            <p class="text-gray-900 whitespace-normal font-bold" x-text="product.name">
-                                            </p>
+                                            <a :href="'/products/' + product.slug" class="text-gray-900 whitespace-normal font-bold" x-text="product.name">
+                                            </a>
                                             <div class="flex text-sm text-gray-500 items-center mt-2"
                                                 x-show="product.variants.length > 1">
                                                 <label for="select_variant"

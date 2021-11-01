@@ -92,7 +92,7 @@ title: "Holi Colours Jewellery"
 											<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
 												alt="icon cart" />
 										</button>
-										<a href="products/{{ product.name | slug }}"
+										<a href="products/{{ product.slug }}"
 											class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
 											<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
 												alt="icon search" />
@@ -104,12 +104,12 @@ title: "Holi Colours Jewellery"
 										</button>
 									</div>
 								</div>
-								<a href="/product" class="flex justify-between items-center pt-6">
-									<div>
+								<div class="flex justify-between items-center pt-6">
+									<a href="/products/{{ product.slug }}">
 										<h3 class="font-hk text-base text-secondary">{{ product.name }}</h3>
-									</div>
+									</a>
 									<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice }}</span>
-								</a>
+								</div>
 							</div>
 						</div>
 						{% endfor %}
@@ -206,7 +206,7 @@ title: "Holi Colours Jewellery"
 											<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
 												alt="icon cart" />
 										</button>
-										<a href="products/{{ product.name | slug }}"
+										<a href="products/{{ product.slug }}"
 											class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
 											<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
 												alt="icon search" />
@@ -218,12 +218,12 @@ title: "Holi Colours Jewellery"
 										</button>
 									</div>
 								</div>
-								<a href="/product" class="flex justify-between items-center pt-6">
-									<div>
+								<div class="flex justify-between items-center pt-6">
+									<a href="/products/{{ product.slug }}">
 										<h3 class="font-hk text-base text-secondary">{{ product.name }}</h3>
-									</div>
+									</a>
 									<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice }}</span>
-								</a>
+								</div>
 							</div>
 						</div>
 						{% endfor %}
@@ -283,7 +283,7 @@ title: "Holi Colours Jewellery"
 													<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
 														alt="icon cart" />
 												</button>
-												<a href="/products/{{ product.name | slug }}"
+												<a href="/products/{{ product.slug }}"
 													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
 													<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
 														alt="icon search" />
@@ -296,9 +296,9 @@ title: "Holi Colours Jewellery"
 											</div>
 										</div>
 										<div class="flex justify-between items-center pt-6">
-											<div>
+											<a href="/products/{{ product.slug }}">
 												<p class="font-hk text-base text-secondary">{{ product.name }}</p>
-											</div>
+											</a>
 											<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice
 												}}</span>
 										</div>
@@ -315,7 +315,7 @@ title: "Holi Colours Jewellery"
 							{{ category.name }}</h2>
 						<p class="font-hk text-secondary-lighter text-lg pt-1">Featured Collection</p>
 						<div class="block lg:hidden">
-							<a href="/collections/{{ category.name | slug }}"
+							<a href="/collections/{{ category.slug }}"
 								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide mt-4">View
 								All Products
 							</a>
@@ -330,7 +330,7 @@ title: "Holi Colours Jewellery"
 						</div>
 						<div
 							class="absolute opacity-0 group-hover:opacity-100 flex justify-center items-center inset-0 mx-auto group transition-opacity">
-							<a href="/collections/{{ category.name | slug }}"
+							<a href="/collections/{{ category.slug }}"
 								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide">View
 								All Products</a>
 						</div>
@@ -343,7 +343,7 @@ title: "Holi Colours Jewellery"
 							category.name }}</h2>
 						<p class="font-hk text-secondary-lighter text-lg pt-1">Featured Collection</p>
 						<div class="block lg:hidden">
-							<a href="/collections/{{ category.name | slug }}"
+							<a href="/collections/{{ category.slug }}"
 								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide mt-4">View
 								All Products
 							</a>
@@ -358,7 +358,7 @@ title: "Holi Colours Jewellery"
 						</div>
 						<div
 							class="absolute opacity-0 group-hover:opacity-100 flex justify-center items-center inset-0 mx-auto group transition-opacity">
-							<a href="/collections/{{ category.name | slug }}"
+							<a href="/collections/{{ category.slug }}"
 								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide">View
 								All Products</a>
 						</div>
@@ -388,7 +388,7 @@ title: "Holi Colours Jewellery"
 													<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
 														alt="icon cart" />
 												</button>
-												<a href="/products/{{ product.name | slug }}"
+												<a href="/products/{{ product.slug }}"
 													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
 													<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
 														alt="icon search" />
@@ -401,9 +401,9 @@ title: "Holi Colours Jewellery"
 											</div>
 										</div>
 										<div class="flex justify-between items-center pt-6">
-											<div>
+											<a href="/products/{{ product.slug }}">
 												<p class="font-hk text-base text-secondary">{{ product.name }}</p>
-											</div>
+											</a>
 											<span class="font-hkbold text-primary text-xl">₹{{ product.salePrice
 												}}</span>
 										</div>

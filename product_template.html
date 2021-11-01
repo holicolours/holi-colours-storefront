@@ -3,7 +3,7 @@ pagination:
     data: data.products
     size: 1
     alias: product
-permalink: "products/{{ product.generalInfo.name | slug }}/"
+permalink: "products/{{ product.generalInfo.slug }}/"
 layout: base.html
 ---
 <div>
@@ -22,7 +22,7 @@ layout: base.html
 					{%- if forloop.first == true -%}
                     <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>					
 					{%- endif -%}
-                    <a href="/collections/{{ data.categories[cid].name | slug }}"
+                    <a href="/collections/{{ data.categories[cid].slug }}"
                         class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
                         {{ data.categories[cid].name }}
                     </a>
@@ -37,11 +37,11 @@ layout: base.html
 				<div class="pt-10 sm:pt-12 pb-10 sm:pb-12 flex flex-col lg:flex-row justify-between -mx-5">
 					<div class="lg:w-1/2 flex flex-col-reverse sm:flex-row-reverse lg:flex-row justify-between px-5">
 						<div class="sm:pl-5 md:pl-4 lg:pl-0 lg:pr-2 xl:pr-3 flex flex-row sm:flex-col">
-							{%- for variant in product.variants %}
+							{%- for image in product.variantImages %}
 							<div class="w-28 sm:w-32 lg:w-24 xl:w-28 relative pb-5 mr-3 sm:pr-0">
 								<div
 									class="bg-v-pink border border-grey relative rounded flex items-center justify-center w-full">
-									<img class="cursor-pointer object-cover" @click="selectedImage = '{{ variant.image }}'" alt="product image" src="{{ variant.image }}">
+									<img class="cursor-pointer object-cover" @click="selectedImage = '{{ image }}'" alt="product image" src="{{ image }}">
 								</div>
 							</div>
 							{% endfor %}
@@ -97,7 +97,7 @@ layout: base.html
 							<div class="w-2/3 sm:w-5/6">
 								<select class="w-2/3 form-select" x-model="selectedVariant" @change="changeVariant()">
 									{%- for variant in product.variants %}
-									<option value="{{variant.id}}">{{variant.name}}</option>
+									<option value="{{variant.id}}" x-show="product.variants[{{variant.id}}]['enabled']">{{variant.name}}</option>
 									{% endfor %}
 								</select>
 							</div>
@@ -136,7 +136,10 @@ layout: base.html
 							</a>
 						</div>
 						{%- if product.generalInfo.description != '' -%}
-						<p class="font-hk text-secondary pb-5 whitespace-pre-line">{{ product.generalInfo.description }}</p>
+						<div class="font-hk text-secondary pb-5 whitespace-pre-line">
+							{{ product.generalInfo.description }}
+							<div x-show="product.variants[selectedVariant].additionalDescription" x-html="product.variants[selectedVariant].additionalDescription"></div>
+						</div>
 						{%- endif -%}
 						<div class="flex pb-4">
 							<p class="font-hk text-secondary">SKU:</p>
@@ -146,7 +149,7 @@ layout: base.html
 							<span class="pr-2">
 								{%- for cid in product.categories -%}
 								{%- if forloop.first == true -%} Categories: &nbsp; {%- endif -%}
-								<a href="/collections/{{ data.categories[cid].name | slug}}" class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-secondary hover:text-primary font-hk">{{ data.categories[cid].name }}</a>
+								<a href="/collections/{{ data.categories[cid].slug}}" class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-secondary hover:text-primary font-hk">{{ data.categories[cid].name }}</a>
 								{%- if forloop.last != true and forloop.length > 1 -%} , &nbsp; {%- endif -%}
 								{%- endfor -%}
 							</span>
@@ -182,9 +185,10 @@ layout: base.html
 							class="tab-pane bg-grey-light py-10 md:py-16 transition-opacity active" role="tabpanel">
 							<div class="w-5/6 mx-auto">
 								<div class="font-hk text-secondary text-base">
-									Dimensions (L×W×H) (cm): <span x-text="product.variants[selectedVariant].length + ' x ' + product.variants[selectedVariant].width + ' x ' + product.variants[selectedVariant].height"></span> 
+									<!-- Dimensions (L×W×H) (cm): <span x-text="product.variants[selectedVariant].length + ' x ' + product.variants[selectedVariant].width + ' x ' + product.variants[selectedVariant].height"></span> 
 									<br>
-									Weight (kg): <span x-text="product.variants[selectedVariant].weight"></span>
+									Weight (kg): <span x-text="product.variants[selectedVariant].weight"></span> -->
+									{{ product.generalInfo.additionalInformation }}
 								</div>
 							</div>
 						</div>
@@ -252,6 +256,7 @@ layout: base.html
 						</div>
 					</div>
 				</div>
+				{%- if product.relatedProducts.length != 0 %}
 				<div class="">
 					<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
 						<div class="text-center sm:text-left">
@@ -298,9 +303,8 @@ layout: base.html
 						<div class="glide__track"
 							data-glide-el="track">
 							<div class="pt-12 relative glide__slides">
-								{%- for cid in product.categories %}
-								{%- for relatedProduct in data.categories[cid].featuredCollections %}
-								{%- if relatedProduct.id != product.id %}
+								{%- for relatedPID in product.relatedProducts %}
+								{% assign relatedProduct = data.products[relatedPID].info %}
 								<div class="relative group glide__slide pt-16 md:pt-0">
 									<div class="sm:px-5 lg:px-4">
 										<div class="relative rounded flex justify-center items-center">
@@ -323,7 +327,7 @@ layout: base.html
 													class="h-6 w-6"
 													alt="icon cart"/>
 												</button>
-												<a href="/products/{{ relatedProduct.name | slug }}"
+												<a href="/products/{{ relatedProduct.slug }}"
 													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
 												<img src="/assets/img/icons/icon-search.svg"
 													class="h-6 w-6"
@@ -337,17 +341,15 @@ layout: base.html
 												</button>
 											</div>
 										</div>
-										<a href="/products/{{ relatedProduct.name | slug }}"
+										<div
 											class="flex justify-between items-center pt-6">
-											<div>
+											<a href="/products/{{ relatedProduct.slug }}">
 												<h3 class="font-hk text-base text-secondary">{{ relatedProduct.name }}</h3>
-											</div>
+											</a>
 											<span class="font-hkbold text-primary text-xl">₹{{ relatedProduct.salePrice }}</span>
-										</a>
+										</div>
 									</div>
 								</div>
-								{% endif -%}
-								{% endfor %}
 								{% endfor %}
 							</div>
 						</div>
@@ -367,6 +369,7 @@ layout: base.html
 						</div>
 					</div>
 				</div>
+				{% endif -%}
 			</div>
 		</template>
 	</div>

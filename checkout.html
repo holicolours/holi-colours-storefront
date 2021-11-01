@@ -68,7 +68,16 @@ title: "Checkout | Holi Colours Jewellery"
                                             <img class="w-full h-full" :src="product.image" alt="" />
                                         </div>
                                         <div class="ml-3">
-                                            <p class="text-gray-900 whitespace-no-wrap" x-text="product.name">
+                                            <p>
+                                                <a :href="'/products/' + product.slug"
+                                                    class="text-gray-900 whitespace-no-wrap"
+                                                    x-text="product.name">
+                                                </a>
+                                                <span
+                                                    class="bg-primary rounded-full px-2 leading-none font-hk font-bold text-white uppercase text-xs"
+                                                    x-show="product.salePercentage"
+                                                    x-text="product.salePercentage + '% off'">
+                                                </span>
                                             </p>
                                             <div class="text-sm text-gray-500"
                                                 x-text="'Variant: ' + product.variantName" x-show="product.variantName">
