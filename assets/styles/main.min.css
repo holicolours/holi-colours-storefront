@@ -27,6 +27,29 @@ hr {
     color: inherit
 }
 
+.entry-content p {
+    margin-bottom: 1.6em;
+}
+
+.entry-content ul {
+    list-style: disc;
+    margin: 0 0 1.5em 3em;
+}
+
+.entry-content h3, .entry-content h3 a {
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    line-height: 1.15;
+}
+
+.entry-content h4, .entry-content h4 a {
+    font-weight: 700;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    line-height: 1.15;
+}
+
 abbr[title] {
     -webkit-text-decoration: underline dotted;
     text-decoration: underline dotted
@@ -3862,11 +3885,18 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 }
 
 @media (min-width:768px) {
+    .md\:z-auto {
+        z-index: auto;
+    }
     .md\:overflow-auto {
         overflow: auto;
     }
     .md\:w-3\/4 {
         width: 75%;
+    }
+    .md\:px-0 {
+        padding-left: 0;
+        padding-right: 0
     }
     .md\:px-5 {
         padding-left: 1.25rem;
@@ -3883,6 +3913,9 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     }
     .md\:aspect-h-5 {
         --tw-aspect-h: 5
+    }
+    .md\:block {
+        display: block
     }
     .md\:border-primary-lighter {
         --tw-border-opacity: 1;
@@ -4132,6 +4165,9 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     .md\:pb-32 {
         padding-bottom: 8rem
     }
+    .md\:static {
+        position: static;
+    }
     .md\:right-0 {
         right: 0
     }
@@ -4191,7 +4227,7 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     }
     .md\:grid-cols-8 {
         grid-template-columns: repeat(8, minmax(0, 1fr));
-    }    
+    }
 }
 
 @media (min-width:1024px) {

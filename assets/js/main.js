@@ -86,8 +86,8 @@ var uiConfig = {
     ],
     autoUpgradeAnonymousUsers: true,
     credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
-    tosUrl: '<your-tos-url>',
-    privacyPolicyUrl: '<your-privacy-policy-url>'
+    tosUrl: '/terms-and-conditions/',
+    privacyPolicyUrl: '/privacy-policy/'
 };
 
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
@@ -108,27 +108,23 @@ var handleSignedInUser = async function (user) {
     document.getElementById('firebaseui-loading').style.display = 'none';
     document.getElementById('firebaseui-container').style.display = 'block';
     console.log('User is signed in: ' + user.uid);
-    console.log('User is signed in: ' + user.displayName);
-    console.log(user);
     if (getCookie('isAnonymous')) {
         setCookie('uid', '', 365);
         setCookie('isAnonymous', '', 365);
     }
     if (!getCookie('uid')) {
-        let serverUser = await firebase.database().ref().child("users").child(user.uid).once('value').then((snapshot) => { return snapshot.val(); });
-        if (!serverUser) {
+        if (!database.isUserExists(user.uid)) {
             const updates = {};
             updates[`users/${user.uid}/userInfo/email`] = user.email;
             updates[`users/${user.uid}/userInfo/displayName`] = user.displayName;
             updates[`users/${user.uid}/userInfo/phoneNumber`] = '';
-            await firebase.database().ref().update(updates, (error) => {
-                if (error) {
-                    console.log(error);
-                    alert('Error creating user! Please clear your browser cache and retry again.');
-                } else {
-                    setCookie('uid', user.uid, 365);
-                }
-            });
+            let updated = await database.updateData(updates);
+            if (!updated) {
+                console.log(error);
+                alert('Error creating user! Please clear your browser cache and retry again.');
+            } else {
+                setCookie('uid', user.uid, 365);
+            }
         } else {
             setCookie('uid', user.uid, 365);
             if (window.location.pathname == '/checkout/') {
@@ -180,42 +176,29 @@ function logOut() {
     });
 }
 
-function addToCart(productId, selectedVariant, productQuantity) {
-    firebase.database().ref().child("stock").child(productId).child(selectedVariant).once('value')
-        .then((snapshot) => {
-            let stockQuantity = snapshot.val();
-
-            if (stockQuantity != 0 && stockQuantity >= productQuantity) {
-                firebase.database().ref().child("carts").child(getCookie('uid')).child(productId).set({
-                    'quantity': productQuantity,
-                    'variant': selectedVariant
-                }, (error) => {
-                    if (error) {
-                        console.log(error);
-                    } else {
-                        var r = confirm("Item added to cart! Do you want to view the cart?");
-                        if (r == true) {
-                            window.location.href = '/cart';
-                        }
-                    }
-                });
-            } else {
-                alert('Product is not in stock!');
-            }
-        });
-}
-
-function addToWishList(productId) {
-    firebase.database().ref().child("wishlist").child(getCookie('uid')).child(productId).set(true, (error) => {
-        if (error) {
-            console.log(error);
-        } else {
-            var r = confirm("Item added to wishlist! Do you want to view the wishlist?");
+async function addToCart(productId, selectedVariant, productQuantity) {
+    let stockQuantity = await database.getStock(productId, selectedVariant);
+    if (stockQuantity != 0 && stockQuantity >= productQuantity) {
+        let updatedCart = await database.addToCart(getCookie('uid'), productId, selectedVariant, productQuantity);
+        if (updatedCart) {
+            var r = confirm("Item added to cart! Do you want to view the cart?");
             if (r == true) {
-                window.location.href = '/wishlist/';
+                window.location.href = '/cart';
             }
         }
-    });
+    } else {
+        alert('Product is not in stock!');
+    }
+}
+
+async function addToWishList(productId, selectedVariant) {
+    let updatedWishList = await database.addToWishList(getCookie('uid'), productId, selectedVariant);
+    if (updatedWishList) {
+        var r = confirm("Item added to wishlist! Do you want to view the wishlist?");
+        if (r == true) {
+            window.location.href = '/wishlist/';
+        }
+    }
 }
 
 function searchModule() {
@@ -225,6 +208,7 @@ function searchModule() {
         searchIndex: null,
         productsObject: null,
         products: [],
+        showFilters: false,
         sort: getCookie('sort_by_search'),
         isLoading: true,
         noOfItemsPerPage: 12,
@@ -436,7 +420,7 @@ function productModule() {
                     this.selectedVariant = product.generalInfo.defaultVariant;
                     document.title = this.product.generalInfo.name + " | Holi Colours Jewellery"
                     this.isLoading = false;
-                    this.stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(this.selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+                    this.stockQuantity = await database.getStock(product.id, this.selectedVariant);
                     this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
                     console.log(this.stockQuantity);
                 }));
@@ -444,7 +428,7 @@ function productModule() {
         async changeVariant() {
             this.stockStatus = null;
             this.selectedImage = this.product.variants[this.selectedVariant].image;
-            this.stockQuantity = await firebase.database().ref().child("stock").child(this.product.id).child(this.selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+            this.stockQuantity = await database.getStock(this.product.id, this.selectedVariant);
             this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
             console.log(this.stockQuantity);
             if (this.quantity > this.stockQuantity) {
@@ -461,16 +445,10 @@ function productModule() {
         async loadReview() {
             this.reviewsLoading = true;
             this.reviews = {};
-            this.product['reviews'] = await firebase.database().ref().child("products").child(this.productId).child("reviews").once('value')
-                .then((snapshot) => {
-                    return snapshot.val();
-                });
+            this.product.reviews = await database.getAllReviews(this.productId);
             if (this.product.reviews) {
                 Object.keys(this.product.reviews).forEach(async (reviewId) => {
-                    this.reviews[reviewId] = await firebase.database().ref().child("reviews").child(reviewId).once('value')
-                        .then((snapshot) => {
-                            return snapshot.val();
-                        });
+                    this.reviews[reviewId] = await database.getReview(reviewId);
                     if (this.reviews[reviewId].images == undefined) {
                         this.reviews[reviewId].images = [];
                     }
@@ -479,17 +457,13 @@ function productModule() {
                 this.reviewsEmpty = true;
             }
             if (!getCookie('isAnonymous')) {
-                await firebase.database().ref().child("users").child(getCookie('uid')).once('value')
-                    .then((snapshot) => {
-                        if (snapshot.val()) {
-                            if (snapshot.val()['userInfo']) {
-                                this.displayName = snapshot.val()['userInfo']['displayName'];
-                                this.email = snapshot.val()['userInfo']['email'];
-                                this.newReview.name = this.displayName;
-                                this.newReview.email = this.email;
-                            }
-                        }
-                    });
+                let user = await database.getUser(getCookie('uid'));
+                if (user && user['userInfo']) {
+                    this.displayName = user.userInfo['displayName'];
+                    this.email = user.userInfo['email'];
+                    this.newReview.name = this.displayName;
+                    this.newReview.email = this.email;
+                }
             }
             this.reviewsLoading = false;
         },
@@ -512,7 +486,7 @@ function productModule() {
         async submitReview() {
             this.submittingReview = true;
 
-            var newReviewKey = firebase.database().ref().child('reviews').push().key;
+            var newReviewKey = await database.addNewReview();
 
             for (let i in this.newReview.images) {
                 if (this.newReview.images[i].startsWith("blob:")) {
@@ -527,29 +501,28 @@ function productModule() {
             updates[`reviews/${newReviewKey}`] = this.newReview;
             updates[`products/${this.productId}/reviews/${newReviewKey}`] = true;
 
-            await firebase.database().ref().update(updates, (error) => {
-                if (error) {
-                    console.log(error);
-                    alert('Error submitting review! Please try again after sometime.');
-                } else {
-                    alert('Thank you for reviewing!');
-                    this.reviewsEmpty = false;
-                    this.reviews[newReviewKey] = this.newReview;
-                    document.querySelector("#new_review_form").reset();
-                    this.newReview = {
-                        uid: getCookie('uid'),
-                        pid: this.projectId,
-                        name: '',
-                        email: '',
-                        title: '',
-                        message: '',
-                        images: [],
-                        createdOn: ''
-                    };
-                    this.newReview.name = this.displayName;
-                    this.newReview.email = this.email;
-                }
-            });
+            let updated = await database.updateData(updates);
+
+            if (!updated) {
+                alert('Error submitting review! Please try again after sometime.');
+            } else {
+                alert('Thank you for reviewing!');
+                this.reviewsEmpty = false;
+                this.reviews[newReviewKey] = this.newReview;
+                document.querySelector("#new_review_form").reset();
+                this.newReview = {
+                    uid: getCookie('uid'),
+                    pid: this.projectId,
+                    name: '',
+                    email: '',
+                    title: '',
+                    message: '',
+                    images: [],
+                    createdOn: ''
+                };
+                this.newReview.name = this.displayName;
+                this.newReview.email = this.email;
+            }
 
             this.submittingReview = false;
         }
@@ -566,7 +539,7 @@ function cartModule() {
         discount: 0,
         total: 0,
         checkoutLoading: false,
-        loadCart() {
+        async loadCart() {
             if (getCookie('uid')) {
                 this.cart = [];
                 this.isLoading = true;
@@ -575,49 +548,46 @@ function cartModule() {
                 this.subTotal = 0;
                 this.discount = 0;
                 this.total = 0;
-                firebase.database().ref().child("carts").child(getCookie('uid')).orderByKey().once('value')
-                    .then((snapshot) => {
-                        let cartList = snapshot.val();
-                        this.empty = cartList ? false : true;
-                        for (var productId in cartList) {
-                            fetch(`/api/products/${productId}.json`)
-                                .then(response => {
-                                    if (response.ok) {
-                                        return response.json();
-                                    } else {
-                                        throw new Error(`Product ${productId} Not Found`);
-                                    }
-                                })
-                                .then(async (product) => {
-                                    let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
 
-                                    let stockQuantity = await fetch(`${firebaseConfig.databaseURL}stock/${product.id}/${selectedVariant}.json`)
-                                        .then(res => res.json());
+                let cartList = await database.getUserCart(getCookie('uid'));
+                this.empty = cartList ? false : true;
+                for (var productId in cartList) {
+                    fetch(`/api/products/${productId}.json`)
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else {
+                                throw new Error(`Product ${productId} Not Found`);
+                            }
+                        })
+                        .then(async (product) => {
+                            let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
 
-                                    let productObject = {
-                                        id: product.id,
-                                        name: product.generalInfo.name,
-                                        slug: product.generalInfo.slug,
-                                        image: product.variants[selectedVariant].image,
-                                        price: product.variants[selectedVariant].salePrice,
-                                        salePercentage: product.variants[selectedVariant].salePercentage, quantity: cartList[product.id].quantity,
-                                        variants: product.variants,
-                                        defaultVariant: product.generalInfo.defaultVariant,
-                                        selectedVariant: selectedVariant,
-                                        stockQuantity: stockQuantity
-                                    };
-                                    this.cart.push(productObject);
-                                    this.quantity += cartList[product.id].quantity;
-                                    this.subTotal += cartList[product.id].quantity * productObject.price;
-                                    this.total = this.subTotal - this.discount;
-                                })
-                                .catch((error) => {
-                                    console.log(error)
-                                });
-                            ;
-                        }
-                        this.isLoading = false;
-                    });
+                            let stockQuantity = await database.getStock(product.id, selectedVariant);
+
+                            let productObject = {
+                                id: product.id,
+                                name: product.generalInfo.name,
+                                slug: product.generalInfo.slug,
+                                image: product.variants[selectedVariant].image,
+                                price: product.variants[selectedVariant].salePrice,
+                                salePercentage: product.variants[selectedVariant].salePercentage, quantity: cartList[product.id].quantity,
+                                variants: product.variants,
+                                defaultVariant: product.generalInfo.defaultVariant,
+                                selectedVariant: selectedVariant,
+                                stockQuantity: stockQuantity
+                            };
+                            this.cart.push(productObject);
+                            this.quantity += cartList[product.id].quantity;
+                            this.subTotal += cartList[product.id].quantity * productObject.price;
+                            this.total = this.subTotal - this.discount;
+                        })
+                        .catch((error) => {
+                            console.log(error)
+                        });
+                    ;
+                }
+                this.isLoading = false;
             } else {
                 this.isLoading = false;
             }
@@ -627,7 +597,7 @@ function cartModule() {
             product.image = product.variants[selectedVariant].image;
             product.price = product.variants[selectedVariant].salePrice;
             product.salePercentage = product.variants[selectedVariant].salePercentage;
-            product.stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+            product.stockQuantity = await database.getStock(product.id, selectedVariant);
             if (product.quantity > product.stockQuantity) {
                 product.quantity = product.stockQuantity;
             } else if (product.quantity == 0 && product.quantity <= product.stockQuantity) {
@@ -642,7 +612,7 @@ function cartModule() {
             }
             this.updateCart();
         },
-        updateCart() {
+        async updateCart() {
             let cartObject = {};
             this.quantity = 0;
             this.subTotal = 0;
@@ -657,12 +627,11 @@ function cartModule() {
             }
             this.total = this.subTotal - this.discount;
             this.empty = this.cart.length != 0 ? false : true;
-            firebase.database().ref().child("carts").child(getCookie('uid')).set(cartObject);
+            await database.updateCart(getCookie('uid'), cartObject);
         },
         async checkout() {
             for (var i in this.cart) {
-                this.cart[i].stockQuantity = await firebase.database().ref().child("stock").child(this.cart[i].id).child(this.cart[i].selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
-
+                this.cart[i].stockQuantity = await database.getStock(this.cart[i].id, this.cart[i].selectedVariant);
                 let productName = this.cart[i].variants.length > 1 ? `${this.cart[i].name} [${this.cart[i].variants[this.cart[i].selectedVariant].name}]` : this.cart[i].name;
                 if (this.cart[i].stockQuantity == 0) {
                     alert(productName + ' is not in stock!');
@@ -698,50 +667,48 @@ function wishlistModule() {
                 color: 'red'
             }
         },
-        loadWishlist() {
+        async loadWishlist() {
             if (getCookie('uid')) {
                 this.wishlist = [];
                 this.isLoading = true;
                 this.empty = true;
-                firebase.database().ref().child("wishlist").child(getCookie('uid')).orderByKey().once('value')
-                    .then((snapshot) => {
-                        let wishlist = snapshot.val();
-                        this.empty = wishlist ? false : true;
-                        for (var productId in wishlist) {
-                            fetch(`/api/products/${productId}.json`)
-                                .then(response => {
-                                    if (response.ok) {
-                                        return response.json();
-                                    } else {
-                                        throw new Error(`Product ${productId} Not Found`);
-                                    }
-                                })
-                                .then(async (product) => {
-                                    let selectedVariant = wishlist[product.id]['variant'] ? wishlist[product.id].variant : product.generalInfo.defaultVariant;
-                                    let stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
-                                    let stockStatus = stockQuantity > 0 ? 'IS' : 'OS';
-                                    let productObject = {
-                                        id: product.id,
-                                        name: product.generalInfo.name,
-                                        slug: product.generalInfo.slug,
-                                        image: product.variants[selectedVariant].image,
-                                        price: product.variants[selectedVariant].salePrice,
-                                        variants: product.variants,
-                                        defaultVariant: product.generalInfo.defaultVariant,
-                                        selectedVariant: selectedVariant,
-                                        stockQuantity: stockQuantity,
-                                        stockStatus: stockStatus
-                                    };
-                                    this.wishlist.push(productObject);
-                                })
-                                .catch((error) => {
-                                    console.log(error)
-                                });
-                            ;
-                        }
-                        console.log(this.wishlist);
-                        this.isLoading = false;
-                    });
+
+                let wishlist = await database.getUserWishlist(getCookie('uid'));
+                this.empty = wishlist ? false : true;
+                for (var productId in wishlist) {
+                    fetch(`/api/products/${productId}.json`)
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else {
+                                throw new Error(`Product ${productId} Not Found`);
+                            }
+                        })
+                        .then(async (product) => {
+                            let selectedVariant = wishlist[product.id]['variant'] ? wishlist[product.id].variant : product.generalInfo.defaultVariant;
+                            let stockQuantity = await database.getStock(product.id, selectedVariant);
+                            let stockStatus = stockQuantity > 0 ? 'IS' : 'OS';
+                            let productObject = {
+                                id: product.id,
+                                name: product.generalInfo.name,
+                                slug: product.generalInfo.slug,
+                                image: product.variants[selectedVariant].image,
+                                price: product.variants[selectedVariant].salePrice,
+                                variants: product.variants,
+                                defaultVariant: product.generalInfo.defaultVariant,
+                                selectedVariant: selectedVariant,
+                                stockQuantity: stockQuantity,
+                                stockStatus: stockStatus
+                            };
+                            this.wishlist.push(productObject);
+                        })
+                        .catch((error) => {
+                            console.log(error)
+                        });
+                    ;
+                }
+                console.log(this.wishlist);
+                this.isLoading = false;
             } else {
                 this.isLoading = false;
             }
@@ -750,7 +717,7 @@ function wishlistModule() {
             const selectedVariant = product.selectedVariant;
             product.image = product.variants[selectedVariant].image;
             product.price = product.variants[selectedVariant].salePrice;
-            product.stockQuantity = await firebase.database().ref().child("stock").child(product.id).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
+            product.stockQuantity = await database.getStock(product.id, selectedVariant);
             product.stockStatus = product.stockQuantity > 0 ? 'IS' : 'OS';
             this.updateWishlist();
         },
@@ -763,7 +730,7 @@ function wishlistModule() {
                 }
             }
         },
-        updateWishlist() {
+        async updateWishlist() {
             let wishlistObject = {};
             for (var i in this.wishlist) {
                 wishlistObject[this.wishlist[i].id] = {
@@ -771,33 +738,23 @@ function wishlistModule() {
                 };
             }
             this.empty = this.wishlist.length != 0 ? false : true;
-            firebase.database().ref().child("wishlist").child(getCookie('uid')).set(wishlistObject);
+            await database.updateWishList(getCookie('uid'), wishlistObject);
         },
         test(productId) { console.log(productId) },
         async addToCart(product) {
-            await firebase.database().ref().child("stock").child(product.id).child(product.selectedVariant).once('value')
-                .then(async (snapshot) => {
-                    let stockQuantity = snapshot.val();
-
-                    if (stockQuantity != 0 && stockQuantity >= 1) {
-                        await firebase.database().ref().child("carts").child(getCookie('uid')).child(product.id).set({
-                            'quantity': 1,
-                            'variant': product.selectedVariant
-                        }, (error) => {
-                            if (error) {
-                                console.log(error);
-                            } else {
-                                this.removeFromWishlist(product.id);
-                                var r = confirm("Item added to cart! Do you want to view the cart?");
-                                if (r == true) {
-                                    window.location.href = '/cart';
-                                }
-                            }
-                        });
-                    } else {
-                        alert('Product is not in stock!');
+            let stockQuantity = await database.getStock(product.id, product.selectedVariant);
+            if (stockQuantity != 0 && stockQuantity >= 1) {
+                let updatedCart = await database.addToCart(getCookie('uid'), product.id, product.selectedVariant, 1);
+                if (updatedCart) {
+                    this.removeFromWishlist(product.id);
+                    var r = confirm("Item added to cart! Do you want to view the cart?");
+                    if (r == true) {
+                        window.location.href = '/cart';
                     }
-                });
+                }
+            } else {
+                alert('Product is not in stock!');
+            }
         }
     }
 }
@@ -832,6 +789,7 @@ function checkoutModule() {
         },
         saveCustomerInfo: getCookie('uid') && !getCookie('isAnonymous'),
         orderNote: '',
+        storeFeedback: '',
         freeShipping: false,
         minNumberOfItems: 0,
         shippingZones: [],
@@ -858,89 +816,83 @@ function checkoutModule() {
                 this.freeShipping = false;
                 this.minNumberOfItems = 0;
                 this.isOnSale = false;
-                await firebase.database().ref().child("carts").child(getCookie('uid')).once('value')
-                    .then(async (snapshot) => {
-                        let cartList = snapshot.val();
-                        if (!cartList) {
-                            window.location.href = '/cart';
-                            return;
-                        }
-                        for (var productId in cartList) {
-                            await fetch(`/api/products/${productId}.json`)
-                                .then(response => {
-                                    if (response.ok) {
-                                        return response.json();
-                                    } else {
-                                        throw new Error(`Product ${productId} Not Found`);
-                                    }
-                                })
-                                .then(async (product) => {
-                                    let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
-                                    let productObject = {
-                                        id: product.id,
-                                        name: product.generalInfo.name,
-                                        slug: product.generalInfo.slug,
-                                        image: product.variants[selectedVariant].image,
-                                        price: product.variants[selectedVariant].salePrice,
-                                        salePercentage: product.variants[selectedVariant].salePercentage,
-                                        variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
-                                        quantity: cartList[product.id].quantity,
-                                        selectedVariant: selectedVariant,
-                                        weight: product.variants[selectedVariant].weight,
-                                        couponCode: product.couponCode
-                                    };
-                                    this.cart.push(productObject);
-                                    this.quantity += cartList[product.id].quantity;
-                                    this.subTotal += cartList[product.id].quantity * productObject.price;
-                                    this.total = this.subTotal - this.discount;
-                                    this.weight += productObject.weight;
-                                    if (!this.isOnSale && product['salePercentage']) {
-                                        this.isOnSale = true;
-                                    }
-                                    if (!this.isOnSale && product['freeshipping']) {
-                                        this.minNumberOfItems += 1;
-                                        if (!this.freeShipping && this.minNumberOfItems >= product['minNumberOfItems']) {
-                                            this.freeShipping = true;
-                                        }
-                                    }
-                                    if (this.isOnSale) {
-                                        this.freeShipping = false;
-                                    }
-                                })
-                                .catch((error) => {
-                                    console.log(error)
-                                });
-                        }
 
-                        await fetch('/api/shipping-zones.json')
-                            .then(response => response.json())
-                            .then((data) => {
-                                this.shippingZones = data;
-                            });
+                let cartList = await database.getUserCart(getCookie('uid'));
+                if (!cartList) {
+                    window.location.href = '/cart';
+                    return;
+                }
+                for (var productId in cartList) {
+                    await fetch(`/api/products/${productId}.json`)
+                        .then(response => {
+                            if (response.ok) {
+                                return response.json();
+                            } else {
+                                throw new Error(`Product ${productId} Not Found`);
+                            }
+                        })
+                        .then(async (product) => {
+                            let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
+                            let productObject = {
+                                id: product.id,
+                                name: product.generalInfo.name,
+                                slug: product.generalInfo.slug,
+                                image: product.variants[selectedVariant].image,
+                                price: product.variants[selectedVariant].salePrice,
+                                salePercentage: product.variants[selectedVariant].salePercentage,
+                                variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
+                                quantity: cartList[product.id].quantity,
+                                selectedVariant: selectedVariant,
+                                weight: product.variants[selectedVariant].weight,
+                                couponCode: product.couponCode
+                            };
+                            this.cart.push(productObject);
+                            this.quantity += cartList[product.id].quantity;
+                            this.subTotal += cartList[product.id].quantity * productObject.price;
+                            this.total = this.subTotal - this.discount;
+                            this.weight += productObject.weight;
+                            if (!this.isOnSale && product['salePercentage']) {
+                                this.isOnSale = true;
+                            }
+                            if (!this.isOnSale && product['freeshipping']) {
+                                this.minNumberOfItems += 1;
+                                if (!this.freeShipping && this.minNumberOfItems >= product['minNumberOfItems']) {
+                                    this.freeShipping = true;
+                                }
+                            }
+                            if (this.isOnSale) {
+                                this.freeShipping = false;
+                            }
+                        })
+                        .catch((error) => {
+                            console.log(error)
+                        });
+                }
 
-                        if (!getCookie('isAnonymous')) {
-                            await firebase.database().ref().child("users").child(getCookie('uid')).once('value')
-                                .then((snapshot) => {
-                                    if (snapshot.val()) {
-                                        if (snapshot.val()['userInfo']) {
-                                            this.account.userInfo = snapshot.val()['userInfo'];
-                                        }
-                                        if (snapshot.val()['shipToAddress']) {
-                                            this.account.shipToAddress = snapshot.val()['shipToAddress'];
-                                            console.log('ST Populated');
-                                        }
-                                        console.log(snapshot.val());
-                                    }
-                                });
-                        }
-                        this.isLoading = false;
+                await fetch('/api/shipping-zones.json')
+                    .then(response => response.json())
+                    .then((data) => {
+                        this.shippingZones = data;
                     });
+
+                if (!getCookie('isAnonymous')) {
+                    let user = await database.getUser(getCookie('uid'));
+                    if (user) {
+                        if (user['userInfo']) {
+                            this.account.userInfo = user.userInfo;
+                        }
+                        if (user['shipToAddress']) {
+                            this.account.shipToAddress = user.shipToAddress;
+                        }
+                    }
+                }
+                this.isLoading = false;
             } else {
                 window.location.href = '/cart';
                 this.isLoading = false;
             }
         },
-        goToShipping() {
+        async goToShipping() {
             if (this.account.shipToAddress.address1 && this.account.shipToAddress.address2 && this.account.shipToAddress.city && this.account.shipToAddress.postalCode && this.account.shipToAddress.state && this.account.shipToAddress.country) {
                 this.page = 'shipping-method';
                 this.loadShippingMethods();
@@ -949,8 +901,7 @@ function checkoutModule() {
                     updates[`users/${getCookie('uid')}/userInfo/displayName`] = this.account.userInfo.displayName;
                     updates[`users/${getCookie('uid')}/userInfo/phoneNumber`] = this.account.userInfo.phoneNumber;
                     updates[`users/${getCookie('uid')}/shipToAddress`] = this.account.shipToAddress;
-                    console.log(updates);
-                    firebase.database().ref().update(updates);
+                    let updated = await database.updateData(updates);
                 }
             }
         },
@@ -1030,8 +981,7 @@ function checkoutModule() {
             this.isPGLoading = true;
 
             for (var i in this.cart) {
-                let stockQuantity = await firebase.database().ref().child("stock").child(this.cart[i].id).child(this.cart[i].selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
-
+                let stockQuantity = await database.getStock(this.cart[i].id, this.cart[i].selectedVariant);
                 let productName = this.cart[i].variantName ? `${this.cart[i].name} [${this.cart[i].variantName}]` : this.cart[i].name;
                 if (stockQuantity == 0) {
                     alert(productName + ' is not in stock!');
@@ -1047,6 +997,7 @@ function checkoutModule() {
             this.order = {
                 cart: {
                     note: this.orderNote,
+                    storeFeedback: this.storeFeedback,
                     redeemCreditPoints: this.redeemCreditPoints,
                     products: {}
                 },
@@ -1142,18 +1093,16 @@ function accountModule() {
                     this.shippingZones = data;
                 });
 
-            await firebase.database().ref().child("users").child(getCookie('uid')).once('value')
-                .then((snapshot) => {
-                    if (snapshot.val()) {
-                        if (snapshot.val()['userInfo']) {
-                            this.account.userInfo = snapshot.val()['userInfo'];
-                        }
-                        if (snapshot.val()['shipToAddress']) {
-                            this.account.shipToAddress = snapshot.val()['shipToAddress'];
-                        }
-                    }
-                    this.isLoading = false;
-                });
+            let user = await database.getUser(getCookie('uid'));
+            if (user) {
+                if (user['userInfo']) {
+                    this.account.userInfo = user.userInfo;
+                }
+                if (user['shipToAddress']) {
+                    this.account.shipToAddress = user.shipToAddress;
+                }
+            }
+            this.isLoading = false;
         },
         async saveAccount() {
             if (!(this.account.shipToAddress.address1 == '' && this.account.shipToAddress.address2 == '' && this.account.shipToAddress.city == '' && this.account.shipToAddress.postalCode == '' && this.account.shipToAddress.state == '' && this.account.shipToAddress.country == '')) {
@@ -1188,7 +1137,7 @@ function accountModule() {
             updates[`users/${getCookie('uid')}/userInfo/phoneNumber`] = this.account.userInfo.phoneNumber;
             updates[`users/${getCookie('uid')}/shipToAddress`] = this.account.shipToAddress;
             console.log(updates);
-            await firebase.database().ref().update(updates);
+            await database.updateData(updates);
             this.saving = false;
             alert('Saved!');
         }
@@ -1235,20 +1184,17 @@ function orderModule() {
         },
         noOfItemsPerPage: 5,
         currentPage: 1,
-        loadOrders() {
-            firebase.database().ref().child("users").child(getCookie('uid')).child("orders").once('value')
-                .then((snapshot) => {
-                    ordersSnapshot = snapshot.val();
-                    this.empty = ordersSnapshot ? false : true;
-                    this.orderList = Object.keys(ordersSnapshot);
-                    this.orderList.sort(function (a, b) {
-                        return b - a;
-                    });
-                    this.noOfPages = Math.ceil(this.orderList.length / this.noOfItemsPerPage);
-                    console.log(this.orderList);
-                    this.orders = {};
-                    this.loadPage();
-                });
+        async loadOrders() {
+            let ordersSnapshot = await database.getUserOrders(getCookie('uid'));
+            this.empty = ordersSnapshot ? false : true;
+            this.orderList = Object.keys(ordersSnapshot);
+            this.orderList.sort(function (a, b) {
+                return b - a;
+            });
+            this.noOfPages = Math.ceil(this.orderList.length / this.noOfItemsPerPage);
+            console.log(this.orderList);
+            this.orders = {};
+            this.loadPage();
         },
         loadPage(page = 1) {
             this.isLoading = true;
@@ -1257,12 +1203,8 @@ function orderModule() {
             let end = this.noOfItemsPerPage * page;
             let currentPageResults = this.orderList.slice(start, end);
             currentPageResults.forEach(async (orderId) => {
-                this.orders[orderId] = await firebase.database().ref().child("orders").child(orderId).once('value')
-                    .then((snapshot) => {
-                        return snapshot.val();
-                    });
+                this.orders[orderId] = await database.getOrder(orderId);
             });
-            console.log(this.orders);
             this.isLoading = false;
         },
         loadOrder(order, id) {
@@ -1284,7 +1226,6 @@ function orderModule() {
             this.currentStatus = this.order.generalInfo.status;
             this.sortNotes();
             document.getElementById("orderPage").scrollIntoView();
-            console.log(this.order);
         },
         closeOrder() {
             this.orderId = null;
@@ -1339,16 +1280,13 @@ function paymentStatusModule() {
             this.status = params['status'];
             this.errorMessage = params['errorMessage'];
             if (this.status == 'Success') {
-                firebase.database().ref().child("orders").child(this.orderId).once('value')
-                    .then(async (snapshot) => {
-                        this.order = snapshot.val();
-                        await fetch('/api/shipping-zones.json')
-                            .then(response => response.json())
-                            .then((data) => {
-                                this.shippingZones = data;
-                            });
-                        this.isLoading = false;
+                this.order = await database.getOrder(this.orderId);
+                await fetch('/api/shipping-zones.json')
+                    .then(response => response.json())
+                    .then((data) => {
+                        this.shippingZones = data;
                     });
+                this.isLoading = false;
             } else {
                 this.isLoading = false;
             }

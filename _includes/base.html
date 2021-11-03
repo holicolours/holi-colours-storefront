@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/hk-grotesk.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.css" />
@@ -158,10 +157,10 @@
 
                 <!--Title-->
                 <div class="flex justify-between pb-3">
-                    <div id="login-modal-title" class="flex-1 font-hkbold text-secondary text-2xl text-center py-4">Login or Create an Account
+                    <div id="login-modal-title" class="flex-1 font-hkbold text-secondary text-2xl text-center py-4">
+                        Login or Create an Account
                     </div>
-                    <div class="cursor-pointer z-50"
-                        @click="$refs.loginModal.style.display = 'none'">
+                    <div class="cursor-pointer z-50" @click="$refs.loginModal.style.display = 'none'">
                         <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
                             viewBox="0 0 18 18">
                             <path
@@ -195,6 +194,7 @@
         integrity="sha256-Ev8y2mML/gGa4LFVZgNpMTjKwj34q4pC4DcseWeRb9w=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide@3.4.1/dist/css/glide.theme.min.css"
         integrity="sha256-sw/JiPOV1ZfcXjqBJT1vqaA4vBGeiqn+b7PDhVv4OA4=" crossorigin="anonymous" />
+    <script src="/assets/js/database.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.x.x/dist/alpine.min.js" defer></script>
 </body>

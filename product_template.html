@@ -26,7 +26,9 @@ layout: base.html
                         class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
                         {{ data.categories[cid].name }}
                     </a>
-					{%- if forloop.last != true and forloop.length > 1 -%} &nbsp; | &nbsp; {%- endif -%}
+					{%- if forloop.last != true and forloop.length > 1 -%}
+					<i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+					{%- endif -%}
 					{%- endfor -%}
                     <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
                     <span
@@ -129,7 +131,7 @@ layout: base.html
 						<div class="flex pb-8 group">
 							<a class="btn btn-outline mr-4 md:mr-6 cursor-pointer" @click="addToCart()">Add to
 								cart</a>
-							<a class="rounded-full btn btn-outline cursor-pointer" @click="addToWishList({{ product.id }})">
+							<a class="rounded-full btn btn-outline cursor-pointer" @click="addToWishList({{ product.id }}, {{product.generalInfo.defaultVariant}})">
 								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
 									<path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
 								</svg>
@@ -333,7 +335,7 @@ layout: base.html
 													class="h-6 w-6"
 													alt="icon search"/>
 												</a>
-												<button @click="addToWishList({{ relatedProduct.id }})"
+												<button @click="addToWishList({{ relatedProduct.id }}, {{relatedProduct.defaultVariant}})"
 												class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
 												<img src="/assets/img/icons/icon-heart.svg"
 													class="h-6 w-6"

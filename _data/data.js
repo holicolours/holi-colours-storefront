@@ -33,6 +33,11 @@ module.exports = async function () {
     let shippingMethods = await firebase.database().ref().child("shippingMethods").once('value').then((snapshot) => { return snapshot.val() });
     let banner = await firebase.database().ref().child("config").child("banner").once('value').then((snapshot) => { return snapshot.val() });
 
+    orderedCategories = Object.keys(categories);
+    orderedCategories.sort(function (a, b) {
+        return categories[a]['order'] - categories[b]['order'];
+    });
+
     let categoryList = [];
 
     for (var cid in categories) {
@@ -83,13 +88,14 @@ module.exports = async function () {
             if ((discountCoupons[coupon].products && discountCoupons[coupon].products[pid]) || discountCoupons[coupon].applyShippingFor == 'all') {
                 if (discountCoupons[coupon].couponType == 'discount') {
                     isOnSale = true;
+                    products[pid].couponCode = coupon;
                     salePercentage = discountCoupons[coupon].discountPercentage;
                     products[pid].salePercentage = salePercentage;
                 } else if (discountCoupons[coupon].couponType == 'shipping') {
                     products[pid].freeshipping = true;
+                    products[pid].couponCode = coupon;
                     products[pid].minNumberOfItems = discountCoupons[coupon].minNumberOfItems;
                 }
-                products[pid].couponCode = coupon;
                 break;
             }
         }
@@ -123,6 +129,9 @@ module.exports = async function () {
 
         if (products[pid]['categories']) {
             products[pid].categories = Object.keys(products[pid].categories);
+            products[pid].categories.sort(function (a, b) {
+                return categories[a]['order'] - categories[b]['order'];
+            });
         } else {
             products[pid].categories = [];
         }
@@ -187,6 +196,23 @@ module.exports = async function () {
 
     let newArrivals = dateNewToOldList.slice(0, 8);
 
+    for (var pid in products) {
+        products[pid].relatedProducts.sort(function (a, b) {
+            return products[b].saleCount - products[a].saleCount;
+        });
+        products[pid].relatedProducts = products[pid].relatedProducts.slice(0, 8);
+        if (products[pid].relatedProducts.length != 8) {
+            for (var j in bestSellerList) {
+                if (!products[pid].relatedProducts.includes(bestSellerList[j].id)) {
+                    products[pid].relatedProducts.push(bestSellerList[j].id);
+                    if (products[pid].relatedProducts.length == 8) {
+                        break;
+                    }
+                }
+            }    
+        }
+    }
+
     for (var cid in categories) {
         categories[cid].id = cid;
 
@@ -226,6 +252,7 @@ module.exports = async function () {
     return {
         products: products,
         categories: categories,
+        orderedCategories: orderedCategories,
         tags: tags,
         productTags: Object.keys(tags),
         onSale: { id: 'on-sale', name: 'On Sale' },

@@ -1,12 +1,24 @@
 <div>
-    <div class="container flex flex-col-reverse md:flex-row">
-        <div class="w-full md:w-1/4">
-            <div class="pt-10 flex flex-col justify-start">
+    <div class="container flex flex-col md:flex-row" x-data="{showFilters: false}" x-cloak>
+        <div class="w-full md:w-1/4 fixed inset-y-0 left-0 z-50 overflow-scroll md:z-auto md:static md:overflow-auto md:block"
+            :class="[ showFilters ? '' : 'hidden' ]" style="background-color: rgba(0,0,0,0.5)">
+            <div class="cursor-pointer fixed right-0 mt-5 mr-5 rounded-full p-1 bg-white" x-show="showFilters" @click="showFilters = false">
+                <svg class="fill-current" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                    viewBox="0 0 18 18">
+                    <path
+                        d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z">
+                    </path>
+                </svg>
+            </div>
+            <div class="px-5 py-10 md:px-0 flex flex-col justify-start bg-white w-3/4 h-full md:w-full">
                 <p class="font-hk text-secondary text-xl md:text-2xl leading-none block">Categories</p>
                 <ul class="pt-8 list-reset">
-                    {%- for category in data.categories %} {%- if category and category.noOfProducts > 0 %}
+                    {%- for cid in data.orderedCategories %} {%- if data.categories[cid] and
+                    data.categories[cid].noOfProducts > 0 %}
                     <li class="pb-3 block">
-                        <a href="/collections/{{ category.slug }}" class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">{{category.name}} ({{category.noOfProducts}})</a>
+                        <a href="/collections/{{ data.categories[cid].slug }}"
+                            class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">{{data.categories[cid].name}}
+                            ({{data.categories[cid].noOfProducts}})</a>
                     </li>
                     {% endif -%} {% endfor %}
                 </ul>
@@ -14,7 +26,8 @@
                 <ul class="pt-8 list-reset">
                     {%- for tag in data.productTags %} {%- if tag %}
                     <li class="pb-3 block">
-                        <a href="/search/?tag={{ tag }}" class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">#{{tag}}</a>
+                        <a href="/search/?tag={{ tag }}"
+                            class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">#{{tag}}</a>
                     </li>
                     {% endif -%} {% endfor %}
                 </ul>
@@ -25,43 +38,57 @@
                 <div class="flex items-center justify-start">
                     <p class="font-hk text-secondary md:text-lg px-2 leading-none block"></p>
                 </div>
-                <div class="flex items-center justify-start sm:justify-end mt-6 sm:mt-0 w-80" x-data="{sort: '{{sort}}'}">
+                <div class="flex items-center justify-center mb-5 md:hidden">
+                    <a class="btn btn-outline px-5 py-2 cursor-pointer" @click="showFilters = true">Filter</a>
+                </div>
+                <div class="flex items-center justify-center sm:justify-end w-80" x-data="{sort: '{{sort}}'}">
                     <span class="font-hk text-secondary md:text-lg mr-2 my-auto inline-block">Sort by:</span>
                     <select class="w-2/3 form-select" onchange="javascript:location.href = this.value;">
                         <option value="/collections/" {%- if sort==''> 0 %}selected{% endif %}>
                             Best Seller
                         </option>
-                        <option value="/collections/price_low_to_high" {%- if sort=='price_low_to_high'> 0 %}selected{% endif %}>
+                        <option value="/collections/price_low_to_high" {%- if sort=='price_low_to_high'> 0 %}selected{%
+                            endif %}>
                             Price: Low - High
                         </option>
-                        <option value="/collections/price_high_to_low" {%- if sort=='price_high_to_low'> 0 %}selected{% endif %}>
+                        <option value="/collections/price_high_to_low" {%- if sort=='price_high_to_low'> 0 %}selected{%
+                            endif %}>
                             Price: High - Low
                         </option>
-                        <option value="/collections/date_old_to_new" {%- if sort=='date_old_to_new'> 0 %}selected{% endif %}>
+                        <option value="/collections/date_old_to_new" {%- if sort=='date_old_to_new'> 0 %}selected{%
+                            endif %}>
                             Date: Old to New
                         </option>
-                        <option value="/collections/date_new_to_old" {%- if sort=='date_new_to_old'> 0 %}selected{% endif %}>
+                        <option value="/collections/date_new_to_old" {%- if sort=='date_new_to_old'> 0 %}selected{%
+                            endif %}>
                             Date: New to Old
                         </option>
                     </select>
                 </div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                 {%- for product in products %}
                 <div class="w-full relative group lg:last:hidden xl:last:block">
                     <div class="relative rounded flex justify-center items-center">
-                        <div class="w-full h-72 bg-center bg-no-repeat bg-cover" style="background-image:url({{product.image}})">
+                        <div class="w-full h-72 bg-center bg-no-repeat bg-cover"
+                            style="background-image:url({{product.image}})">
                         </div>
                         {%- if product.salePercentage %}
-                        <span class="absolute top-0 right-0 bg-white px-5 py-1 mt-4 mr-4 rounded-full font-hk font-bold  text-v-green text-sm uppercase tracking-wide">{{product.salePercentage}}% OFF</span> {% endif -%}
-                        <div class="absolute opacity-0 transition-opacity group-hover:opacity-100 flex justify-center items-center py-28 inset-0 group bg-secondary bg-opacity-85">
-                            <button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)" class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+                        <span
+                            class="absolute top-0 right-0 bg-white px-5 py-1 mt-4 mr-4 rounded-full font-hk font-bold  text-v-green text-sm uppercase tracking-wide">{{product.salePercentage}}%
+                            OFF</span> {% endif -%}
+                        <div
+                            class="absolute opacity-0 transition-opacity group-hover:opacity-100 flex justify-center items-center py-28 inset-0 group bg-secondary bg-opacity-85">
+                            <button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
+                                class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
                                 <img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6" alt="icon cart">
                             </button>
-                            <a href="/products/{{ product.slug }}" class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+                            <a href="/products/{{ product.slug }}"
+                                class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
                                 <img src="/assets/img/icons/icon-search.svg" class="h-6 w-6" alt="icon search">
                             </a>
-                            <button @click="addToWishList({{ product.id }})" class="bg-white hover:bg-primary-light  rounded-full px-3 py-3 flex items-center transition-all ">
+                            <button @click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
+                                class="bg-white hover:bg-primary-light  rounded-full px-3 py-3 flex items-center transition-all ">
                                 <img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6" alt="icon heart">
                             </button>
                         </div>
@@ -78,10 +105,15 @@
             {% if pagination.hrefs.length > 1 %}
             <div class="pt-16 flex justify-center mx-auto">
                 {% if pagination.href.previous %}
-                <a href="{{ pagination.href.previous }}" class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pr-5 cursor-pointer">Previous</a> {% endif %} {%- for pagehref in pagination.hrefs %}
-                <a href="{{ pagehref }}" class="font-hk font-semibold text-black transition-colors hover:text-white text-sm hover:bg-primary h-6 w-6 rounded-full flex items-center justify-center mr-3 cursor-pointer">{{
+                <a href="{{ pagination.href.previous }}"
+                    class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pr-5 cursor-pointer">Previous</a>
+                {% endif %} {%- for pagehref in pagination.hrefs %}
+                <a href="{{ pagehref }}"
+                    class="font-hk font-semibold text-black transition-colors hover:text-white text-sm hover:bg-primary h-6 w-6 rounded-full flex items-center justify-center mr-3 cursor-pointer">{{
                     forloop.index }}</a> {%- endfor %} {% if pagination.href.next %}
-                <a href="{{ pagination.href.next }}" class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pl-2 cursor-pointer">Next</a> {% endif %}
+                <a href="{{ pagination.href.next }}"
+                    class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pl-2 cursor-pointer">Next</a>
+                {% endif %}
             </div>
             {% endif %}
         </div>

@@ -55,7 +55,6 @@ exports.handler = async (event, context) => {
 
         for (var coupon in discountCoupons) {
             let currentTime = new Date().getTime();
-            console.log(currentTime);
             if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
                 onSaleCoupons.push(coupon);
             }
@@ -115,14 +114,18 @@ exports.handler = async (event, context) => {
                         }
                     }
 
-                    if (salePercentage) {
+                    if (isOnSale && salePercentage) {
                         variant.salePrice = Math.round(variant.regularPrice * (1 - salePercentage / 100));
                     } else {
-                        variant.salePrice = variant.regularPrice;
+                        if (!variant.salePrice) {
+                            variant.salePrice = variant.regularPrice;
+                        } else {
+                            salePercentage = Math.round(((variant.regularPrice - variant.salePrice) / variant.regularPrice) * 100);
+                        }
                     }
 
                     order.cart.products[productId].name = product.generalInfo.name;
-                    order.cart.products[productId].image = variant.image;
+                    order.cart.products[productId].image = variant.image ? variant.image : product.variants[product.generalInfo.defaultVariant].image;
                     order.cart.products[productId].price = variant.salePrice;
                     order.cart.products[productId].couponCode = couponCode;
                     order.cart.products[productId].salePercentage = salePercentage;
