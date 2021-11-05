@@ -188,7 +188,7 @@ exports.handler = async (event, context) => {
                     order.cart.quantity += order.cart.products[productId].quantity;
                     order.cart.subTotal += order.cart.products[productId].quantity * order.cart.products[productId].price;
 
-                    if (order.cart.products[pid]['type'] == '1-freebie') {
+                    if (order.cart.products[productId]['type'] == '1-freebie') {
                         order.cart.discount += order.cart.products[productId].price;
                     }
                 });
