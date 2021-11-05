@@ -142,7 +142,7 @@ exports.handler = async (event, context) => {
                         }
 
                         if (cartList && cartList[productId]) {
-                            if (cartList[productId].quantity == order.cart.products[productId].quantity) {
+                            if (cartList[productId].quantity <= order.cart.products[productId].quantity) {
                                 updates[`carts/${order.customer.uid}/${productId}`] = null;
                             } else {
                                 updates[`carts/${order.customer.uid}/${productId}/quantity`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);

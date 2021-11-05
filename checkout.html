@@ -300,7 +300,7 @@ title: "Checkout | Holi Colours Jewellery"
                                                 @click="selectShippingMethod(shippingMethod)">
                                             <label :for="shippingMethod.key"
                                                 class="cursor-pointer ml-3 font-hk text-secondary"
-                                                x-text="shippingMethod.name + ' (' + shippingMethod.expected + ')'"></label>
+                                                x-text="shippingMethod.expected ? shippingMethod.name + ' (' + shippingMethod.expected + ')' : shippingMethod.name"></label>
                                         </div>
                                         <p class="font-hk uppercase text-secondary" x-text="'₹' + shippingMethod.price">
                                         </p>

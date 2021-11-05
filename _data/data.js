@@ -80,23 +80,19 @@ module.exports = async function () {
             products[pid].saleCount = 0;
         }
 
-        let isOnSale = false;
-        let salePercentage = null;
-
         for (var i in coupons) {
             let coupon = coupons[i];
-            if ((discountCoupons[coupon].products && discountCoupons[coupon].products[pid]) || discountCoupons[coupon].applyShippingFor == 'all') {
-                if (discountCoupons[coupon].couponType == 'discount') {
-                    isOnSale = true;
-                    products[pid].couponCode = coupon;
-                    salePercentage = discountCoupons[coupon].discountPercentage;
-                    products[pid].salePercentage = salePercentage;
-                } else if (discountCoupons[coupon].couponType == 'shipping') {
-                    products[pid].freeshipping = true;
-                    products[pid].couponCode = coupon;
-                    products[pid].minNumberOfItems = discountCoupons[coupon].minNumberOfItems;
-                }
+            if (discountCoupons[coupon].couponType == 'sale' && discountCoupons[coupon].products && discountCoupons[coupon].products[pid]) {
+                products[pid].isOnSale = true;
+                products[pid].salePercentage = discountCoupons[coupon].discountPercentage;
+                products[pid].offers = [];
                 break;
+            } else if (discountCoupons[coupon].couponType == 'offer') {
+                products[pid].isOnSale = false;
+                if (products[pid].offers == undefined) {
+                    products[pid].offers = [];
+                }
+                products[pid].offers.push(discountCoupons[coupon]);
             }
         }
 
@@ -105,9 +101,9 @@ module.exports = async function () {
         for (var vid in products[pid].variants) {
             products[pid].variants[vid].id = vid;
 
-            if (isOnSale && salePercentage) {
-                products[pid].variants[vid].salePrice = Math.round(products[pid].variants[vid].regularPrice * (1 - salePercentage / 100));
-                products[pid].variants[vid].salePercentage = salePercentage;
+            if (products[pid].isOnSale && products[pid].salePercentage) {
+                products[pid].variants[vid].salePrice = Math.round(products[pid].variants[vid].regularPrice * (1 - products[pid].salePercentage / 100));
+                products[pid].variants[vid].salePercentage = products[pid].salePercentage;
             } else {
                 if (!products[pid].variants[vid].salePrice) {
                     products[pid].variants[vid].salePrice = products[pid].variants[vid].regularPrice;
@@ -167,7 +163,7 @@ module.exports = async function () {
         dateOldToNewList.push(product);
         dateNewToOldList.push(product);
 
-        if (salePercentage) {
+        if (products[pid].salePercentage) {
             onSaleList.push(product);
         }
     }
@@ -209,7 +205,7 @@ module.exports = async function () {
                         break;
                     }
                 }
-            }    
+            }
         }
     }
 

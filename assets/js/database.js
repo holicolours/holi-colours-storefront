@@ -183,5 +183,10 @@ var database = {
         let apiURL = `${databaseURL}/reviews.json`;
         let newReview = await database.post(apiURL, {}, true);
         return newReview.name;
+    },
+    getProduct: async function (productId) {
+        let apiURL = `/api/products/${productId}.json`;
+        let product = await database.read(apiURL);
+        return product;
     }
 };

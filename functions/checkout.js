@@ -51,25 +51,87 @@ exports.handler = async (event, context) => {
 
         let discountCoupons = await dbRef.child("discount").child("coupons").once('value').then((snapshot) => { return snapshot.val() });
 
-        let onSaleCoupons = [];
+        let coupons = [];
 
         for (var coupon in discountCoupons) {
             let currentTime = new Date().getTime();
             if (currentTime >= discountCoupons[coupon].startTime && currentTime <= discountCoupons[coupon].endTime) {
-                onSaleCoupons.push(coupon);
+                coupons.push(coupon);
             }
         }
 
-        onSaleCoupons.sort(function (a, b) {
+        coupons.sort(function (a, b) {
             return discountCoupons[a].createdOn - discountCoupons[b].createdOn;
         });
 
-        console.log(onSaleCoupons);
+        console.log(coupons);
 
+        let cartQuantity = 0;
         let isOnSale = false;
+        let offers = [];
+        let offerApplied = false;
         let freeshipping = false;
 
         const updates = {};
+
+        for (var i in coupons) {
+            let coupon = coupons[i];
+            if (discountCoupons[coupon].couponType == 'sale' && discountCoupons[coupon].products) {
+                for (var productId in order.cart.products) {
+                    if (discountCoupons[coupon].products[productId]) {
+                        isOnSale = true;
+                        offers = [];
+                        break;
+                    }
+                }
+            } else if (discountCoupons[coupon].couponType == 'offer') {
+                isOnSale = false;
+                offers.push(coupon);
+            }
+            if (isOnSale) {
+                break;
+            }
+        }
+
+        offers.sort(function (a, b) {
+            return discountCoupons[b].minNumberOfItems - discountCoupons[a].minNumberOfItems;
+        });
+
+        if (!isOnSale && offers.length > 0) {
+            for (var productId in order.cart.products) {
+                cartQuantity += order.cart.products[productId].quantity;
+            }
+
+            for (let i in offers) {
+                let coupon = discountCoupons[offers[i]];
+                if (!offerApplied && cartQuantity >= coupon.minNumberOfItems) {
+                    if (coupon.freeShipping) {
+                        freeShipping = true;
+                        // order.shipping.coupon = offers[i];
+                        offerApplied = true;
+                    }
+                    if (coupon.discountAmount > 0) {
+                        order.cart.discount += coupon.discountAmount;
+                        offerApplied = true;
+                    }
+                    if (coupon.products && Object.keys(coupon.products).length > 0) {
+                        for (var pid in coupon.products) {
+                            if (!order.cart.products[pid]) {
+                                order.cart.products[pid].quantity = 1;
+                            } else {
+                                order.cart.products[pid].quantity += 1;
+                            }
+                            order.cart.products[pid].type = '1-freebie';
+                        }
+                        offerApplied = true;
+                    }
+                }
+                if (offerApplied) {
+                    order.cart.offerCoupon = offers[i];
+                    break;
+                }
+            }
+        }
 
         for (var productId in order.cart.products) {
             await dbRef.child("products").child(productId).once('value')
@@ -77,6 +139,9 @@ exports.handler = async (event, context) => {
                     let productId = snapshot.key;
                     let product = snapshot.val();
 
+                    if (order.cart.products[productId].selectedVariant == undefined) {
+                        order.cart.products[productId].selectedVariant = product.generalInfo.defaultVariant;
+                    }
                     let selectedVariant = order.cart.products[productId].selectedVariant;
                     let variant = product.variants[selectedVariant];
                     let productName = order.cart.products[productId].variant ? `${product.generalInfo.name} [${order.cart.products[productId].variant}]` : product.generalInfo.name;
@@ -92,26 +157,16 @@ exports.handler = async (event, context) => {
                     }
 
                     let salePercentage = null;
-                    let couponCode = null;
 
-                    for (var i in onSaleCoupons) {
-                        let coupon = onSaleCoupons[i];
-                        if ((discountCoupons[coupon].products && discountCoupons[coupon].products[productId]) || discountCoupons[coupon].applyShippingFor == 'all') {
-                            if (discountCoupons[coupon].couponType == 'discount') {
-                                couponCode = coupon;
+                    if (isOnSale) {
+                        for (var i in coupons) {
+                            let coupon = coupons[i];
+                            if (discountCoupons[coupon].couponType == 'sale' && discountCoupons[coupon].products && discountCoupons[coupon].products[productId]) {
+                                order.cart.products[productId].onSaleCoupon = coupon;
                                 salePercentage = discountCoupons[coupon].discountPercentage;
-                                isOnSale = true;
-                                freeshipping = false;
-                                order.shipping.coupon = null;
-                            } else if (discountCoupons[coupon].couponType == 'shipping') {
-                                if (!isOnSale && !freeshipping && Object.keys(order.cart.products).length >= discountCoupons[coupon].minNumberOfItems) {
-                                    couponCode = coupon;
-                                    freeshipping = true;
-                                    order.shipping.coupon = coupon;
-                                }
+                                break;
                             }
-                            break;
-                        }
+                        }    
                     }
 
                     if (isOnSale && salePercentage) {
@@ -127,12 +182,15 @@ exports.handler = async (event, context) => {
                     order.cart.products[productId].name = product.generalInfo.name;
                     order.cart.products[productId].image = variant.image ? variant.image : product.variants[product.generalInfo.defaultVariant].image;
                     order.cart.products[productId].price = variant.salePrice;
-                    order.cart.products[productId].couponCode = couponCode;
                     order.cart.products[productId].salePercentage = salePercentage;
 
                     order.cart.weight += parseFloat(variant.weight);
                     order.cart.quantity += order.cart.products[productId].quantity;
                     order.cart.subTotal += order.cart.products[productId].quantity * order.cart.products[productId].price;
+
+                    if (order.cart.products[pid]['type'] == '1-freebie') {
+                        order.cart.discount += order.cart.products[productId].price;
+                    }
                 });
         }
 
@@ -155,7 +213,7 @@ exports.handler = async (event, context) => {
                             });
                     }
                 });
-            order.shipping.coupon = null;
+            // order.shipping.coupon = null;
         } else {
             order.shipping.charge = 0;
         }
@@ -165,7 +223,7 @@ exports.handler = async (event, context) => {
         let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
 
         if (userRegistered != null && !isOnSale && !freeshipping && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
-            order.cart.discount = order.cart.redeemCreditPoints;
+            order.cart.discount += order.cart.redeemCreditPoints;
         } else {
             order.cart.redeemCreditPoints = 0;
         }
@@ -183,6 +241,8 @@ exports.handler = async (event, context) => {
             updates[`users/${order.customer.uid}/orders/${orderId}`] = true;
         }
         updates[`orders/${orderId}`] = order;
+
+        // throw order;
 
         // For Staging 
         // var environment = Paytm.LibraryConstants.STAGING_ENVIRONMENT;
@@ -263,7 +323,7 @@ exports.handler = async (event, context) => {
         console.log(error);
         return {
             statusCode: 500,
-            body: JSON.stringify(error)
+            body: JSON.stringify(error, null, 4)
         };
     }
 };

@@ -804,6 +804,8 @@ function checkoutModule() {
         },
         isPGLoading: false,
         isOnSale: false,
+        offers: [],
+        offerApplied: false,
         async loadCart() {
             if (getCookie('uid')) {
                 this.cart = [];
@@ -823,50 +825,99 @@ function checkoutModule() {
                     return;
                 }
                 for (var productId in cartList) {
-                    await fetch(`/api/products/${productId}.json`)
-                        .then(response => {
-                            if (response.ok) {
-                                return response.json();
-                            } else {
-                                throw new Error(`Product ${productId} Not Found`);
+                    let product = await database.getProduct(productId);
+                    let selectedVariant = cartList[product.id].variant;
+                    let productObject = {
+                        id: product.id,
+                        name: product.generalInfo.name,
+                        slug: product.generalInfo.slug,
+                        image: product.variants[selectedVariant].image,
+                        price: product.variants[selectedVariant].salePrice,
+                        salePercentage: product.variants[selectedVariant].salePercentage,
+                        variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
+                        quantity: cartList[product.id].quantity,
+                        selectedVariant: selectedVariant,
+                        weight: product.variants[selectedVariant].weight
+                    };
+                    this.cart.push(productObject);
+                    this.quantity += cartList[product.id].quantity;
+                    this.subTotal += cartList[product.id].quantity * productObject.price;
+                    this.weight += productObject.weight;
+                    if (!this.isOnSale && product.isOnSale) {
+                        this.isOnSale = true;
+                        this.offers = [];
+                    }
+                    console.log(this.isOnSale);
+                    console.log(this.offers);
+                    console.log(product.offers);
+                    if (!this.isOnSale && this.offers.length == 0 && product.offers && product.offers.length >= 1) {
+                        this.offers = product.offers;
+                        console.log(this.offers);
+                    }
+                }
+
+                let sortedOffers = this.offers;
+                sortedOffers.sort(function (a, b) {
+                    return b.minNumberOfItems - a.minNumberOfItems;
+                });
+                this.offers = sortedOffers;
+                console.log(this.offers);
+
+                if (!this.isOnSale && this.offers && this.offers.length >= 1) {
+                    for (let i in this.offers) {
+                        if (!this.offerApplied && this.quantity >= this.offers[i].minNumberOfItems) {
+                            if (this.offers[i].freeShipping) {
+                                this.freeShipping = true;
+                                this.offerApplied = true;
                             }
-                        })
-                        .then(async (product) => {
-                            let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
-                            let productObject = {
-                                id: product.id,
-                                name: product.generalInfo.name,
-                                slug: product.generalInfo.slug,
-                                image: product.variants[selectedVariant].image,
-                                price: product.variants[selectedVariant].salePrice,
-                                salePercentage: product.variants[selectedVariant].salePercentage,
-                                variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
-                                quantity: cartList[product.id].quantity,
-                                selectedVariant: selectedVariant,
-                                weight: product.variants[selectedVariant].weight,
-                                couponCode: product.couponCode
-                            };
-                            this.cart.push(productObject);
-                            this.quantity += cartList[product.id].quantity;
-                            this.subTotal += cartList[product.id].quantity * productObject.price;
-                            this.total = this.subTotal - this.discount;
-                            this.weight += productObject.weight;
-                            if (!this.isOnSale && product['salePercentage']) {
-                                this.isOnSale = true;
+                            if (this.offers[i].discountAmount > 0) {
+                                this.discount += parseFloat(this.offers[i].discountAmount);
+                                this.offerApplied = true;
                             }
-                            if (!this.isOnSale && product['freeshipping']) {
-                                this.minNumberOfItems += 1;
-                                if (!this.freeShipping && this.minNumberOfItems >= product['minNumberOfItems']) {
-                                    this.freeShipping = true;
+                            console.log(this.offers[i].products);
+                            if (this.offers[i].products && Object.keys(this.offers[i].products).length > 0) {
+                                for (var pid in this.offers[i].products) {
+                                    let pidIndex = null;
+                                    for (var j in this.cart) {
+                                        if (pid == this.cart[j].id) {
+                                            pidIndex = j;
+                                            break;
+                                        }
+                                    }
+                                    if (pidIndex) {
+                                        this.cart[pidIndex].quantity += 1;
+                                        this.cart[pidIndex].type = '1-freebie';
+                                        this.subTotal += this.cart[pidIndex].price;
+                                        this.discount += parseFloat(this.cart[pidIndex].price);
+                                    } else {
+                                        let product = await database.getProduct(pid);
+                                        let selectedVariant = product.generalInfo.defaultVariant;
+                                        let productObject = {
+                                            id: product.id,
+                                            name: product.generalInfo.name,
+                                            slug: product.generalInfo.slug,
+                                            type: '1-freebie',
+                                            image: product.variants[selectedVariant].image,
+                                            price: product.variants[selectedVariant].salePrice,
+                                            salePercentage: product.variants[selectedVariant].salePercentage,
+                                            variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
+                                            quantity: 1,
+                                            selectedVariant: selectedVariant,
+                                            weight: product.variants[selectedVariant].weight
+                                        };
+                                        this.cart.push(productObject);
+                                        this.subTotal += productObject.price;
+                                        this.discount += parseFloat(productObject.price);
+                                    }
+                                    this.quantity += 1;
                                 }
+                                this.offerApplied = true;
                             }
-                            if (this.isOnSale) {
-                                this.freeShipping = false;
-                            }
-                        })
-                        .catch((error) => {
-                            console.log(error)
-                        });
+                        }
+                        if (this.offerApplied) {
+                            break;
+                        }
+                    }
                 }
 
                 await fetch('/api/shipping-zones.json')
@@ -886,6 +937,8 @@ function checkoutModule() {
                         }
                     }
                 }
+
+                this.total = this.subTotal - this.discount;
                 this.isLoading = false;
             } else {
                 window.location.href = '/cart';
@@ -974,7 +1027,7 @@ function checkoutModule() {
         },
         redeemCP(redeem) {
             this.redeemCreditPoints = redeem ? this.account.userInfo['creditPoints'] : 0;
-            this.discount = this.redeemCreditPoints;
+            this.discount += parseFloat(this.redeemCreditPoints);
             this.total = this.subTotal + this.shipping - this.discount;
         },
         async initiatePayment(paytmForm) {
@@ -1018,8 +1071,11 @@ function checkoutModule() {
                 this.order.cart.products[this.cart[i].id] = {
                     quantity: this.cart[i].quantity,
                     variant: this.cart[i].variantName,
-                    selectedVariant: this.cart[i].selectedVariant
+                    selectedVariant: this.cart[i].selectedVariant,
                 };
+                if (this.cart[i].type = '1-freebie') {
+                    this.order.cart.products[this.cart[i].id].quantity += -1;
+                }
             }
 
             console.log(this.order);
