@@ -52,7 +52,10 @@ title: "Payment Status | Holi Colours Jewellery"
                     <p class="font-hkbold text-secondary text-md pb-5 md:pb-6 text-center sm:text-left">We'll
                         send a confirmation mail to <span x-text="order.customer.email"></span> shortly. Please
                         also check your spam folder.</p>
-                    <p class="font-hkbold text-secondary text-md pb-5 md:pb-6 text-center sm:text-left" x-show="order.cart.rewardCreditPoints">We have added  <span x-text="order.cart.rewardCreditPoints"></span> points to your credit points balance. Once you reach 100 points you will be eligible for a discount of Rs.100 on your next order.</p>
+                    <p class="font-hkbold text-secondary text-md pb-5 md:pb-6 text-center sm:text-left"
+                        x-show="order.cart.rewardCreditPoints">We have added <span
+                            x-text="order.cart.rewardCreditPoints"></span> points to your credit points balance. Once
+                        you reach 100 points you will be eligible for a discount of Rs.100 on your next order.</p>
                     <div class="border border-grey-darker rounded px-4 sm:px-5 mb-5 md:mb-6">
                         <div class="flex flex-col sm:flex-row justify-between py-2 border-b border-grey-dark">
                             <div class="w-full sm:w-1/5">
@@ -145,13 +148,15 @@ title: "Payment Status | Holi Colours Jewellery"
                                                 <img class="w-full h-full" :src="order.cart.products[i].image" alt="" />
                                             </div>
                                             <div class="ml-3">
-                                                <p class="text-gray-900 whitespace-no-wrap"
-                                                    x-show="!order.cart.products[i].salePercentage"
-                                                    x-text="order.cart.products[i].name">
-                                                </p>
-                                                <p class="text-gray-900 whitespace-no-wrap"
-                                                    x-show="order.cart.products[i].salePercentage"
-                                                    x-text="order.cart.products[i].name + ' (' + order.cart.products[i].salePercentage + '% OFF)'">
+                                                <p>
+                                                    <span
+                                                        class="text-gray-900 whitespace-no-wrap" x-text="order.cart.products[i].name">
+                                                    </span>
+                                                    <span
+                                                        class="bg-primary rounded-full px-2 leading-none font-hk font-bold text-white uppercase text-xs"
+                                                        x-show="order.cart.products[i].salePercentage"
+                                                        x-text="order.cart.products[i].salePercentage + '% off'">
+                                                    </span>
                                                 </p>
                                                 <div class="text-sm text-gray-500"
                                                     x-text="'Variant: ' + order.cart.products[i].variant"

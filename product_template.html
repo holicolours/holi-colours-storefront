@@ -66,7 +66,7 @@ layout: base.html
 						</div>
 					</div>
 					<div class="lg:w-1/2 pt-8 lg:pt-0 px-5">
-						<div class="border-b border-grey-dark mb-8">
+						<div class="border-b border-grey-dark">
 							<div class="flex items-center">
 								<h2 class=" font-butler text-3xl md:text-4xl lg:text-4.5xl">{{ product.generalInfo.name }}</h2>
 							</div>
@@ -82,7 +82,15 @@ layout: base.html
 							<p class="font-hk text-secondary pt-3 pb-8">Shipping charges calculated at checkout.</p>
 							{%- endif -%}
 						</div>
-						<div class="flex pb-5">
+						<div class="quill-view border-b border-grey-dark py-4" x-show="product.offers && product.offers.length != 0">
+							<p class="font-hk text-secondary mb-2">Offers:</p>
+							<ul>
+								<template x-if="product.offers && product.offers.length != 0" x-for="offer in product.offers">
+									<li><p class="text-secondary pl-3" x-text="offer.offerText"></p></li>
+								</template>	
+							</ul>
+						</div>
+						<div class="flex pb-5 mt-4">
 							<p class="font-hk text-secondary">Availability:</p>
 							<template x-if="stockStatus">
 								<p class="text-secondary pl-3" :class="'text-' + stockStatuses[stockStatus]['color'] + '-900'" x-text="stockStatuses[stockStatus]['name']"></p>
@@ -138,9 +146,9 @@ layout: base.html
 							</a>
 						</div>
 						{%- if product.generalInfo.description != '' -%}
-						<div class="font-hk text-secondary pb-5 whitespace-pre-line">
+						<div class="quill-view font-hk text-secondary pb-5">
 							{{ product.generalInfo.description }}
-							<div x-show="product.variants[selectedVariant].additionalDescription" x-html="product.variants[selectedVariant].additionalDescription"></div>
+							<div class="quill-view" x-show="product.variants[selectedVariant].additionalDescription" x-html="product.variants[selectedVariant].additionalDescription"></div>
 						</div>
 						{%- endif -%}
 						<div class="flex pb-4">
@@ -184,12 +192,9 @@ layout: base.html
 					</div>
 					<div class="tab-content relative">
 						<div x-show="activeTab === 'additional-information'" :class="{ 'active': activeTab === 'additional-information' }"
-							class="tab-pane bg-grey-light py-10 md:py-16 transition-opacity active" role="tabpanel">
+							class="quill-view tab-pane bg-grey-light py-10 md:py-16 transition-opacity active" role="tabpanel">
 							<div class="w-5/6 mx-auto">
 								<div class="font-hk text-secondary text-base">
-									<!-- Dimensions (L×W×H) (cm): <span x-text="product.variants[selectedVariant].length + ' x ' + product.variants[selectedVariant].width + ' x ' + product.variants[selectedVariant].height"></span> 
-									<br>
-									Weight (kg): <span x-text="product.variants[selectedVariant].weight"></span> -->
 									{{ product.generalInfo.additionalInformation }}
 								</div>
 							</div>

@@ -111,13 +111,13 @@ exports.handler = async (event, context) => {
                         offerApplied = true;
                     }
                     if (coupon.discountAmount > 0) {
-                        order.cart.discount += coupon.discountAmount;
+                        order.cart.discount += parseFloat(coupon.discountAmount);
                         offerApplied = true;
                     }
                     if (coupon.products && Object.keys(coupon.products).length > 0) {
                         for (var pid in coupon.products) {
                             if (!order.cart.products[pid]) {
-                                order.cart.products[pid].quantity = 1;
+                                order.cart.products[pid] = { quantity: 1 };
                             } else {
                                 order.cart.products[pid].quantity += 1;
                             }
@@ -166,7 +166,7 @@ exports.handler = async (event, context) => {
                                 salePercentage = discountCoupons[coupon].discountPercentage;
                                 break;
                             }
-                        }    
+                        }
                     }
 
                     if (isOnSale && salePercentage) {
@@ -189,7 +189,7 @@ exports.handler = async (event, context) => {
                     order.cart.subTotal += order.cart.products[productId].quantity * order.cart.products[productId].price;
 
                     if (order.cart.products[productId]['type'] == '1-freebie') {
-                        order.cart.discount += order.cart.products[productId].price;
+                        order.cart.discount += parseFloat(order.cart.products[productId].price);
                     }
                 });
         }
@@ -223,7 +223,7 @@ exports.handler = async (event, context) => {
         let userCreditPoints = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("creditPoints").once('value').then((snapshot) => { return snapshot.val() });
 
         if (userRegistered != null && !isOnSale && !freeshipping && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
-            order.cart.discount += order.cart.redeemCreditPoints;
+            order.cart.discount += parseFloat(order.cart.redeemCreditPoints);
         } else {
             order.cart.redeemCreditPoints = 0;
         }

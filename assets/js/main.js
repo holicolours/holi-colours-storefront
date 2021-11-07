@@ -886,7 +886,7 @@ function checkoutModule() {
                                     }
                                     if (pidIndex) {
                                         this.cart[pidIndex].quantity += 1;
-                                        this.cart[pidIndex].type = '1-freebie';
+                                        this.cart[pidIndex].type = 'item+1freebie';
                                         this.subTotal += this.cart[pidIndex].price;
                                         this.discount += parseFloat(this.cart[pidIndex].price);
                                     } else {
@@ -896,7 +896,7 @@ function checkoutModule() {
                                             id: product.id,
                                             name: product.generalInfo.name,
                                             slug: product.generalInfo.slug,
-                                            type: '1-freebie',
+                                            type: '1freebie',
                                             image: product.variants[selectedVariant].image,
                                             price: product.variants[selectedVariant].salePrice,
                                             salePercentage: product.variants[selectedVariant].salePercentage,
@@ -1068,13 +1068,18 @@ function checkoutModule() {
             };
 
             for (let i in this.cart) {
-                this.order.cart.products[this.cart[i].id] = {
-                    quantity: this.cart[i].quantity,
-                    variant: this.cart[i].variantName,
-                    selectedVariant: this.cart[i].selectedVariant,
-                };
-                if (this.cart[i].type = '1-freebie') {
-                    this.order.cart.products[this.cart[i].id].quantity += -1;
+                if (this.cart[i]['type'] == 'item+1freebie') {
+                    this.order.cart.products[this.cart[i].id] = {
+                        quantity: this.cart[i].quantity - 1,
+                        variant: this.cart[i].variantName,
+                        selectedVariant: this.cart[i].selectedVariant,
+                    };
+                } else if (this.cart[i]['type'] != '1freebie') {
+                    this.order.cart.products[this.cart[i].id] = {
+                        quantity: this.cart[i].quantity,
+                        variant: this.cart[i].variantName,
+                        selectedVariant: this.cart[i].selectedVariant,
+                    };
                 }
             }
 
