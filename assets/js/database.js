@@ -2,6 +2,10 @@ let databaseURL = "https://holi-colours-jewellery-default-rtdb.asia-southeast1.f
 let idToken = null;
 
 var database = {
+    relogin: async function () {
+        idToken = null;
+        await database.authenticate();
+    },
     authenticate: async function () {
         if (!idToken) {
             while (firebase.auth().currentUser === null) {

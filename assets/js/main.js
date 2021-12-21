@@ -45,32 +45,23 @@ var uiConfig = {
             }
             return false;
         },
-        signInFailure: function (error) {
+        signInFailure: async function (error) {
             console.log(error);
             if (error.code != 'firebaseui/anonymous-upgrade-merge-conflict') {
                 return Promise.resolve();
             }
-            var anonymousUserData = null;
-            var anonymousUser = firebase.auth().currentUser;
+            var anonymousUser = await firebase.auth().currentUser;
+            var anonymousUserData = await database.getUserCart(anonymousUser.uid);
+            await database.updateCart(anonymousUser.uid, null);
             var cred = error.credential;
-            return firebase.app().database().ref('carts/' + firebase.auth().currentUser.uid)
-                .once('value')
-                .then(function (snapshot) {
-                    anonymousUserData = snapshot.val();
-                    return firebase.auth().signInWithCredential(cred);
-                })
-                .then(function (newUser) {
-                    if (anonymousUserData) {
-                        firebase.app().database().ref('carts/' + newUser.user.uid).set(anonymousUserData)
-                    }
-                    return firebase.app().database().ref('carts/' + anonymousUser.uid).remove();
-                })
-                .then(function () {
-                    return anonymousUser.delete();
-                }).then(function () {
-                    anonymousUserData = null;
-                    handleSignedInUser(firebase.auth().currentUser);
-                });
+            var newUser = await firebase.auth().signInWithCredential(cred);
+            await database.relogin();
+            if (anonymousUserData) {
+                await database.updateCart(newUser.user.uid, anonymousUserData);
+            }
+            anonymousUser.delete();
+            anonymousUserData = null;
+            handleSignedInUser(firebase.auth().currentUser);
         }
     },
     signInFlow: 'popup',
@@ -1436,3 +1427,68 @@ function postSlider() {
     })
         .mount();
 }
+
+// document.addEventListener('DOMContentLoaded', function(){
+//         var script = document.createElement('script');
+//         script.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';
+//         script.onload = function(){
+//             particlesJS("snow", {
+//                 "particles": {
+//                     "number": {
+//                         "value": 200,
+//                         "density": {
+//                             "enable": true,
+//                             "value_area": 800
+//                         }
+//                     },
+//                     "color": {
+//                         "value": "#ffffff"
+//                     },
+//                     "opacity": {
+//                         "value": 0.7,
+//                         "random": false,
+//                         "anim": {
+//                             "enable": false
+//                         }
+//                     },
+//                     "size": {
+//                         "value": 5,
+//                         "random": true,
+//                         "anim": {
+//                             "enable": false
+//                         }
+//                     },
+//                     "line_linked": {
+//                         "enable": false
+//                     },
+//                     "move": {
+//                         "enable": true,
+//                         "speed": 5,
+//                         "direction": "bottom",
+//                         "random": true,
+//                         "straight": false,
+//                         "out_mode": "out",
+//                         "bounce": false,
+//                         "attract": {
+//                             "enable": true,
+//                             "rotateX": 300,
+//                             "rotateY": 1200
+//                         }
+//                     }
+//                 },
+//                 "interactivity": {
+//                     "events": {
+//                         "onhover": {
+//                             "enable": false
+//                         },
+//                         "onclick": {
+//                             "enable": false
+//                         },
+//                         "resize": false
+//                     }
+//                 },
+//                 "retina_detect": true
+//             });
+//         }
+//         document.head.append(script);
+//     });

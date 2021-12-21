@@ -247,8 +247,138 @@ title: "Holi Colours Jewellery"
 				</div>
 			</div>
 		</div>
+
+		<div class="pt-20" x-data="{activeBestSellerTab: 'all'}">
+			<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
+				<div class="text-center sm:text-left">
+					<h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">Best Sellers</h2>
+					<p class="font-hk text-secondary-lighter text-lg md:text-xl pt-2">Find products that are most
+						selling!
+					</p>
+				</div>
+				<a href="/collections/"
+					class="flex items-center group pt-1 sm:pt-0 border-b border-primary transition-colors hover:border-primary-light font-hk text-xl text-primary">
+					Show more
+					<i
+						class="bx bx-chevron-right text-primary transition-colors group-hover:text-primary-light pl-3 pt-2 text-xl"></i>
+				</a>
+			</div>
+			<div>
+				<div class="flex flex-wrap justify-center pb-8 group">
+					<a class="btn m-2 cursor-pointer" @click="activeBestSellerTab = 'all'"
+						:class="{ 'btn-outline': activeBestSellerTab != 'all', 'btn-primary': activeBestSellerTab === 'all' }">All</a>
+					{%- for category in data.categories %}
+					{%- if category and category.featured and category.noOfProducts > 0 and category.featuredCollections
+					%}
+					<a class="btn m-2 cursor-pointer" @click="activeBestSellerTab = '{{category.slug}}'"
+						:class="{ 'btn-outline': activeBestSellerTab != '{{category.slug}}', 'btn-primary': activeBestSellerTab === '{{category.slug}}' }">{{category.name}}</a>
+					{% endif -%}
+					{% endfor %}
+				</div>
+				<div>
+					<div x-show="activeBestSellerTab === 'all'">
+						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+							{%- for product in data.topBestSellers %}
+							<div class="w-full relative group lg:last:hidden xl:last:block">
+								<div class="relative rounded flex justify-center items-center">
+									<div class="w-full h-72 bg-center bg-no-repeat bg-cover"
+										style="background-image:url({{product.image}})">
+									</div>
+									{%- if product.salePercentage %}
+									<span
+										class="absolute top-0 right-0 bg-white px-5 py-1 mt-4 mr-4 rounded-full font-hk font-bold  text-v-green text-sm uppercase tracking-wide">{{product.salePercentage}}%
+										OFF</span> {% endif -%}
+									<div
+										class="absolute opacity-0 transition-opacity group-hover:opacity-100 flex justify-center items-center py-28 inset-0 group bg-secondary bg-opacity-85">
+										<button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
+											class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+											<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6" alt="icon cart">
+										</button>
+										<a href="/products/{{ product.slug }}"
+											class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+											<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
+												alt="icon search">
+										</a>
+										<button @click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
+											class="bg-white hover:bg-primary-light  rounded-full px-3 py-3 flex items-center transition-all ">
+											<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
+												alt="icon heart">
+										</button>
+									</div>
+								</div>
+								<div class="flex justify-between items-center pt-6">
+									<a href="/products/{{ product.slug }}">
+										<h3 class="font-hk text-base text-secondary">{{ product.name }}</h3>
+									</a>
+									<span class="font-hk font-bold text-primary text-xl">₹{{ product.regularPrice
+										}}</span>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						<div class="py-16 flex justify-center mx-auto">
+							<a href="/collections/"
+								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide mt-4">Show More
+							</a>
+						</div>
+					</div>
+					{%- for category in data.categories %}
+					{%- if category and category.featured and category.noOfProducts > 0 and category.featuredCollections
+					%}
+					<div x-show="activeBestSellerTab === '{{category.slug}}'">
+						<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+							{%- for product in category.featuredCollections %}
+							<div class="w-full relative group lg:last:hidden xl:last:block">
+								<div class="relative rounded flex justify-center items-center">
+									<div class="w-full h-72 bg-center bg-no-repeat bg-cover"
+										style="background-image:url({{product.image}})">
+									</div>
+									{%- if product.salePercentage %}
+									<span
+										class="absolute top-0 right-0 bg-white px-5 py-1 mt-4 mr-4 rounded-full font-hk font-bold  text-v-green text-sm uppercase tracking-wide">{{product.salePercentage}}%
+										OFF</span> {% endif -%}
+									<div
+										class="absolute opacity-0 transition-opacity group-hover:opacity-100 flex justify-center items-center py-28 inset-0 group bg-secondary bg-opacity-85">
+										<button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
+											class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+											<img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6" alt="icon cart">
+										</button>
+										<a href="/products/{{ product.slug }}"
+											class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
+											<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
+												alt="icon search">
+										</a>
+										<button @click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
+											class="bg-white hover:bg-primary-light  rounded-full px-3 py-3 flex items-center transition-all ">
+											<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
+												alt="icon heart">
+										</button>
+									</div>
+								</div>
+								<div class="flex justify-between items-center pt-6">
+									<a href="/products/{{ product.slug }}">
+										<h3 class="font-hk text-base text-secondary">{{ product.name }}</h3>
+									</a>
+									<span class="font-hk font-bold text-primary text-xl">₹{{ product.regularPrice
+										}}</span>
+								</div>
+							</div>
+							{%- endfor %}
+						</div>
+						<div class="py-16 flex justify-center mx-auto">
+							<a href="/collections/{{ category.slug }}"
+								class="bg-primary hover:bg-primary-light font-hk font-semibold transition-colors text-sm text-white px-5 md:px-8 py-4 md:py-5 rounded uppercase focus:outline-none inline-block tracking-wide mt-4">Show More
+							</a>
+						</div>
+					</div>
+					{% endif -%}
+					{% endfor %}
+				</div>
+			</div>
+		</div>
 	</div>
-	<div class="w-full relative mt-20">
+
+	<!-- <div class="w-full relative mt-20">
 		<div class="absolute inset-y-0 right-0 w-full bg-center bg-no-repeat bg-cover"
 			style="background-image:url(/assets/img/bg-products.png)"></div>
 		<div
@@ -288,7 +418,8 @@ title: "Holi Colours Jewellery"
 													<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
 														alt="icon search" />
 												</a>
-												<button @click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
+												<button
+													@click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
 													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
 													<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
 														alt="icon heart" />
@@ -393,7 +524,8 @@ title: "Holi Colours Jewellery"
 													<img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
 														alt="icon search" />
 												</a>
-												<button @click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
+												<button
+													@click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
 													class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
 													<img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
 														alt="icon heart" />
@@ -418,6 +550,26 @@ title: "Holi Colours Jewellery"
 			</div>
 			{% endif -%}
 			{% endfor %}
+		</div>
+	</div> -->
+
+	<div class="container mt-20 mb-20">
+		<div class="bg-center bg-no-repeat bg-cover" style="background-image:url(/assets/img/bg-cta.png)">
+			<div class="py-16 md:py-20 text-center">
+				<h3 class="font-butler text-white text-3xl sm:text-4xl tracking-wide">Let's keep in touch</h3>
+				<p class="font-hk text-white text-lg sm:text-xl pt-3 px-6">Get the latest news, invites and offers
+					straight to your mail</p>
+				<form class="pt-10 sm:pt-12">
+					<div
+						class="w-5/6 sm:w-3/4 lg:w-3/5 xl:w-1/2 mx-auto flex flex-col sm:flex-row justify-center items-center">
+						<label for="cta_email" class="block relative h-0 w-0 overflow-hidden">Email</label>
+						<input type="email" name="cta_email" id="cta_email" placeholder="ENTER YOUR EMAIL"
+							class="form-input bg-transparent text-sm text-white border-white uppercase placeholder-grey-dark" />
+						<button type="button" class="btn btn-primary sm:ml-5 mt-4 sm:mt-0 w-full sm:w-auto"
+							aria-label="Subscribe button">SUBSCRIBE</button>
+					</div>
+				</form>
+			</div>
 		</div>
 	</div>
 </div>

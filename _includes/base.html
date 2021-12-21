@@ -16,6 +16,25 @@
     <script src="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.css" />
+    <!--====== Vendor Css ======-->
+    <!-- <link rel="stylesheet" href="https://d2r00w08fz6ft0.cloudfront.net/ludus-demo/css/vendor.42504241b05c76b514a0.css"> -->
+
+    <!--====== Utility-Spacing ======-->
+    <!-- <link rel="stylesheet" href="https://d2r00w08fz6ft0.cloudfront.net/ludus-demo/css/utility.9e5500f2bbed28faea9d.css"> -->
+
+    <!--====== App ======-->
+    <!-- <link rel="stylesheet" href="https://d2r00w08fz6ft0.cloudfront.net/ludus-demo/css/app.5265a57c411426f0b5ec.css"> -->
+    <style>
+        #snow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
 </head>
 
 <body style="font-family: 'HK Grotesk', sans-serif;" x-data="{
@@ -180,14 +199,150 @@
             <!--/Dialog -->
         </div><!-- /Overlay -->
 
+        <div class="mt-8 bg-center bg-no-repeat bg-cover" style="background-image:url(/assets/img/bg-footer.png)">
+            <div class="container py-16 sm:py-20 md:py-24">
+                <div class="w-5/6 mx-auto flex flex-col lg:flex-row items-center justify-between">
+                    <div class="text-center lg:text-left">
+                        <h4 class="font-hk font-bold text-white text-xl pb-8">Shop by Category</h4>
+                        <ul class="list-reset">
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Golden
+                                    Jewellery</a>
+                            </li>
+                            <!-- <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Necklace</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Haram</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Chocker</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Bangle</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Hipbelt / Hipchain</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Tikka</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Other Accessories</a>
+                            </li> -->
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Silver
+                                    Jewellery</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Artificial
+                                    Diamonds</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href=""
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Others</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="text-center py-16 lg:py-0">
+                        <a href="/" class="font-butler text-white text-4xl uppercase tracking-wider">Holi Colours</a>
+                        <div class="flex items-center justify-center pt-5">
+    
+                            <a href="https://www.google.com" class="group">
+                                <div
+                                    class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
+                                    <i class="bx bxl-facebook text-secondary transition-colors group-hover:text-white"></i>
+                                </div>
+                            </a>
+    
+                            <a href="https://www.google.com" class="group">
+                                <div
+                                    class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
+                                    <i class="bx bxl-instagram text-secondary transition-colors group-hover:text-white"></i>
+                                </div>
+                            </a>
+    
+                            <a href="https://www.google.com" class="group">
+                                <div
+                                    class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
+                                    <i class="bx bxl-pinterest text-secondary transition-colors group-hover:text-white"></i>
+                                </div>
+                            </a>
+    
+                            <a href="https://www.google.com" class="group">
+                                <div
+                                    class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
+                                    <i class="bx bxl-youtube text-secondary transition-colors group-hover:text-white"></i>
+                                </div>
+                            </a>
+    
+                        </div>
+                    </div>
+                    <div class="text-center lg:text-left">
+                        <h4 class="font-hk font-bold text-white text-xl pb-8">Quick Links</h4>
+                        <ul class="list-reset">
+                            <li class="pb-2 block">
+                                <a href="/shipping-and-delivery/"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Shipping
+                                    & Delivery</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href="/terms-and-conditions/"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Terms
+                                    & Conditions</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href="/single"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Size
+                                    Chart</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href="/jewellery-care/"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Jewellery
+                                    Care</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href="/return-refund-and-exchange-policy/"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Return,
+                                    Refund & Exchange Policy</a>
+                            </li>
+                            <!-- <li class="pb-2 block">
+                                <a href="/single"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">About Us</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href="/single"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Contact Us</a>
+                            </li>
+                            <li class="pb-2 block">
+                                <a href="/single"
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Frequently Asked Questions</a>
+                            </li> -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div
-            class="mt-16 container py-8 border-t border-grey-darker {% if title == 'Checkout | Holi Colours Jewellery' %}hidden{% endif %} sm:block">
+            class="container py-8 border-t border-grey-darker {% if title == 'Checkout | Holi Colours Jewellery' %}hidden{% endif %} sm:block">
             <p class="font-hk text-secondary text-base text-center">
                 All rights reserved © {{data.currentYear}}. Designed & Developed by
                 <a href="" target="_blank" class="text-primary">Magesh S</a>.
             </p>
         </div>
     </div>
+    <div id="snow"></div>
     <script src="https://cdn.jsdelivr.net/npm/@glidejs/glide@3.4.1/dist/glide.min.js"
         integrity="sha256-CnNQJd80jPuIDyeQRRq7+Wgt+++Kl0dZLt4ETNmxMIw=" crossorigin="anonymous" defer></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide@3.4.1/dist/css/glide.core.min.css"

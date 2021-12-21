@@ -231,7 +231,7 @@ module.exports = async function () {
         featuredCollections.sort(function (a, b) {
             return b.saleCount - a.saleCount;
         });
-        categories[cid].featuredCollections = featuredCollections.slice(0, 9);
+        categories[cid].featuredCollections = featuredCollections.slice(0, 8);
     }
 
     for (var tag in tags) {
@@ -249,6 +249,7 @@ module.exports = async function () {
         products: products,
         categories: categories,
         orderedCategories: orderedCategories,
+        topBestSellers: bestSellerList.slice(0,8),
         tags: tags,
         productTags: Object.keys(tags),
         onSale: { id: 'on-sale', name: 'On Sale' },

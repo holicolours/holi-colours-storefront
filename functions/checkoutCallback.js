@@ -117,7 +117,7 @@ exports.handler = async (event, context) => {
                         let stockQuantity = await dbRef.child("stock").child(productId).child(selectedVariant).once('value').then((snapshot) => { return snapshot.val(); });
 
                         if (stockQuantity >= order.cart.products[productId].quantity) {
-                            updates[`products/${productId}/variants/${selectedVariant}/stockQuantity`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);
+                            // updates[`products/${productId}/variants/${selectedVariant}/stockQuantity`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);
                             updates[`stock/${productId}/${selectedVariant}`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);
                         } else {
                             if (order.generalInfo.status != 'OH') {

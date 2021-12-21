@@ -110,7 +110,7 @@
                     </div>
                 </template>
             </div>
-            <div class="pt-16 flex justify-center mx-auto" x-show="noOfItemsPerPage < results.length" x-cloak>
+            <div class="pt-16 pb-8 flex justify-center mx-auto" x-show="noOfItemsPerPage < results.length" x-cloak>
                 <a @click="loadPage(currentPage - 1)" x-show="currentPage != 1"
                     class="font-hk font-semibold text-grey-darkest transition-colors hover:text-black pr-5 cursor-pointer">Previous</a>
                 <a @click="loadPage(currentPage - 1)" x-show="currentPage != 1"
