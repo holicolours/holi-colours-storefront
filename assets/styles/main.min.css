@@ -2368,6 +2368,11 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     padding-right: 2.5rem
 }
 
+.px-20 {
+    padding-left: 5rem;
+    padding-right: 5rem
+}
+
 .py-12 {
     padding-top: 3rem;
     padding-bottom: 3rem
@@ -2668,6 +2673,14 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
 
 .bottom-0 {
     bottom: 0
+}
+
+.bottom-12 {
+    bottom: 3rem
+}
+
+.right-12 {
+    right: 3rem
 }
 
 .left-0 {
@@ -3741,6 +3754,10 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     .sm\:py-4 {
         padding-top: 1rem;
         padding-bottom: 1rem
+    }
+    .sm\:px-0 {
+        padding-left: 0;
+        padding-right: 0
     }
     .sm\:px-5 {
         padding-left: 1.25rem;

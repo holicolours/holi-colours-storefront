@@ -1428,6 +1428,21 @@ function postSlider() {
         .mount();
 }
 
+// var btnBackToTop = $('#btnBackToTop');
+
+// window.scroll(function() {
+//   if (window.scrollTop() > 300) {
+//     btnBackToTop.addClass('block');
+//   } else {
+//     btnBackToTop.removeClass('block');
+//   }
+// });
+
+// btnBackToTop.on('click', function(e) {
+//   e.preventDefault();
+//   $('html, body').animate({scrollTop:0}, '300');
+// });
+
 // document.addEventListener('DOMContentLoaded', function(){
 //         var script = document.createElement('script');
 //         script.src = 'https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js';

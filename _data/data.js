@@ -245,10 +245,33 @@ module.exports = async function () {
     firebase.database().goOffline();
     app.delete();
 
+    let reviews = [];
+    reviews.push({
+        name: 'Varsha B',
+        message: 'A big thanks to Holi Colours Jewellery for bringing such unique designs along with super fast delivery',
+        images: ['https://firebasestorage.googleapis.com/v0/b/holi-colours-jewellery.appspot.com/o/products%2F10%2Freviews%2F5946666c-1bfa-445f-a654-a91ec4e0d426?alt=media&token=eea67ad3-d6a0-459e-afd1-91f8a045afa9']
+    });
+    reviews.push({
+        name: 'Vishnupriya',
+        message: 'Amazing designs and at such reasonable prices. Loved the experience.',
+        images: ['https://firebasestorage.googleapis.com/v0/b/holi-colours-jewellery.appspot.com/o/products%2F10%2Freviews%2F0c26e499-5242-4b5c-965e-04b08c968a74?alt=media&token=d70762d1-9b3d-4382-a5aa-2448e4295ea4']
+    });
+    reviews.push({
+        name: 'Aditya',
+        message: 'Got this as a gift for my Mom - she absolutely loved it! Thanks Holi Colours!',
+        images: ['https://firebasestorage.googleapis.com/v0/b/holi-colours-jewellery.appspot.com/o/products%2F10%2Freviews%2Fd9d838b6-9dc1-4b06-bd14-0d6c663818ff?alt=media&token=bc1e9824-021d-42a6-83ea-ecde23410b69']
+    });
+    reviews.push({
+        name: 'Sanu',
+        message: `Best Silver Jewellery. Holi Colours's collection is a mix of Modern yet traditional, and affordable as well.`,
+        images: ['https://firebasestorage.googleapis.com/v0/b/holi-colours-jewellery.appspot.com/o/products%2F10%2Freviews%2F5438c967-cec4-41f4-b542-9fd53c8c4156?alt=media&token=c4ecddd6-9240-429a-af13-0e973c371c00']
+    });
+
     return {
         products: products,
         categories: categories,
         orderedCategories: orderedCategories,
+        reviews: reviews,
         topBestSellers: bestSellerList.slice(0,8),
         tags: tags,
         productTags: Object.keys(tags),
