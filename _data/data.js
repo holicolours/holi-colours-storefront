@@ -245,6 +245,17 @@ module.exports = async function () {
     firebase.database().goOffline();
     app.delete();
 
+    let announcements = [];
+    announcements.push({
+        message: 'Secure Online Payment'
+    });
+    announcements.push({
+        message: 'No Cash on Delivery'
+    });
+    announcements.push({
+        message: 'Save while shopping'
+    });
+
     let reviews = [];
     reviews.push({
         name: 'Varsha B',
@@ -271,6 +282,7 @@ module.exports = async function () {
         products: products,
         categories: categories,
         orderedCategories: orderedCategories,
+        announcements: announcements,
         reviews: reviews,
         topBestSellers: bestSellerList.slice(0,8),
         tags: tags,

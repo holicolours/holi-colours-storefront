@@ -11,19 +11,21 @@
     <link rel="stylesheet" href="/assets/styles/fonts.css" media="screen" crossorigin="anonymous" />
     <link rel="stylesheet" href="/assets/styles/main.min.css" media="screen" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xz/fonts@1/serve/hk-grotesk.min.css">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-K8KWHPC');</script>
+    <!-- End Google Tag Manager -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/5.0.0/firebase-ui-auth.css" />
-    <!--====== Vendor Css ======-->
-    <!-- <link rel="stylesheet" href="https://d2r00w08fz6ft0.cloudfront.net/ludus-demo/css/vendor.42504241b05c76b514a0.css"> -->
-
-    <!--====== Utility-Spacing ======-->
-    <!-- <link rel="stylesheet" href="https://d2r00w08fz6ft0.cloudfront.net/ludus-demo/css/utility.9e5500f2bbed28faea9d.css"> -->
-
-    <!--====== App ======-->
-    <!-- <link rel="stylesheet" href="https://d2r00w08fz6ft0.cloudfront.net/ludus-demo/css/app.5265a57c411426f0b5ec.css"> -->
     <style>
         #snow {
             position: fixed;
@@ -43,6 +45,10 @@
 		mobileSearch: false,
 		mobileCart: false,
 		}" :class="{ 'overflow-hidden max-h-screen': modal || mobileMenu }" @keydown.escape="modal = false">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K8KWHPC" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
     {%- if data.banner.message != '' -%}
     <div class="text-center bg-primary">
         <p class="text-white font-semibold px-8 py-4">{{ data.banner.message }}</p>
@@ -307,15 +313,18 @@
                         <ul class="list-reset">
                             <li class="pb-2 block">
                                 <a href="/about/"
-                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">About Us</a>
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">About
+                                    Us</a>
                             </li>
                             <li class="pb-2 block">
                                 <a href="/contact/"
-                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Contact Us</a>
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Contact
+                                    Us</a>
                             </li>
                             <li class="pb-2 block">
                                 <a href="/contact/#faq"
-                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Frequently Asked Questions</a>
+                                    class="font-hk transition-colors text-white hover:text-primary text-base tracking-wide">Frequently
+                                    Asked Questions</a>
                             </li>
                             <li class="pb-2 block">
                                 <a href="/careers/"
@@ -370,7 +379,8 @@
             </p>
         </div>
 
-        <div id="btnBackToTop" class="shadow-lg rounded-full fixed bg-primary bottom-12 right-12 z-30 cursor-pointer group hidden">
+        <div id="btnBackToTop"
+            class="shadow-lg rounded-full fixed bg-primary bottom-12 right-12 z-30 cursor-pointer group hidden">
             <div class="h-16 w-16 flex items-center justify-center">
                 <i class="bx bx-up-arrow-alt text-white text-3xl leading-none"></i>
             </div>

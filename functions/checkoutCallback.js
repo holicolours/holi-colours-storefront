@@ -74,6 +74,8 @@ exports.handler = async (event, context) => {
 
         if (paymentResult["STATUS"] == "TXN_SUCCESS") {
             status = 'Success';
+            let lowStockProducts = [];
+            let outOfStockProducts = [];
 
             order['payment'] = {
                 method: "Paytm",
@@ -119,6 +121,21 @@ exports.handler = async (event, context) => {
                         if (stockQuantity >= order.cart.products[productId].quantity) {
                             // updates[`products/${productId}/variants/${selectedVariant}/stockQuantity`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);
                             updates[`stock/${productId}/${selectedVariant}`] = firebase.database.ServerValue.increment(-order.cart.products[productId].quantity);
+
+                            let remainingStock = stockQuantity - order.cart.products[productId].quantity;
+                            if (remainingStock <= 5) {
+                                let prd = {
+                                    pid: productId,
+                                    productName: product.generalInfo.name,
+                                    variant: order.cart.products[productId].variant,
+                                    stock: remainingStock
+                                };
+                                if (remainingStock != 0) {
+                                    lowStockProducts.push(prd);
+                                } else {
+                                    outOfStockProducts.push(prd);
+                                }
+                            }
                         } else {
                             if (order.generalInfo.status != 'OH') {
                                 order.generalInfo.status = 'OH';
@@ -225,6 +242,50 @@ exports.handler = async (event, context) => {
             });
 
             console.log(adminGmailResponse);
+
+            if (lowStockProducts.length != 0) {
+                const lowStockEmail = new Email();
+
+                let lowStockHtmlMessage = await lowStockEmail
+                    .render('stock-low/html', {
+                        products: lowStockProducts
+                    })
+                    .then((data) => {
+                        return data;
+                    })
+                    .catch(console.error);
+    
+                const lowStockEmailResponse = await mailClient.sendMail({
+                    from: '"Holi Colours Jewellery" <holicoloursit@gmail.com>',
+                    to: `"Holi Colours Jewellery" <holicoloursit@gmail.com>`,
+                    subject: 'Low Stock Notification',
+                    html: lowStockHtmlMessage
+                });
+    
+                console.log(lowStockEmailResponse);
+            }
+
+            if (outOfStockProducts.length != 0) {
+                const outOfStockEmail = new Email();
+
+                let outOfStockHtmlMessage = await outOfStockEmail
+                    .render('stock-empty/html', {
+                        products: outOfStockProducts
+                    })
+                    .then((data) => {
+                        return data;
+                    })
+                    .catch(console.error);
+    
+                const outOfStockEmailResponse = await mailClient.sendMail({
+                    from: '"Holi Colours Jewellery" <holicoloursit@gmail.com>',
+                    to: `"Holi Colours Jewellery" <holicoloursit@gmail.com>`,
+                    subject: 'Out of Stock Notification',
+                    html: outOfStockHtmlMessage
+                });
+    
+                console.log(outOfStockEmailResponse);
+            }
         } else {
             status = 'Error';
             errorMessage = `${paymentResult["RESPMSG"]} Transaction ID: ${paymentResult["TXNID"]}. Paytm Order ID: ${paymentResult["ORDERID"]}.`;
