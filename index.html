@@ -5,7 +5,8 @@ title: "Holi Colours Jewellery"
 
 <div>
 	<div class="container" x-data x-init="collectionSliders">
-		<div class="hero-slider relative">
+		<div class="hero-slider relative" x-data
+			x-init="new Glide('.hero-slider', { autoplay: 4000, type: 'carousel' }).mount()">
 			<div class="glide__track" data-glide-el="track">
 				<div class="glide__slides">
 					<div class="glide__slide">
@@ -16,7 +17,34 @@ title: "Holi Colours Jewellery"
 							</div>
 						</div>
 					</div>
+					<div class="glide__slide">
+						<div class="bg-left sm:bg-center bg-no-repeat bg-cover"
+							style="height: 44em; background-image:url(/assets/img/poster_1.jpg)">
+							<div
+								class="py-48 px-5 sm:px-10 md:px-12 xl:px-24 text-center sm:text-left sm:w-5/6 lg:w-3/4 xl:w-2/3">
+							</div>
+						</div>
+					</div>
+					<div class="glide__slide">
+						<div class="bg-left sm:bg-center bg-no-repeat bg-cover"
+							style="height: 44em; background-image:url(/assets/img/poster_2.jpg)">
+							<div
+								class="py-48 px-5 sm:px-10 md:px-12 xl:px-24 text-center sm:text-left sm:w-5/6 lg:w-3/4 xl:w-2/3">
+							</div>
+						</div>
+					</div>
 				</div>
+			</div>
+			<div class="absolute bottom-0 inset-x-0 mb-6 z-30 text-center" data-glide-el="controls[nav]">
+				<span
+					class="inline-block border border-primary transition-colors hover:bg-secondary-lighter p-1 rounded-full mr-1 focus:outline-none cursor-pointer"
+					data-glide-dir="=0"></span>
+				<span
+					class="inline-block border border-primary transition-colors hover:bg-secondary-lighter p-1 rounded-full mr-1 focus:outline-none cursor-pointer"
+					data-glide-dir="=1"></span>
+				<span
+					class="inline-block border border-primary transition-colors hover:bg-secondary-lighter p-1 rounded-full mr-1 focus:outline-none cursor-pointer"
+					data-glide-dir="=2"></span>
 			</div>
 		</div>
 
@@ -434,7 +462,8 @@ title: "Holi Colours Jewellery"
 			<div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
 				<div class="text-center sm:text-left">
 					<h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">Customer Feedback</h2>
-					<p class="font-hk text-secondary-lighter text-lg md:text-xl pt-2">Find what our clients say about us!</p>
+					<p class="font-hk text-secondary-lighter text-lg md:text-xl pt-2">Find what our clients say about
+						us!</p>
 				</div>
 				<!-- <a href="/collections/on-sale/"
 					class="flex items-center group pt-1 sm:pt-0 border-b border-primary transition-colors hover:border-primary-light font-hk text-xl text-primary">
@@ -492,14 +521,16 @@ title: "Holi Colours Jewellery"
 												<div class="aspect-w-1 aspect-h-1 w-full">
 													{%- for reviewImg in review.images %}
 													<img src="{{ reviewImg }}" alt="review image"
-													class="object-cover cursor-pointer" @click="$dispatch('img-modal', {  imgModalSrc: '{{ reviewImg }}', imgModalDesc: '' })"/>
+														class="object-cover cursor-pointer"
+														@click="$dispatch('img-modal', {  imgModalSrc: '{{ reviewImg }}', imgModalDesc: '' })" />
 													{% endfor %}
 												</div>
 											</div>
 											{% endif -%}
 											<span class="mt-4">{{ review.message }}</span>
 											<div class="mt-4">
-												<h3 class="font-hk font-bold text-lg text-secondary">{{ review.name }}</h3>
+												<h3 class="font-hk font-bold text-lg text-secondary">{{ review.name }}
+												</h3>
 												<div class="flex justify-center mt-1">
 													<div class="flex items-center">
 														<i class="bx bxs-star text-primary"></i>
@@ -673,7 +704,8 @@ title: "Holi Colours Jewellery"
 						</button>
 					</div>
 					<div class="p-2">
-						<img :alt="imgModalSrc" class="object-contain h-1/2-screen" :src="imgModalSrc" style="height: 90vh; width: 90vh;">
+						<img :alt="imgModalSrc" class="object-contain h-1/2-screen" :src="imgModalSrc"
+							style="height: 90vh; width: 90vh;">
 						<p x-text="imgModalDesc" class="text-center text-white"></p>
 					</div>
 				</div>

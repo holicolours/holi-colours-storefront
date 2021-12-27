@@ -45,7 +45,7 @@ title: "Cart | Holi Colours Jewellery"
                     <tbody class="border-t border-grey-darker">
                         <template x-for="(product, index) in cart" :key="index">
                             <tr x-show="product.quantity != null"
-                                class="grid grid-cols-8 md:table-row border-b border-grey-darker">
+                                class="grid grid-cols-8 md:table-row bg-white border-b border-grey-darker">
                                 <td class="px-5 py-5 bg-white text-sm order-1 col-span-2 m-auto">
                                     <div class="w-full w-auto">
                                         <img class="w-full h-full" :src="product.image" alt="" />

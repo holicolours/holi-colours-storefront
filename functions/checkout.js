@@ -275,6 +275,12 @@ exports.handler = async (event, context) => {
                 email: order.customer.email,
                 firstName: order.customer.displayName
             },
+            enablePaymentMode: [
+                { mode: "UPI" },
+                { mode: "CREDIT_CARD", channels: ["VISA", "MASTER", "AMEX"] },
+                { mode: "DEBIT_CARD", channels: ["VISA", "MASTER", "AMEX"] },
+                { mode: "NET_BANKING", channels: ["SBI", "ICICI", "HDFC", "PNB"] } 
+            ]
         };
 
         var checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), PAYTM_MKEY);

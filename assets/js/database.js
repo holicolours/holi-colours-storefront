@@ -1,5 +1,10 @@
-let databaseURL = "https://holi-colours-jewellery-default-rtdb.asia-southeast1.firebasedatabase.app";
+let databaseURL = null;
 let idToken = null;
+if (window.location.host == "localhost") {
+    databaseURL = "https://dev-holi-colours-default-rtdb.asia-southeast1.firebasedatabase.app";
+} else {
+    databaseURL = "https://holi-colours-jewellery-default-rtdb.asia-southeast1.firebasedatabase.app";
+}
 
 var database = {
     relogin: async function () {
@@ -186,7 +191,7 @@ var database = {
     addNewReview: async function () {
         let apiURL = `${databaseURL}/reviews.json`;
         let newReview = await database.post(apiURL, {}, true);
-        return newReview.name;
+        return newReview['name'];
     },
     getProduct: async function (productId) {
         let apiURL = `/api/products/${productId}.json`;

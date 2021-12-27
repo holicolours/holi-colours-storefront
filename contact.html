@@ -14,8 +14,9 @@ title: "Contact Us | Holi Colours Jewellery"
                 <a href="mailto:holicolourscustomercare@gmail.com"
                     class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-secondary hover:text-primary font-hk">holicolourscustomercare@gmail.com</a>
 
-                <!-- <h4 class="font-hk font-bold text-secondary text-lg sm:text-xl uppercase pt-8">Phone</h4>
-                <p class="font-hk text-secondary">+0 321-654-0987</p> -->
+                <h4 class="font-hk font-bold text-secondary text-lg sm:text-xl uppercase pt-8">Phone</h4>
+                <a href="tel:+918778876584"
+                    class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-secondary hover:text-primary font-hk">+918778876584</a>
 
                 <h4 class="font-hk font-bold text-secondary text-lg sm:text-xl uppercase pt-8">WORKING HOURS</h4>
 
@@ -27,6 +28,10 @@ title: "Contact Us | Holi Colours Jewellery"
                         <a href="https://www.instagram.com/holi_colours_jewel/"
                             class="bg-secondary-lighter transition-colors hover:bg-primary p-3 rounded-full mr-2 flex items-center text-xl">
                             <i class="bx bxl-instagram text-white"></i>
+                        </a>
+                        <a href="https://www.facebook.com/profile.php?id=100075692184488"
+                            class="bg-secondary-lighter transition-colors hover:bg-primary p-3 rounded-full mr-2 flex items-center text-xl">
+                            <i class="bx bxl-facebook text-white"></i>
                         </a>
                     </div>
                 </div>
@@ -67,185 +72,27 @@ title: "Contact Us | Holi Colours Jewellery"
                 <h2 class="font-butler text-secondary text-2xl sm:text-3xl md:text-4.5xl lg:text-5xl">Frequently Asked
                     Questions</h2>
 
-                <div class="pt-12" x-data="{ faqIndex: 1 }">
-
+                <div class="pt-12" x-data="{ faqIndex: null }">
+                    {%- for faq in data.faqs %}
                     <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
                         <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary"
-                            @click="faqIndex === 1 ? faqIndex=null : faqIndex=1" :class="{ 'border-b': faqIndex=== 1 }">
+                            @click="faqIndex === {{forloop.index}} ? faqIndex=null : faqIndex={{forloop.index}}" :class="{ 'border-b': faqIndex==={{forloop.index}} }">
                             <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">How many days does
-                                    the product takes to arrive?</span>
+                                    class="font-hk font-medium text-secondary md:text-lg uppercase">{{faq.question}}</span>
                             </div>
                             <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-plus"
-                                    :class="faqIndex === 1 ? 'bx-minus' : 'bx-plus'"></i>
+                                <i class="bx text-primary text-2xl"
+                                    :class="faqIndex === {{forloop.index}} ? 'bx-minus' : 'bx-plus'"></i>
                             </div>
                         </div>
-                        <div class="transition-all cursor-text max-h-0 overflow-hidden"
-                            :class="faqIndex === 1 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
+                        <div class="transition-all cursor-text"
+                            :class="faqIndex === {{forloop.index}} ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
                             <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    It takes 7-10 working days to deliver our products across India (the product will be
-                                    dispatched within 4 working days from your payment date. Saturday and Sunday are not
-                                    accountable).</p>
+                                <p class="font-hk text-secondary text-sm leading-loose text-left">{{faq.answer}}</p>
                             </div>
                         </div>
                     </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">Is there an option
-                                    to get your product before the defined delivery time?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    Yes, we do have two options on the site (Standard and Express Delivery). Please
-                                    select the "Express Delivery" shipping method on the Checkout page.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">Where can I get the
-                                    product's real image?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    All the pictures on the website were taken by our in-house photographer without
-                                    editing and filter in place.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">Where and when can I
-                                    get the tracking id?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    You'll get your tracking id via mail on the 4th working day from your payment date.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">Will you ship
-                                    overseas?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    Yes, we do. Please text us on WhatsApp (87788-76584) and our team will assist you.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">What should I do if
-                                    I haven't got the product within the defined time?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    Please send an email to holicolourscustomercare@gmail.com. Our team will assist you
-                                    within 30 minutes.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">Will you take back
-                                    your product in case of damage?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    Yes, we do. Please text us on WhatsApp (87788-76584) with the product unboxing video
-                                    and our team will assist you.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="faq-wrapper border-t border-l border-r border-primary last:border-b cursor-pointer">
-                        <div class="faq-question transition-all bg-primary-lightest flex justify-between items-center px-5 md:px-8 py-5 border-primary border-b"
-                            @click="faqIndex === 2 ? faqIndex=null : faqIndex=2" :class="{ 'border-b': faqIndex=== 2 }">
-                            <div class="w-5/6 text-left"><span
-                                    class="font-hk font-medium text-secondary md:text-lg uppercase">Does Cash On Delivery/Installment options available for payment?</span>
-                            </div>
-                            <div class="w-1/6 text-right">
-                                <i class="bx text-primary text-2xl bx-minus"
-                                    :class="faqIndex === 2 ? 'bx-minus' : 'bx-plus'"></i>
-                            </div>
-                        </div>
-                        <div class="transition-all cursor-text max-h-infinite"
-                            :class="faqIndex === 2 ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
-                            <div class="px-5 md:px-8 py-5">
-                                <p class="font-hk text-secondary text-sm leading-loose text-left">
-                                    No, as of now we are not offering both of these options. We will let you know if we enable these options in the future.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>

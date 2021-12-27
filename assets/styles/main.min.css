@@ -2811,6 +2811,11 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
     text-align: right
 }
 
+.text-yellow-500 {
+    --tw-text-opacity: 1;
+    color: rgba(234 179 8);
+}
+
 .text-yellow-900 {
     --tw-text-opacity: 1;
     color: rgba(120, 53, 15, var(--tw-text-opacity));

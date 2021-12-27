@@ -1,6 +1,16 @@
 let checkoutPendingLogin = false;
 
-var firebaseConfig = {
+const devFirebaseConfig = {
+    apiKey: "AIzaSyAkfxQ2E3adYmlfYOy3uhRf6ENZ6VQ5a4U",
+    authDomain: "dev-holi-colours.firebaseapp.com",
+    databaseURL: "https://dev-holi-colours-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "dev-holi-colours",
+    storageBucket: "dev-holi-colours.appspot.com",
+    messagingSenderId: "30340203484",
+    appId: "1:30340203484:web:37b0125a160be9f3ba8519",
+    measurementId: "G-H81HK8R7E6"
+  };
+const prdfirebaseConfig = {
     apiKey: "AIzaSyAVKIXxd68CdLlJfzCcPtw47-dkJh2xJm0",
     authDomain: "holi-colours-jewellery.firebaseapp.com",
     projectId: "holi-colours-jewellery",
@@ -11,7 +21,11 @@ var firebaseConfig = {
     measurementId: "G-LNR3MKCG8F"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (window.location.host == "localhost") {
+    firebase.initializeApp(devFirebaseConfig);
+} else {
+    firebase.initializeApp(prdfirebaseConfig);
+}
 
 function setCookie(cname, cvalue, exdays) {
     const d = new Date();
@@ -394,6 +408,7 @@ function productModule() {
             email: '',
             title: '',
             message: '',
+            rating: 0,
             images: [],
             createdOn: ''
         },
@@ -475,9 +490,15 @@ function productModule() {
                 });
         },
         async submitReview() {
+            if(this.newReview.rating == 0) {
+                alert('Please select a rating');
+                return;
+            }
+
             this.submittingReview = true;
 
             var newReviewKey = await database.addNewReview();
+            console.log(newReviewKey);
 
             for (let i in this.newReview.images) {
                 if (this.newReview.images[i].startsWith("blob:")) {

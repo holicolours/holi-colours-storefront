@@ -278,6 +278,97 @@ module.exports = async function () {
         images: ['https://firebasestorage.googleapis.com/v0/b/holi-colours-jewellery.appspot.com/o/products%2F10%2Freviews%2F5438c967-cec4-41f4-b542-9fd53c8c4156?alt=media&token=c4ecddd6-9240-429a-af13-0e973c371c00']
     });
 
+    let faqs = [];
+    faqs.push({
+        question: `How many days does the product takes to arrive?`,
+        answer: `It takes 7-10 working days to deliver our products across India (the product will be dispatched within 4 working days from your payment date. Saturday and Sunday are not accountable).`
+    });
+    faqs.push({
+        question: `Is there an option to get your product before the defined delivery time?`,
+        answer: `Yes, we do have two options on the site (Standard and Express Delivery). Please select the "Express Delivery" shipping method on the Checkout page.`
+    });
+    faqs.push({
+        question: `Where can I get the product's real image?`,
+        answer: `All the pictures on the website were taken by our in-house photographer without editing and filter in place.`
+    });
+    faqs.push({
+        question: `Where and when can I get the tracking id?`,
+        answer: `You'll get your tracking id via mail on the 4th working day from your payment date.`
+    });
+    faqs.push({
+        question: `Will you ship overseas?`,
+        answer: `Yes, we do. Please text us on WhatsApp (87788-76584) and our team will assist you.`
+    });
+    faqs.push({
+        question: `What should I do if I haven't got the product within the defined time?`,
+        answer: `Please send an email to holicolourscustomercare@gmail.com. Our team will assist you within 30 minutes`
+    });
+    faqs.push({
+        question: `Will you take back your product in case of damage?`,
+        answer: `Yes, we do. Please text us on WhatsApp (87788-76584) with the product unboxing video and our team will assist you.`
+    });
+    faqs.push({
+        question: `Does Cash On Delivery/Installment options available for payment?`,
+        answer: `No, as of now we are not offering both of these options. We will let you know if we enable these options in the future.`
+    });
+    faqs.push({
+        question: `Do you have whatsapp broadcast group?`,
+        answer: `Yes we do have, please do text us in whatsapp so that we'll add you to our regular update broadcast ( it is not a reseller group .. So please don't reach us for reselling )`
+    });
+    faqs.push({
+        question: `What is the jewellery made of ?`,
+        answer: `Each Jewellery is made up of " base metal " such as Copper, Brass, Zinc, and Bronze 
+        Then coated with premium quality matte or antique polish`
+    });
+    faqs.push({
+        question: `How to take care of jewellery?`,
+        answer: `Please do visit jewellery care instruction page`
+    });
+    faqs.push({
+        question: `Is their any guarantee or warranty for jewellery?`,
+        answer: `No, but we'll serve you with premium quality products.`
+    });
+    faqs.push({
+        question: `What if a product I want to buy is Sold Out?`,
+        answer: `We do have subscribe button on the right side of particular jewellery please do subscribe it .. So that our team can work on restocking process in no time. As well you can pre book it via whatsapp 8778876584.`
+    });
+    faqs.push({
+        question: `Will the products be checked for damage before dispatch?`,
+        answer: `Yes, before packing your order had been undergone 3 step verification.`
+    });
+    faqs.push({
+        question: `What will be the Size of the product?`,
+        answer: `The approx. size in terms of dimensions and weight are mentioned in the description of the post.`
+    });
+    faqs.push({
+        question: `Can I speak to someone about a problem on the website?`,
+        answer: `We always welcome your valuable feedback and strive to offer you the joy of jewellery shopping with every visit. You can contact us by email holicolourscustomercare@gmail.com or via whatsapp 8778876584.`
+    });
+    faqs.push({
+        question: `Do you have a physical outlet?`,
+        answer: `No, we don't have any physical outlet.`
+    });
+    faqs.push({
+        question: `How do I know if my order has been confirmed?`,
+        answer: `You'll get notified right from ordering to delivery via registered mail.`
+    });
+    faqs.push({
+        question: `Do I need to create an account to buy products?`,
+        answer: `It is optional but our expert team suggest you to create account so that it'll help you manage address, card details securely, your order history, etc.,`
+    });
+    faqs.push({
+        question: `How do I track my order?`,
+        answer: `Once your order is dispatched you'll get tracking id via mail as well how to track procedure too..that will help you locate your parcel.`
+    });
+    faqs.push({
+        question: `Do you undertake bulk orders?`,
+        answer: `Yes please text us 8778876584.`
+    });
+    faqs.push({
+        question: `Can I transfer funds through NEFT/IMPS and will you undertake such orders through WhatsApp?`,
+        answer: `Yes, if you are a person who is unaware of Net banking, Card based payments, Google Pay, we can definitely undertake such orders over what’s app and help you with NEFT/IMPS details.`
+    });
+
     return {
         products: products,
         categories: categories,
@@ -286,6 +377,7 @@ module.exports = async function () {
         reviews: reviews,
         topBestSellers: bestSellerList.slice(0,8),
         tags: tags,
+        faqs: faqs,
         productTags: Object.keys(tags),
         onSale: { id: 'on-sale', name: 'On Sale' },
         onSaleList: onSaleList,
