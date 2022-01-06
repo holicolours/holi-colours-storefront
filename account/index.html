@@ -30,23 +30,37 @@ title: "Account Details | Holi Colours Jewellery"
                         <form class="mt-8" @submit.prevent="saveAccount()">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div class="">
-                                    <label for="name_displayed" class="font-hk text-secondary block mb-2">Display
+                                    <label for="first_name" class="font-hk text-secondary block mb-2">First
                                         Name</label>
-                                    <input type="text" class="form-input" id="name_displayed"
-                                        x-model="account.userInfo.displayName" required>
+                                    <input type="text" class="form-input" id="first_name"
+                                        x-model="account.userInfo.firstName" required>
                                 </div>
+                                <div class="">
+                                    <label for="last_name" class="font-hk text-secondary block mb-2">Last
+                                        Name</label>
+                                    <input type="text" class="form-input" id="last_name"
+                                        x-model="account.userInfo.lastName" required>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                                 <div class="">
                                     <label for="email" class="font-hk text-secondary block mb-2">Email Address</label>
                                     <input type="email" class="form-input" id="email" x-model="account.userInfo.email"
                                         readonly>
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                                 <div class="">
                                     <label for="phone_number" class="font-hk text-secondary block mb-2">Phone
                                         Number</label>
                                     <input type="tel" class="form-input" id="phone_number"
                                         x-model="account.userInfo.phoneNumber" required pattern="[0-9]{10}">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                                <div class="">
+                                    <label for="alternate_phone_number" class="font-hk text-secondary block mb-2">Alternate Phone
+                                        Number</label>
+                                    <input type="tel" class="form-input" id="alternate_phone_number"
+                                        x-model="account.userInfo.alternatePhoneNumber" required pattern="[0-9]{10}">
                                 </div>
                                 <div class="" x-show="account.userInfo['enableCreditPoints']">
                                     <label for="credit_points" class="font-hk text-secondary block mb-2">Credit

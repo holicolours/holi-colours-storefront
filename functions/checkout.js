@@ -48,6 +48,8 @@ exports.handler = async (event, context) => {
         order.cart.quantity = 0;
         order.cart.subTotal = 0;
         order.cart.weight = 0;
+        order.cart.total = 0;
+        order.shipping.charge = 0;
 
         let discountCoupons = await dbRef.child("discount").child("coupons").once('value').then((snapshot) => { return snapshot.val() });
 
@@ -214,8 +216,6 @@ exports.handler = async (event, context) => {
                     }
                 });
             // order.shipping.coupon = null;
-        } else {
-            order.shipping.charge = 0;
         }
 
         let userRegistered = await dbRef.child("users").child(order.customer.uid).child("userInfo").child("email").once('value').then((snapshot) => { return snapshot.val() });
@@ -257,6 +257,9 @@ exports.handler = async (event, context) => {
         // var website = "WEBSTAGING";
         // var callbackUrl = "http://localhost:8888/.netlify/functions/checkoutCallback";
 
+        console.log(order.cart);
+        console.log(order.shipping);
+
         var paytmParams = {};
 
         paytmParams.body = {
@@ -274,13 +277,13 @@ exports.handler = async (event, context) => {
                 mobile: order.customer.phoneNumber,
                 email: order.customer.email,
                 firstName: order.customer.displayName
-            },
-            enablePaymentMode: [
-                { mode: "UPI" },
-                { mode: "CREDIT_CARD", channels: ["VISA", "MASTER", "AMEX"] },
-                { mode: "DEBIT_CARD", channels: ["VISA", "MASTER", "AMEX"] },
-                { mode: "NET_BANKING", channels: ["SBI", "ICICI", "HDFC", "PNB"] } 
-            ]
+            }
+            // enablePaymentMode: [
+            //     { mode: "UPI" },
+            //     { mode: "CREDIT_CARD", channels: ["VISA", "MASTER", "AMEX"] },
+            //     { mode: "DEBIT_CARD", channels: ["VISA", "MASTER", "AMEX"] },
+            //     { mode: "NET_BANKING", channels: ["SBI", "ICICI", "HDFC", "PNB"] } 
+            // ]
         };
 
         var checksum = await PaytmChecksum.generateSignature(JSON.stringify(paytmParams.body), PAYTM_MKEY);

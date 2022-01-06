@@ -198,15 +198,21 @@ title: "Checkout | Holi Colours Jewellery"
                         </div>
                         <div>
                             <div class="pt-4 md:pt-5">
-                                <input type="text" placeholder="Name" class="form-input mb-4 sm:mb-5" id="display_name"
-                                    x-model="account.userInfo.displayName" required>
                                 <div class="flex flex-col lg:flex-row justify-between">
-                                    <input type="email" placeholder="Email Address"
-                                        class="form-input mb-4 sm:mb-5 sm:mr-3" id="email"
-                                        x-model="account.userInfo.email" required
-                                        :readonly="getCookie('uid') && !getCookie('isAnonymous')">
-                                    <input type="tel" id="phone" placeholder="Phone" required
-                                        class="form-input mb-4 sm:mb-5" x-model="account.userInfo.phoneNumber"
+                                    <input type="text" placeholder="First Name" class="form-input mb-4 sm:mb-5 sm:mr-3"
+                                        id="first_name" x-model="account.userInfo.firstName" required>
+                                    <input type="text" placeholder="Last Name" class="form-input mb-4 sm:mb-5"
+                                        id="last_name" x-model="account.userInfo.lastName" required>
+                                </div>
+                                <input type="email" placeholder="Email Address" class="form-input mb-4 sm:mb-5"
+                                    id="email" x-model="account.userInfo.email" required
+                                    :readonly="getCookie('uid') && !getCookie('isAnonymous')">
+                                <div class="flex flex-col lg:flex-row justify-between">
+                                    <input type="tel" id="phone" placeholder="Phone Number" required
+                                        class="form-input mb-4 sm:mb-5 sm:mr-3" x-model="account.userInfo.phoneNumber"
+                                        pattern="[0-9]{10}">
+                                    <input type="tel" id="alternate_phone" placeholder="Alternate Phone Number" required
+                                        class="form-input mb-4 sm:mb-5" x-model="account.userInfo.alternatePhoneNumber"
                                         pattern="[0-9]{10}">
                                 </div>
                                 <h4
@@ -260,7 +266,8 @@ title: "Checkout | Holi Colours Jewellery"
                                 <textarea rows="3"
                                     placeholder="Notes about your order, e.g. special notes for delivery."
                                     class="form-textarea" x-model="orderNote"></textarea>
-                                <textarea rows="2" placeholder="We knew, you choose to look radiant! How did Holicolours Jewellery helps you to style it up? Let us know."
+                                <textarea rows="2"
+                                    placeholder="We knew, you choose to look radiant! How did Holicolours Jewellery helps you to style it up? Let us know."
                                     class="form-textarea" x-model="storeFeedback"></textarea>
                             </div>
                             <div class="flex flex-col sm:flex-row pt-8 sm:pt-12 justify-between">
@@ -308,7 +315,11 @@ title: "Checkout | Holi Colours Jewellery"
                             </div>
                         </div>
                         <div class="flex flex-col-reverse sm:flex-row pt-8 sm:pt-12 justify-between">
-                            <a @click="page = 'customer-info'"
+                            <a @click="page = 'customer-info'; window.scroll({
+                                top: 0,
+                                left: 0,
+                                behavior: 'smooth'
+                            });"
                                 class="cursor-pointer flex items-center mb-3 sm:mb-0 font-hk group-hover:font-bold text-sm text-secondary hover:text-primary group transition-colors">
                                 <i
                                     class="bx bx-chevron-left text-secondary group-hover:text-primary pr-2 text-2xl -mb-1 transition-colors"></i>
@@ -396,7 +407,11 @@ title: "Checkout | Holi Colours Jewellery"
                                 </div>
                             </div>
                             <div class="flex flex-col sm:flex-row pt-8 sm:pt-12 justify-between">
-                                <a @click="page = 'shipping-method'"
+                                <a @click="page = 'shipping-method'; window.scroll({
+                                    top: 0,
+                                    left: 0,
+                                    behavior: 'smooth'
+                                });"
                                     class="cursor-pointer flex items-center mb-3 sm:mb-0 font-hk group-hover:font-bold text-sm text-secondary hover:text-primary group transition-colors">
                                     <i
                                         class="bx bx-chevron-left text-secondary group-hover:text-primary pr-2 text-2xl -mb-1 transition-colors"></i>

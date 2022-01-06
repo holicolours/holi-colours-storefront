@@ -9,7 +9,7 @@ const devFirebaseConfig = {
     messagingSenderId: "30340203484",
     appId: "1:30340203484:web:37b0125a160be9f3ba8519",
     measurementId: "G-H81HK8R7E6"
-  };
+};
 const prdfirebaseConfig = {
     apiKey: "AIzaSyAVKIXxd68CdLlJfzCcPtw47-dkJh2xJm0",
     authDomain: "holi-colours-jewellery.firebaseapp.com",
@@ -121,7 +121,7 @@ var handleSignedInUser = async function (user) {
         if (!database.isUserExists(user.uid)) {
             const updates = {};
             updates[`users/${user.uid}/userInfo/email`] = user.email;
-            updates[`users/${user.uid}/userInfo/displayName`] = user.displayName;
+            updates[`users/${user.uid}/userInfo/firstName`] = user.displayName;
             updates[`users/${user.uid}/userInfo/phoneNumber`] = '';
             let updated = await database.updateData(updates);
             if (!updated) {
@@ -465,7 +465,7 @@ function productModule() {
             if (!getCookie('isAnonymous')) {
                 let user = await database.getUser(getCookie('uid'));
                 if (user && user['userInfo']) {
-                    this.displayName = user.userInfo['displayName'];
+                    this.displayName = user.userInfo['firstName'];
                     this.email = user.userInfo['email'];
                     this.newReview.name = this.displayName;
                     this.newReview.email = this.email;
@@ -490,7 +490,7 @@ function productModule() {
                 });
         },
         async submitReview() {
-            if(this.newReview.rating == 0) {
+            if (this.newReview.rating == 0) {
                 alert('Please select a rating');
                 return;
             }
@@ -786,9 +786,11 @@ function checkoutModule() {
         page: 'customer-info',
         account: {
             userInfo: {
-                displayName: '',
+                firstName: '',
+                lastName: '',
                 email: '',
-                phoneNumber: ''
+                phoneNumber: '',
+                alternatePhoneNumber: ''
             },
             shipToAddress: {
                 address1: '',
@@ -963,11 +965,18 @@ function checkoutModule() {
                 this.loadShippingMethods();
                 if (this.saveCustomerInfo && !getCookie('isAnonymous')) {
                     const updates = {};
-                    updates[`users/${getCookie('uid')}/userInfo/displayName`] = this.account.userInfo.displayName;
+                    updates[`users/${getCookie('uid')}/userInfo/firstName`] = this.account.userInfo.firstName;
+                    updates[`users/${getCookie('uid')}/userInfo/lastName`] = this.account.userInfo.lastName;
                     updates[`users/${getCookie('uid')}/userInfo/phoneNumber`] = this.account.userInfo.phoneNumber;
+                    updates[`users/${getCookie('uid')}/userInfo/alternatePhoneNumber`] = this.account.userInfo.alternatePhoneNumber;
                     updates[`users/${getCookie('uid')}/shipToAddress`] = this.account.shipToAddress;
                     let updated = await database.updateData(updates);
                 }
+                window.scroll({
+                    top: 0,
+                    left: 0,
+                    behavior: 'smooth'
+                });
             }
         },
         printShippingAddress() {
@@ -1035,6 +1044,11 @@ function checkoutModule() {
         goToPayment() {
             if (this.shippingInfo.key) {
                 this.page = 'payment-method';
+                window.scroll({
+                    top: 0,
+                    left: 0,
+                    behavior: 'smooth'
+                });
             }
         },
         redeemCP(redeem) {
@@ -1067,9 +1081,11 @@ function checkoutModule() {
                     products: {}
                 },
                 customer: {
-                    displayName: this.account.userInfo.displayName,
+                    firstName: this.account.userInfo.firstName,
+                    lastName: this.account.userInfo.lastName,
                     email: this.account.userInfo.email,
                     phoneNumber: this.account.userInfo.phoneNumber,
+                    alternatePhoneNumber: this.account.userInfo.alternatePhoneNumber,
                     shipToAddress: this.account.shipToAddress,
                     uid: getCookie('uid')
                 },
@@ -1140,9 +1156,11 @@ function accountModule() {
     return {
         account: {
             userInfo: {
-                displayName: '',
+                firstName: '',
+                lastName: '',
                 email: '',
                 phoneNumber: '',
+                alternatePhoneNumber: '',
                 creditPoints: null
             },
             shipToAddress: {
@@ -1206,8 +1224,10 @@ function accountModule() {
             }
             this.saving = true;
             const updates = {};
-            updates[`users/${getCookie('uid')}/userInfo/displayName`] = this.account.userInfo.displayName;
+            updates[`users/${getCookie('uid')}/userInfo/firstName`] = this.account.userInfo.firstName;
+            updates[`users/${getCookie('uid')}/userInfo/lastName`] = this.account.userInfo.lastName;
             updates[`users/${getCookie('uid')}/userInfo/phoneNumber`] = this.account.userInfo.phoneNumber;
+            updates[`users/${getCookie('uid')}/userInfo/alternatePhoneNumber`] = this.account.userInfo.alternatePhoneNumber;
             updates[`users/${getCookie('uid')}/shipToAddress`] = this.account.shipToAddress;
             console.log(updates);
             await database.updateData(updates);
