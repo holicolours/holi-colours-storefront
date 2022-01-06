@@ -77,6 +77,11 @@ title: "Checkout | Holi Colours Jewellery"
                                                     x-show="product.salePercentage"
                                                     x-text="product.salePercentage + '% off'">
                                                 </span>
+                                                <span
+                                                    class="bg-grey rounded-full px-2 leading-none font-hk font-bold border uppercase text-xs"
+                                                    x-show="product.addOn == 'chain'"
+                                                    x-text="'+ Chain'">
+                                                </span>
                                             </p>
                                             <div class="text-sm text-gray-500"
                                                 x-text="'Variant: ' + product.variantName" x-show="product.variantName">

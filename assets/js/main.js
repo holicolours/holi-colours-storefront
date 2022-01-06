@@ -181,10 +181,11 @@ function logOut() {
     });
 }
 
-async function addToCart(productId, selectedVariant, productQuantity) {
+async function addToCart(productId, selectedVariant, productQuantity, addOn) {
     let stockQuantity = await database.getStock(productId, selectedVariant);
     if (stockQuantity != 0 && stockQuantity >= productQuantity) {
-        let updatedCart = await database.addToCart(getCookie('uid'), productId, selectedVariant, productQuantity);
+        let updatedCart = await database.addToCart(getCookie('uid'), productId, selectedVariant, productQuantity, addOn);
+        console.log('productQuantity: ' + productQuantity);
         if (updatedCart) {
             var r = confirm("Item added to cart! Do you want to view the cart?");
             if (r == true) {
@@ -421,6 +422,8 @@ function productModule() {
             fetch(`/api/products/${productId}.json`).then((res) =>
                 res.json().then(async (product) => {
                     this.product = product;
+                    this.product.generalInfo.addOn = 'rope';
+                    this.product.generalInfo.addOnPrice = 0;
                     console.log(this.product);
                     this.selectedImage = product.variants[product.generalInfo.defaultVariant].image;
                     this.selectedVariant = product.generalInfo.defaultVariant;
@@ -441,9 +444,19 @@ function productModule() {
                 this.quantity = this.stockQuantity;
             }
         },
+        changeAddOn() {
+            if (this.product.generalInfo.addOn == 'chain') {
+                this.product.generalInfo.addOnPrice = 39;
+            } else if (this.product.generalInfo.addOn == 'rope') {
+                this.product.generalInfo.addOnPrice = 0;
+            }
+        },
+        getSalePrice() {
+            return this.product.variants[this.selectedVariant].salePrice + this.product.generalInfo.addOnPrice;
+        },
         addToCart() {
             if (this.stockQuantity != 0 && this.stockQuantity >= this.quantity) {
-                addToCart(this.product.id, this.selectedVariant, this.quantity);
+                addToCart(this.product.id, this.selectedVariant, this.quantity, this.product.generalInfo.addOn);
             } else {
                 alert('Product is not in stock!');
             }
@@ -575,6 +588,10 @@ function cartModule() {
                         .then(async (product) => {
                             let selectedVariant = cartList[product.id]['variant'] ? cartList[product.id].variant : product.generalInfo.defaultVariant;
 
+                            if (cartList[product.id]['addOn'] == 'chain') {
+                                product.variants[selectedVariant].salePrice += 39;
+                            }
+
                             let stockQuantity = await database.getStock(product.id, selectedVariant);
 
                             let productObject = {
@@ -587,7 +604,8 @@ function cartModule() {
                                 variants: product.variants,
                                 defaultVariant: product.generalInfo.defaultVariant,
                                 selectedVariant: selectedVariant,
-                                stockQuantity: stockQuantity
+                                stockQuantity: stockQuantity,
+                                addOn: cartList[product.id]['addOn']
                             };
                             this.cart.push(productObject);
                             this.quantity += cartList[product.id].quantity;
@@ -606,6 +624,9 @@ function cartModule() {
         },
         async changeVariant(product) {
             const selectedVariant = product.selectedVariant;
+            if (product.addOn == 'chain') {
+                product.variants[selectedVariant].salePrice += 39;
+            }
             product.image = product.variants[selectedVariant].image;
             product.price = product.variants[selectedVariant].salePrice;
             product.salePercentage = product.variants[selectedVariant].salePercentage;
@@ -632,8 +653,12 @@ function cartModule() {
             for (var i in this.cart) {
                 cartObject[this.cart[i].id] = {
                     quantity: this.cart[i].quantity,
-                    variant: this.cart[i].selectedVariant
+                    variant: this.cart[i].selectedVariant,
+                    addOn: this.cart[i]['addOn']
                 };
+                if (this.cart[i]['addOn'] == 'chain') {
+                    this.subTotal += this.cart[i].quantity * 39;
+                }
                 this.quantity += this.cart[i].quantity;
                 this.subTotal += this.cart[i].quantity * this.cart[i].price;
             }
@@ -756,7 +781,7 @@ function wishlistModule() {
         async addToCart(product) {
             let stockQuantity = await database.getStock(product.id, product.selectedVariant);
             if (stockQuantity != 0 && stockQuantity >= 1) {
-                let updatedCart = await database.addToCart(getCookie('uid'), product.id, product.selectedVariant, 1);
+                let updatedCart = await database.addToCart(getCookie('uid'), product.id, product.selectedVariant, 1, '');
                 if (updatedCart) {
                     this.removeFromWishlist(product.id);
                     var r = confirm("Item added to cart! Do you want to view the cart?");
@@ -838,9 +863,13 @@ function checkoutModule() {
                     window.location.href = '/cart';
                     return;
                 }
+                console.log(cartList);
                 for (var productId in cartList) {
                     let product = await database.getProduct(productId);
                     let selectedVariant = cartList[product.id].variant;
+                    if (cartList[product.id]['addOn'] == 'chain') {
+                        product.variants[selectedVariant].salePrice += 39;
+                    }
                     let productObject = {
                         id: product.id,
                         name: product.generalInfo.name,
@@ -851,7 +880,8 @@ function checkoutModule() {
                         variantName: product.variants.length > 1 ? product.variants[selectedVariant].name : '',
                         quantity: cartList[product.id].quantity,
                         selectedVariant: selectedVariant,
-                        weight: product.variants[selectedVariant].weight
+                        weight: product.variants[selectedVariant].weight,
+                        addOn: cartList[product.id]['addOn']
                     };
                     this.cart.push(productObject);
                     this.quantity += cartList[product.id].quantity;
@@ -1101,12 +1131,14 @@ function checkoutModule() {
                         quantity: this.cart[i].quantity - 1,
                         variant: this.cart[i].variantName,
                         selectedVariant: this.cart[i].selectedVariant,
+                        addOn: this.cart[i].addOn
                     };
                 } else if (this.cart[i]['type'] != '1freebie') {
                     this.order.cart.products[this.cart[i].id] = {
                         quantity: this.cart[i].quantity,
                         variant: this.cart[i].variantName,
                         selectedVariant: this.cart[i].selectedVariant,
+                        addOn: this.cart[i].addOn
                     };
                 }
             }

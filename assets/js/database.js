@@ -158,11 +158,13 @@ var database = {
         let userWishlist = await database.read(apiURL, true);
         return userWishlist;
     },
-    addToCart: async function (uid, productId, selectedVariant, productQuantity) {
+    addToCart: async function (uid, productId, selectedVariant, productQuantity, addOn) {
         let apiURL = `${databaseURL}/carts/${uid}/${productId}.json`;
+        console.log('productQuantity2: ' + productQuantity);
         let updatedCart = await database.put(apiURL, {
             'quantity': productQuantity,
-            'variant': selectedVariant
+            'variant': selectedVariant,
+            'addOn': addOn
         }, true);
         return updatedCart;
     },

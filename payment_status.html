@@ -157,6 +157,11 @@ title: "Payment Status | Holi Colours Jewellery"
                                                         x-show="order.cart.products[i].salePercentage"
                                                         x-text="order.cart.products[i].salePercentage + '% off'">
                                                     </span>
+                                                    <span
+                                                        class="bg-grey rounded-full px-2 leading-none font-hk font-bold border uppercase text-xs"
+                                                        x-show="order.cart.products[i].addOn == 'chain'"
+                                                        x-text="'+ Chain'">
+                                                    </span>
                                                 </p>
                                                 <div class="text-sm text-gray-500"
                                                     x-text="'Variant: ' + order.cart.products[i].variant"

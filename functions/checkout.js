@@ -181,6 +181,10 @@ exports.handler = async (event, context) => {
                         }
                     }
 
+                    if (order.cart.products[productId]['addOn'] == 'chain') {
+                        variant.salePrice += 39;
+                    }
+
                     order.cart.products[productId].name = product.generalInfo.name;
                     order.cart.products[productId].image = variant.image ? variant.image : product.variants[product.generalInfo.defaultVariant].image;
                     order.cart.products[productId].price = variant.salePrice;
