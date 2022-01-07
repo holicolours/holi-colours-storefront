@@ -113,6 +113,11 @@ var database = {
             });
         return result;
     },
+    checkSubscription: async function (topic, token) {
+        let apiURL = `${databaseURL}/topics/${topic}/${token}.json`;
+        let subscription = await database.read(apiURL, true);
+        return subscription ? true : false;
+    },
     getStock: async function (productId, selectedVariant) {
         let apiURL = `${databaseURL}/stock/${productId}/${selectedVariant}.json`;
         let stockQuantity = await database.read(apiURL);

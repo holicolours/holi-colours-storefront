@@ -165,8 +165,7 @@ layout: base.html
 						</div>
 						{%- endif -%}
 						<div class="flex pb-8 group">
-							<a class="btn btn-outline mr-4 md:mr-6 cursor-pointer" @click="addToCart()">Add to
-								cart</a>
+							<a class="btn btn-outline mr-4 md:mr-6 cursor-pointer" @click="addToCart()" x-text="addToCartText">Add to cart</a>
 							<a class="rounded-full btn btn-outline cursor-pointer"
 								@click="addToWishList({{ product.id }}, {{product.generalInfo.defaultVariant}})">
 								<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"

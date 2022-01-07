@@ -27,6 +27,8 @@ if (window.location.host == "localhost") {
     firebase.initializeApp(prdfirebaseConfig);
 }
 
+const messaging = firebase.messaging();
+
 function setCookie(cname, cvalue, exdays) {
     const d = new Date();
     d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
@@ -416,6 +418,7 @@ function productModule() {
         reviewsEmpty: false,
         reviewsLoading: false,
         submittingReview: false,
+        addToCartText: 'Add To Cart',
         async loadProduct(productId) {
             this.productId = productId;
             this.newReview.pid = this.productId;
@@ -431,7 +434,7 @@ function productModule() {
                     this.isLoading = false;
                     this.stockQuantity = await database.getStock(product.id, this.selectedVariant);
                     this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
-                    console.log(this.stockQuantity);
+                    this.checkSubscription();
                 }));
         },
         async changeVariant() {
@@ -439,9 +442,18 @@ function productModule() {
             this.selectedImage = this.product.variants[this.selectedVariant].image;
             this.stockQuantity = await database.getStock(this.product.id, this.selectedVariant);
             this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
-            console.log(this.stockQuantity);
+            this.checkSubscription();
             if (this.quantity > this.stockQuantity) {
                 this.quantity = this.stockQuantity;
+            }
+        },
+        async checkSubscription() {
+            this.addToCartText = this.stockStatus == 'IS' ? 'Add To Cart' : 'Notify Me on Stock';
+            if (this.stockStatus == 'OS' && Notification.permission == 'granted') {
+                let token = await getRegistrationToken();
+                if (token && await database.checkSubscription(`stock-${this.product.id}-${this.selectedVariant}`, token)) {
+                    this.addToCartText = '✔ Notify Me on Stock';
+                }
             }
         },
         changeAddOn() {
@@ -454,11 +466,19 @@ function productModule() {
         getSalePrice() {
             return this.product.variants[this.selectedVariant].salePrice + this.product.generalInfo.addOnPrice;
         },
-        addToCart() {
+        async addToCart() {
             if (this.stockQuantity != 0 && this.stockQuantity >= this.quantity) {
                 addToCart(this.product.id, this.selectedVariant, this.quantity, this.product.generalInfo.addOn);
             } else {
-                alert('Product is not in stock!');
+                if (this.addToCartText == 'Notify Me on Stock') {
+                    this.addToCartText = 'Subscribing...';
+                    let status = await subscribeToNotification(`stock-${this.product.id}-${this.selectedVariant}`);
+                    if (status) {
+                        this.addToCartText = '✔ Notify Me on Stock';
+                    } else {
+                        this.addToCartText = 'Notify Me on Stock';
+                    }
+                }
             }
         },
         async loadReview() {
@@ -656,9 +676,6 @@ function cartModule() {
                     variant: this.cart[i].selectedVariant,
                     addOn: this.cart[i]['addOn']
                 };
-                if (this.cart[i]['addOn'] == 'chain') {
-                    this.subTotal += this.cart[i].quantity * 39;
-                }
                 this.quantity += this.cart[i].quantity;
                 this.subTotal += this.cart[i].quantity * this.cart[i].price;
             }
@@ -1432,6 +1449,89 @@ function paymentStatusModule() {
                     + this.shippingZones[this.order.customer.shipToAddress.country].name;
             }
             return address;
+        }
+    }
+}
+
+async function getRegistrationToken() {
+    let registrationToken = null;
+    await messaging.requestPermission()
+        .then(function () {
+            console.log("Notification permission granted.");
+            // get the token in the form of promise
+            return messaging.getToken()
+        })
+        .then(async function (token) {
+            console.log("token is : " + token);
+            registrationToken = token;
+        })
+        .catch(function (err) {
+            console.log("Unable to get permission to notify.", err);
+            alert("Unable to get permission to notification. Please check your browser's notification settings");
+        });
+    return registrationToken;
+}
+
+async function subscribeToNotification(topic) {
+    let status = false;
+    let token = await getRegistrationToken();
+    if (!token) {
+        return false;
+    }
+    await fetch('/.netlify/functions/subscribeToTopic', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            uid: getCookie('uid'),
+            registrationTokens: [token],
+            topic: topic
+        })
+    })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                throw response.json();
+            }
+        })
+        .then(data => {
+            console.log(data);
+            if (data['successCount'] > 0) {
+                console.log('Success');
+                status = true;
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+            alert('Unable to Subscribe. Please try again after sometime.');
+        });
+    return status;
+}
+
+function subscribeModule() {
+    return {
+        subscribeText: null,
+        async checkSubscription() {
+            this.subscribeText = 'Subscribe';
+            if (Notification.permission == 'granted') {
+                let token = await getRegistrationToken();
+                if (token && await database.checkSubscription('newsletter', token)) {
+                    this.subscribeText = 'Subscribed!';
+                }
+            }
+        },
+        async subscribe() {
+            if (this.subscribeText == 'Subscribe') {
+                this.subscribeText = 'Subscribing...';
+                let status = await subscribeToNotification('newsletter');
+                if (status) {
+                    this.subscribeText = 'Subscribed!';
+                } else {
+                    this.subscribeText = 'Subscribe';
+                }
+            }
         }
     }
 }
