@@ -26,7 +26,14 @@ module.exports = async function () {
     }
 
     let discountCoupons = await firebase.database().ref().child("discount").child("coupons").once('value').then((snapshot) => { return snapshot.val() });
-    let products = await firebase.database().ref().child("products").orderByChild("publish/status").equalTo("P").once('value').then((snapshot) => { return snapshot.val() });
+    let products = await firebase.database().ref().child("products").orderByChild("publish/status").equalTo("P").once('value').then((snapshot) => { 
+        let prdList = [];
+        let prdObj = snapshot.val();
+        for (var pid in prdObj) {
+            prdList[pid] = prdObj[pid];
+        }
+        return prdList 
+    });
     let categories = await firebase.database().ref().child("categories").once('value').then((snapshot) => { return snapshot.val() });
     let tags = await firebase.database().ref().child("tags").once('value').then((snapshot) => { return snapshot.val() });
     let shippingZones = await firebase.database().ref().child("shipping").once('value').then((snapshot) => { return snapshot.val() });
