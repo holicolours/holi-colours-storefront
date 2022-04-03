@@ -4,306 +4,296 @@ title: "Orders | Holi Colours Jewellery"
 ---
 
 <div x-data="orderModule()" x-init="loadOrders()">
-	<div class="container border-t border-grey-dark">
-		<div class="pt-10 sm:pt-12 flex flex-col lg:flex-row justify-between">
-			<div class="lg:w-1/4">
-				<p class="font-butler text-secondary text-2xl sm:text-3xl lg:text-4xl pb-6">My Account</p>
-				<div class="pl-3 flex flex-col">
-					<a href="/account/"
-						class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Account
-						Details</a>
-					<a href="/account/orders"
-						class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk font-bold text-primary border-primary ">Orders</a>
-					<a href="/wishlist"
-						class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Wishlist</a>
-				</div>
-				<button @click="logOut()"
-					class="transition-all border hover:bg-primary hover:text-white border-primary rounded px-8 py-3 mt-8 inline-block font-hk font-bold text-primary">Log
-					Out</button>
-			</div>
-			<div class="lg:w-3/4 mt-12 lg:mt-0" id="orderPage">
-				<div class="bg-grey-light py-10 px-6 md:px-10 mt-4 md:mt-0">
-					<h1 class="font-hkbold text-secondary text-2xl text-center sm:text-left" x-show="!order">My Orders</h1>
-					<div class="flex justify-center items-center pt-5" x-show="isLoading">
-						<div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-					</div>
-					<div class="flex flex-col justify-center items-center pt-5 hidden" x-show="!isLoading && empty">
-						<span class="font-hkbold text-secondary text-xl w-full text-center mb-3">You are yet to place
-							any orders!</span>
-						<a href="/collections" class="btn btn-outline">Continue Shopping</a>
-					</div>
-					<template x-if="orders && !order">
-						<div class="leading-loose">
-							<div class="mt-8 bg-white rounded shadow-xl overflow-auto">
-								<table class="w-full leading-normal">
-									<thead class="hidden md:table-header-group">
-										<tr class="border-b-2 border-grey-darker ">
-											<th
-												class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-												Order
-											</th>
-											<th
-												class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-												Date
-											</th>
-											<th
-												class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-												Status
-											</th>
-											<th
-												class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-												Total
-											</th>
-											<th
-												class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-												Actions
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										<template x-for="index in Object.keys(orders).sort(function (a, b) {return parseInt(b) - parseInt(a);})">
-											<tr class="grid grid-cols-1 md:table-row border-b border-grey-darker">
-												<td class="flex md:table-cell px-5 py-5 bg-white text-sm">
-													<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Order: </strong>
-													<p class="text-gray-900 whitespace-no-wrap" x-text="'#' + index">
-													</p>
-												</td>
-												<td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-													<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Date: </strong>
-													<p class="text-gray-900 whitespace-no-wrap"
-														x-text="new Date(orders[index].generalInfo.createdOn).toLocaleString()">
-													</p>
-												</td>
-												<td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-													<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Status: </strong>
-													<span
-														class="relative inline-block px-3 py-1 font-semibold leading-tight"
-														:class="'text-' + statuses[orders[index].generalInfo.status]['color'] + '-900'">
-														<span aria-hidden
-															class="absolute inset-0 opacity-50 rounded-full"
-															:class="'bg-' + statuses[orders[index].generalInfo.status]['color'] + '-200'"></span>
-														<span class="relative"
-															x-text="statuses[orders[index].generalInfo.status]['name']"></span>
-													</span>
-												</td>
-												<td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-													<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Total: </strong>
-													<strong class="mr-1" x-text="'₹' + orders[index].cart.total"></strong>
-													<span x-text="'for ' + orders[index].cart.quantity + ' items'"></span>
-												</td>
-												<td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-													<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Actions: </strong>
-													<a class="btn btn-primary py-2 cursor-pointer"
-													@click="loadOrder(orders[index], index)">View</a>
-												</td>
-											</tr>
-										</template>
-									</tbody>
-								</table>
-							</div>
-							<div class="flex w-full mt-8 justify-center" x-show="noOfPages != currentPage">
-								<a class="btn btn-primary py-2 cursor-pointer"
-								@click="loadPage(currentPage + 1)" x-text="isLoading ? 'Loading...' : 'Load More'">Load More</a>
-							</div>
-						</div>
-					</template>
-					<template x-if="order">
-						<div>
-							<div class="flex space-x-4">
-								<i class="my-auto text-xl cursor-pointer" @click="closeOrder()">
-									<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-									</svg>
-								</i>
-								<h1 class="text-3xl text-black" x-text="'#' + orderId">
-								</h1>
-								<span class="relative my-auto inline-block px-3 py-1 font-semibold leading-tight"
-									:class="'text-' + statuses[order.generalInfo.status]['color'] + '-900'">
-									<span aria-hidden="" class="absolute inset-0 opacity-50 rounded-full"
-										:class="'bg-' + statuses[order.generalInfo.status]['color'] + '-200'"></span>
-									<span class="relative" x-text="statuses[order.generalInfo.status]['name']"></span>
-								</span>
-							</div>
-							<div class="flex flex-wrap">
-								<div class="w-full lg:w-2/3 mt-6 pr-0 lg:pr-3">
-									<p class="text-xl pb-6 flex items-center">
-										Products
-									</p>
-									<div class="leading-loose">
-										<div class="bg-white rounded shadow-xl overflow-auto">
-											<table class="w-full leading-normal">
-												<thead class="hidden md:table-header-group">
-													<tr class="border-b-2 border-grey-darker">
-														<th
-															class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-															Product
-														</th>
-														<th
-															class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-															SKU
-														</th>
-														<th
-															class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-															Quantity
-														</th>
-														<th
-															class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-															Price
-														</th>
-														<th
-															class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-															Total
-														</th>
-													</tr>
-												</thead>
-												<tbody>
-													<template x-for="index in Object.keys(order.cart.products)"
-														:key="index">
-														<tr class="grid grid-cols-1 md:table-row border-b-2 border-grey-darker">
-															<td
-																class="px-5 py-5 bg-white text-sm">
-																<div class="flex items-center">
-																	<div class="flex-shrink-0 w-10">
-																		<img class="w-full h-full"
-																			:src="order.cart.products[index].image"
-																			alt="" />
-																	</div>
-																	<div class="ml-3">
-																		<p class="text-gray-900 whitespace-no-wrap"
-																			x-text="order.cart.products[index].name">
-																		</p>
-																		<div class="text-sm text-gray-500"
-																			x-text="'Variant: ' + order.cart.products[index].variant"
-																			x-show="order.cart.products[index].variant">
-																		</div>
-																	</div>
-																</div>
-															</td>
-															<td
-																class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-																<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">SKU: </strong>
-																<p class="text-gray-900 whitespace-no-wrap"
-																	x-text="index"></p>
-															</td>
-															<td
-																class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-																<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Quantity: </strong>
-																<p class="text-gray-900 whitespace-no-wrap"
-																	x-text="order.cart.products[index].quantity"></p>
-															</td>
-															<td
-																class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-																<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Price: </strong>
-																<span class=""
-																	x-text="'₹' + order.cart.products[index].price"></span>
-															</td>
-															<td
-																class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
-																<strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Total: </strong>
-																<span class=""
-																	x-text="'₹' + order.cart.products[index].quantity * order.cart.products[index].price"></span>
-															</td>
-														</tr>
-													</template>
-													<tr class="flex md:table-row border-b-2 border-grey-darker">
-														<td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
-															<p class="text-gray-900 whitespace-no-wrap"
-																x-text="'Subtotal (' + order.cart.quantity + ' items)'">
-															</p>
-														</td>
-														<td class="px-5 py-5 bg-white text-sm">
-															<span class=""
-																x-text="'₹' + order.cart.subTotal"></span>
-														</td>
-													</tr>
-													<tr class="flex md:table-row border-b-2 border-grey-darker">
-														<td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
-															<p class="text-gray-900 whitespace-no-wrap"
-																x-text="'Shipping (' + order.shipping.methodName + ')'">
-															</p>
-														</td>
-														<td class="px-5 py-5 bg-white text-sm">
-															<span class=""
-																x-text="'₹' + order.shipping.charge"></span>
-														</td>
-													</tr>
-													<tr class="flex md:table-row border-b-2 border-grey-darker">
-														<td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
-															<p class="text-gray-900 whitespace-no-wrap">Discount</p>
-														</td>
-														<td class="px-5 py-5 bg-white text-sm">
-															<span class=""
-																x-text="'-₹' + order.cart.discount"></span>
-														</td>
-													</tr>
-													<tr class="flex md:table-row border-b-2 border-grey-darker">
-														<td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
-															<p class="text-gray-900 whitespace-no-wrap">Total</p>
-														</td>
-														<td class="px-5 py-5 bg-white text-sm">
-															<span class="" x-text="'₹' + order.cart.total"></span>
-														</td>
-													</tr>
-												</tbody>
-											</table>
-										</div>
-									</div>
-									<p class="text-xl py-6 flex items-center">
-										Shipping Address
-									</p>
-									<div class="p-5 leading-loose bg-white rounded text-sm">
-										<p class="text-gray-900 whitespace-pre-line"
-											x-text="order.customer.displayName"></p>
-										<p class="text-gray-900 whitespace-pre-line"
-											x-text="printShippingAddress()"></p>
-										<p class="flex text-gray-900">
-											<span class="mr-1 my-auto">
-												<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-													<path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-													<path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-												</svg>
-											</span>
-											<span x-text="order.customer.email"></span>
-										</p>
-										<p class="flex text-gray-900">
-											<span class="mr-1 my-auto">
-												<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-													<path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-												</svg>
-											</span>
-											<span x-text="order.customer.phoneNumber"></span>
-										</p>
-										<p class="text-gray-900 whitespace-pre-line" x-show="order.cart.note" x-text="'Customer provided note: ' + order.cart.note"></p>
-									</div>
-								</div>
-								<div class="w-full lg:w-1/3 mt-6 pl-0 lg:pl-3" x-show="order.notes.length != 0">
-									<p class="text-xl pb-6 flex items-center">
-										Order Notes
-									</p>
-									<div class="leading-loose">
-										<form class="p-5 bg-white rounded shadow-xl">
-											<div class="">
-												<div class="flex flex-wrap mt-4 text-sm">
-													<template x-for="(note, index) in order.notes" :key="index">
-														<div class="w-full">
-															<div class="bg-gray-100 px-4 py-2 mb-2 mr-2 rounded">
-																<p class="overflow-x-scroll sm:overflow-auto" x-text="note.message"></p>
-															</div>
-															<p class="text-xs mb-2 px-4"
-																x-text="new Date(note.createdOn).toLocaleString()">
-															</p>
-														</div>
-													</template>
-												</div>
-											</div>
-										</form>
-									</div>
-								</div>
-							</div>
-						</div>
-					</template>
-				</div>
-			</div>
-		</div>
-	</div>
+  <div class="container border-t border-grey-dark">
+    <div class="pt-10 sm:pt-12 flex flex-col lg:flex-row justify-between">
+      <div class="lg:w-1/4">
+        <p class="font-butler text-secondary text-2xl sm:text-3xl lg:text-4xl pb-6">My Account</p>
+        <div class="pl-3 flex flex-col">
+          <a href="/account/"
+            class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Account
+            Details</a>
+          <a href="/account/orders"
+            class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk font-bold text-primary border-primary ">Orders</a>
+          <a href="/wishlist"
+            class="transition-all hover:font-bold hover:text-primary px-4 py-3 border-l-2 border-primary-lighter hover:border-primary  font-hk text-grey-darkest ">Wishlist</a>
+        </div>
+        <button @click="logOut()"
+          class="transition-all border hover:bg-primary hover:text-white border-primary rounded px-8 py-3 mt-8 inline-block font-hk font-bold text-primary">Log
+          Out</button>
+      </div>
+      <div class="lg:w-3/4 mt-12 lg:mt-0" id="orderPage">
+        <div class="bg-grey-light py-10 px-6 md:px-10 mt-4 md:mt-0">
+          <h1 class="font-hkbold text-secondary text-2xl text-center sm:text-left" x-show="!order">My Orders</h1>
+          <div class="flex justify-center items-center pt-5" x-show="isLoading">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+          </div>
+          <div class="flex flex-col justify-center items-center pt-5 hidden" x-show="!isLoading && empty">
+            <span class="font-hkbold text-secondary text-xl w-full text-center mb-3">You are yet to place
+              any orders!</span>
+            <a href="/shop" class="btn btn-outline">Continue Shopping</a>
+          </div>
+          <template x-if="orders && !order">
+            <div class="leading-loose">
+              <div class="mt-8 bg-white rounded shadow-xl overflow-auto">
+                <table class="w-full leading-normal">
+                  <thead class="hidden md:table-header-group">
+                    <tr class="border-b-2 border-grey-darker ">
+                      <th
+                        class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Order
+                      </th>
+                      <th
+                        class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th
+                        class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th
+                        class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Total
+                      </th>
+                      <th
+                        class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template
+                      x-for="index in Object.keys(orders).sort(function (a, b) {return parseInt(b) - parseInt(a);})">
+                      <tr class="grid grid-cols-1 md:table-row border-b border-grey-darker">
+                        <td class="flex md:table-cell px-5 py-5 bg-white text-sm">
+                          <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Order: </strong>
+                          <p class="text-gray-900 whitespace-no-wrap" x-text="'#' + index">
+                          </p>
+                        </td>
+                        <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                          <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Date: </strong>
+                          <p class="text-gray-900 whitespace-no-wrap"
+                            x-text="new Date(orders[index].createdOn).toLocaleString()">
+                          </p>
+                        </td>
+                        <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                          <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Status: </strong>
+                          <span class="relative inline-block px-3 py-1 font-semibold leading-tight"
+                            :class="'text-' + statuses[orders[index].status]['color'] + '-900'">
+                            <span aria-hidden class="absolute inset-0 opacity-50 rounded-full"
+                              :class="'bg-' + statuses[orders[index].status]['color'] + '-200'"></span>
+                            <span class="relative" x-text="statuses[orders[index].status]['name']"></span>
+                          </span>
+                        </td>
+                        <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                          <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Total: </strong>
+                          <strong class="mr-1" x-text="'₹' + orders[index].cart.total"></strong>
+                          <span x-text="'for ' + orders[index].cart.quantity + ' items'"></span>
+                        </td>
+                        <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                          <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Actions: </strong>
+                          <a class="btn btn-primary py-2 cursor-pointer"
+                            @click="loadOrder(orders[index], index)">View</a>
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+              <div class="flex w-full mt-8 justify-center" x-show="noOfPages != currentPage">
+                <a class="btn btn-primary py-2 cursor-pointer" @click="loadPage(currentPage + 1)"
+                  x-text="isLoading ? 'Loading...' : 'Load More'">Load More</a>
+              </div>
+            </div>
+          </template>
+          <template x-if="order">
+            <div>
+              <div class="flex space-x-4">
+                <i class="my-auto text-xl cursor-pointer" @click="closeOrder()">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                </i>
+                <h1 class="text-3xl text-black" x-text="'#' + orderId">
+                </h1>
+                <span class="relative my-auto inline-block px-3 py-1 font-semibold leading-tight"
+                  :class="'text-' + statuses[order.status]['color'] + '-900'">
+                  <span aria-hidden="" class="absolute inset-0 opacity-50 rounded-full"
+                    :class="'bg-' + statuses[order.status]['color'] + '-200'"></span>
+                  <span class="relative" x-text="statuses[order.status]['name']"></span>
+                </span>
+              </div>
+              <div class="flex flex-wrap">
+                <div class="w-full lg:w-2/3 mt-6 pr-0 lg:pr-3">
+                  <p class="text-xl pb-6 flex items-center">
+                    Products
+                  </p>
+                  <div class="leading-loose">
+                    <div class="bg-white rounded shadow-xl overflow-auto">
+                      <table class="w-full leading-normal">
+                        <thead class="hidden md:table-header-group">
+                          <tr class="border-b-2 border-grey-darker">
+                            <th
+                              class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Product
+                            </th>
+                            <th
+                              class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              SKU
+                            </th>
+                            <th
+                              class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Quantity
+                            </th>
+                            <th
+                              class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Price
+                            </th>
+                            <th
+                              class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                              Total
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <template x-for="product in order.cart.products">
+                            <tr class="grid grid-cols-1 md:table-row border-b-2 border-grey-darker">
+                              <td class="px-5 py-5 bg-white text-sm">
+                                <div class="flex items-center">
+                                  <div class="flex-shrink-0 w-10">
+                                    <img class="w-full h-full" :src="product.details.image" alt="" />
+                                  </div>
+                                  <div class="ml-3">
+                                    <p class="text-gray-900 whitespace-no-wrap" x-text="product.details.product">
+                                    </p>
+                                    <div class="text-sm text-gray-500" x-text="'Variant: ' + product.details.variant"
+                                      x-show="product.details.variant != 'Simple Product'">
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                                <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">SKU: </strong>
+                                <p class="text-gray-900 whitespace-no-wrap" x-text="product.details.sku"></p>
+                              </td>
+                              <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                                <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Quantity:
+                                </strong>
+                                <p class="text-gray-900 whitespace-no-wrap" x-text="product.quantity"></p>
+                              </td>
+                              <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                                <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Price:
+                                </strong>
+                                <span class="" x-text="'₹' + product.details.price"></span>
+                              </td>
+                              <td class="flex md:table-cell px-5 pb-5 md:py-5 bg-white text-sm">
+                                <strong class="flex-1 my-auto md:hidden text-gray-900 whitespace-no-wrap">Total:
+                                </strong>
+                                <span class="" x-text="'₹' + product.quantity * product.details.price"></span>
+                              </td>
+                            </tr>
+                          </template>
+                          <tr class="flex md:table-row border-b-2 border-grey-darker">
+                            <td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
+                              <p class="text-gray-900 whitespace-no-wrap"
+                                x-text="'Subtotal (' + order.cart.quantity + ' items)'">
+                              </p>
+                            </td>
+                            <td class="px-5 py-5 bg-white text-sm">
+                              <span class="" x-text="'₹' + order.cart.subTotal"></span>
+                            </td>
+                          </tr>
+                          <tr class="flex md:table-row border-b-2 border-grey-darker">
+                            <td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
+                              <p class="text-gray-900 whitespace-no-wrap"
+                                x-text="'Shipping (' + order.shipping.methodName + ')'">
+                              </p>
+                            </td>
+                            <td class="px-5 py-5 bg-white text-sm">
+                              <span class="" x-text="'₹' + order.shipping.charge"></span>
+                            </td>
+                          </tr>
+                          <tr class="flex md:table-row border-b-2 border-grey-darker">
+                            <td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
+                              <p class="text-gray-900 whitespace-no-wrap">Discount</p>
+                            </td>
+                            <td class="px-5 py-5 bg-white text-sm">
+                              <span class="" x-text="'-₹' + order.cart.discount"></span>
+                            </td>
+                          </tr>
+                          <tr class="flex md:table-row border-b-2 border-grey-darker">
+                            <td class="flex-1 px-5 py-5 bg-white text-sm" colspan="4">
+                              <p class="text-gray-900 whitespace-no-wrap">Total</p>
+                            </td>
+                            <td class="px-5 py-5 bg-white text-sm">
+                              <span class="" x-text="'₹' + order.cart.total"></span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <p class="text-xl py-6 flex items-center">
+                    Shipping Address
+                  </p>
+                  <div class="p-5 leading-loose bg-white rounded text-sm">
+                    <p class="text-gray-900 whitespace-pre-line"
+                      x-text="order.customer.firstName + ' ' + order.customer.lastName"></p>
+                    <p class="text-gray-900 whitespace-pre-line" x-text="getShippingAddress()"></p>
+                    <p class="flex text-gray-900">
+                      <span class="mr-1 my-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                      </span>
+                      <span x-text="order.customer.email"></span>
+                    </p>
+                    <p class="flex text-gray-900">
+                      <span class="mr-1 my-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path
+                            d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                        </svg>
+                      </span>
+                      <span x-text="order.customer.phoneNumber"></span>
+                      <span x-text="'/' + order.customer.alternatePhoneNumber"
+                        x-show="order.customer.alternatePhoneNumber"></span>
+                    </p>
+                    <p class="text-gray-900 whitespace-pre-line" x-show="order.cart.note"
+                      x-text="'Customer provided note: ' + order.cart.note"></p>
+                    <p class="text-gray-900 whitespace-pre-line" x-show="order.cart.storeFeedback"
+                      x-text="'Customer provided feedback: ' + order.cart.storeFeedback"></p>
+                  </div>
+                </div>
+                <div class="w-full lg:w-1/3 mt-6 pl-0 lg:pl-3" x-show="order.notes.length != 0">
+                  <p class="text-xl pb-6 flex items-center">
+                    Order Notes
+                  </p>
+                  <div class="leading-loose">
+                    <form class="p-5 bg-white rounded shadow-xl">
+                      <div class="">
+                        <div class="flex flex-wrap mt-4 text-sm">
+                          <template x-for="(note, index) in order.notes" :key="index">
+                            <div class="w-full">
+                              <div class="bg-gray-100 px-4 py-2 mb-2 mr-2 rounded">
+                                <p class="overflow-x-scroll sm:overflow-auto" x-text="note.message"></p>
+                              </div>
+                              <p class="text-xs mb-2 px-4" x-text="new Date(note.createdOn).toLocaleString()">
+                              </p>
+                            </div>
+                          </template>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

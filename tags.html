@@ -1,6 +1,0 @@
----
-permalink: /api/tags.json
----
-{
-{%- for tag in data.productTags -%}"{{tag}}": {"products": {{data.tags[tag].products}}}{%- unless forloop.last -%},{%- endunless -%}
-{%- endfor -%}}

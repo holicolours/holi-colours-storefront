@@ -120,10 +120,36 @@
                             <a href="/"
                                 class="block text-lg font-hk hover:font-bold transition-all text-secondary hover:text-primary border-b-2 border-transparent hover:border-primary px-2">Home</a>
                         </li>
-                        <li class="mr-10">
-                            <a href="/collections"
-                                class="block text-lg font-hk hover:font-bold transition-all text-secondary hover:text-primary border-b-2 border-transparent hover:border-primary px-2">Collections</a>
+                        <li class="group mr-10 hidden lg:block">
+                            <div
+                                class="flex items-center border-b-2 border-white transition-colors group-hover:border-primary">
+                                <span
+                                    class="cursor-pointer px-2 font-hk text-lg text-secondary transition-all group-hover:font-bold group-hover:text-primary">Shop</span>
+                                <i
+                                    class="bx bx-chevron-down px-2 pl-2 text-secondary transition-colors group-hover:text-primary"></i>
+                            </div>
+                            <div
+                                class="pointer-events-none absolute top-0 left-0 right-0 z-50 mx-auto mt-40 w-2/3 pt-10 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100">
+                                <div class="relative flex rounded-b bg-white p-8 shadow-lg transition-all">
+                                    {%- for rootCategory in data.shopByCategory %}
+                                    <div class="relative z-20 flex-1">
+                                        <a href="/shop/{{rootCategory.slug}}" class="font-hkbold mb-2 text-base text-secondary">{{rootCategory.name}}</h4>
+                                        {%- if rootCategory.categories.length > 0 %}
+                                        <ul>
+                                            {%- for childCategory in rootCategory.categories %}
+                                            <li>
+                                                <a href="/shop/{{childCategory.slug}}"
+                                                    class="border-b border-transparent font-hk text-sm leading-loose text-secondary-lighter hover:border-secondary-lighter">{{childCategory.name}}</a>
+                                            </li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% endif -%}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
                         </li>
+
                         <li class="mr-10">
                             <a href="/contact#faq"
                                 class="block text-lg font-hk hover:font-bold transition-all text-secondary hover:text-primary border-b-2 border-transparent hover:border-primary px-2">FAQ</a>
@@ -146,9 +172,37 @@
                 <a href="/wishlist"
                     class="w-full py-3 cursor-pointer font-hk font-medium text-secondary border-b border-grey-dark block">Wishlist
                 </a>
-                <a href="/collections"
-                    class="w-full py-3 cursor-pointer font-hk font-medium text-secondary border-b border-grey-dark block">Collections
-                </a>
+                <div class="block w-full border-b border-grey-dark py-3" x-data="{ isParentAccordionOpen: false }">
+                    <div class="flex items-center justify-between"
+                        @click="isParentAccordionOpen = !isParentAccordionOpen">
+                        <span class="block font-hk font-medium transition-colors"
+                            :class="isParentAccordionOpen ? 'text-primary' : 'text-secondary'">Shop</span>
+                        <i class="bx text-xl text-secondary"
+                            :class="isParentAccordionOpen ? 'bx-chevron-down' : 'bx-chevron-left'"></i>
+                    </div>
+                    <div class="transition-all"
+                        :class="isParentAccordionOpen ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
+                        {%- for rootCategory in data.shopByCategory %}
+                        <div x-data="{ isAccordionOpen: false }">
+                            <div class="flex items-center pt-3" @click="isAccordionOpen = !isAccordionOpen">
+                                <i class="bx pr-3 text-xl transition-colors"
+                                    :class="isAccordionOpen ? 'bx-chevron-down text-secondary' : 'bx-chevron-right text-grey-darkest'"></i>
+                                <a href="/shop/{{rootCategory.slug}}" class="font-hk font-medium transition-colors"
+                                    :class="isAccordionOpen ? 'text-primary' : 'text-grey-darkest'">{{rootCategory.name}}</a>
+                            </div>
+                            {%- if rootCategory.categories.length > 0 %}
+                            <div class="pl-12 transition-all"
+                                :class="isAccordionOpen ? 'max-h-infinite' : 'max-h-0 overflow-hidden'">
+                                {%- for childCategory in rootCategory.categories %}
+                                <a href="/shop/{{childCategory.slug}}"
+                                    class="mt-2 block font-hk font-medium text-secondary">{{childCategory.name}}</a>
+                                {% endfor %}
+                            </div>
+                            {% endif -%}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
                 <a href="/contact#faq"
                     class="w-full py-3 cursor-pointer font-hk font-medium text-secondary border-b border-grey-dark block">FAQ
                 </a>
@@ -225,32 +279,25 @@
                                 <div class="flex items-center justify-center lg:justify-start">
                                     <a href="https://www.instagram.com/holi_colours_jewel/" class="group">
                                         <div
-                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
+                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 mr-5 flex items-center transition-colors">
                                             <i
                                                 class="bx bxl-instagram text-secondary transition-colors group-hover:text-white"></i>
                                         </div>
                                     </a>
                                     <a href="https://www.facebook.com/profile.php?id=100075692184488" class="group">
                                         <div
-                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center transition-colors">
+                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 mr-5 flex items-center transition-colors">
                                             <i
                                                 class="bx bxl-facebook text-secondary transition-colors group-hover:text-white"></i>
                                         </div>
                                     </a>
-                                    <!-- <a href="https://www.google.com" class="group">
+                                    <a href="https://pin.it/6NmcDSM" class="group">
                                         <div
-                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
+                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center transition-colors">
                                             <i
                                                 class="bx bxl-pinterest text-secondary transition-colors group-hover:text-white"></i>
                                         </div>
                                     </a>
-                                    <a href="https://www.google.com" class="group">
-                                        <div
-                                            class="bg-white group-hover:bg-primary rounded-full px-2 py-2 flex items-center mr-5 transition-colors">
-                                            <i
-                                                class="bx bxl-youtube text-secondary transition-colors group-hover:text-white"></i>
-                                        </div>
-                                    </a> -->
                                 </div>
                             </li>
                         </ul>
@@ -259,53 +306,12 @@
                     <div class="text-center lg:text-left lg:w-1/5 pt-6 lg:pt-0">
                         <h4 class="font-hk font-bold text-white text-xl pb-8">Shop by Category</h4>
                         <ul class="list-reset">
+                            {%- for category in data.shopByCategory %}
                             <li class="pb-2 block">
-                                <a href="/collections/golden-jewelry/"
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Golden
-                                    Jewellery</a>
+                                <a href="/shop/{{ category.slug }}"
+                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">{{category.name}}</a>
                             </li>
-                            <!-- <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Necklace</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Haram</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Chocker</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Bangle</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Hipbelt / Hipchain</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Tikka</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href=""
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Other Accessories</a>
-                            </li> -->
-                            <li class="pb-2 block">
-                                <a href="/collections/silver-jewelry/"
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Silver
-                                    Jewellery</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href="/collections/artificial-diamonds/"
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Artificial
-                                    Diamonds</a>
-                            </li>
-                            <li class="pb-2 block">
-                                <a href="/collections/others/"
-                                    class="font-hk text-white transition-colors hover:text-primary text-base tracking-wide">Others</a>
-                            </li>
+                            {% endfor %}
                         </ul>
                     </div>
 

@@ -1,0 +1,11 @@
+---
+pagination:
+    data: data.collections.sortedLists.dateNewToOld
+    size: 12
+    alias: products
+permalink: /shop/{% if pagination.pageNumber > 0 %}{{ pagination.pageNumber }}/{% endif %}date_new_to_old/
+layout: base.html
+title: "Shop | Holi Colours Jewellery"
+---
+
+{% include product_listing.html, sort: 'date_new_to_old', products: products, pagination: pagination %}

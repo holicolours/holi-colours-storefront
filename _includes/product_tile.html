@@ -1,0 +1,35 @@
+<div class="relative rounded flex justify-center items-center">
+    <div class="aspect-w-1 aspect-h-1 w-full">
+        <img :src="product.image" alt="product image" class="object-cover" />
+    </div>
+    <div class="absolute top-0 left-0 bg-white px-5 py-1 m-4 rounded-full" x-show="product.stockStatus == 'OS'">
+        <p class="text-v-red font-hk font-bold text-sm uppercase tracking-wide">SOLD OUT</p>
+    </div>
+    <div class="absolute top-0 right-0 bg-white px-5 py-1 m-4 rounded-full" x-show="product.salePercentage > 0">
+        <p class="text-v-green font-hk font-bold text-sm uppercase tracking-wide" x-text="product.salePercentage + '% OFF'"></p>
+    </div>
+    <div
+        class="absolute inset-0 opacity-0 group-hover:opacity-100 flex justify-center items-center bg-secondary bg-opacity-85 transition-opacity">
+        <button @click="addToCart(product.id, product.defaultVariantId)"
+            class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+            <img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
+                alt="icon cart" />
+        </button>
+        <a :href="'/products/' + product.slug"
+            class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
+            <img src="/assets/img/icons/icon-search.svg" class="h-6 w-6"
+                alt="icon search" />
+        </a>
+        <button @click="addToWishList(product.id, product.defaultVariantId)"
+            class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all">
+            <img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6"
+                alt="icon heart" />
+        </button>
+    </div>
+</div>
+<div class="flex justify-between items-center pt-6">
+    <a :href="'/products/' + product.slug">
+        <h3 class="font-hk text-base text-secondary" x-text="product.name"></h3>
+    </a>
+    <span class="font-hkbold text-primary text-xl" x-text="'₹' + product.price"></span>
+</div>

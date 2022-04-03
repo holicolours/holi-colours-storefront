@@ -1,0 +1,407 @@
+---
+pagination:
+    data: data.products
+    size: 1
+    alias: product
+permalink: "products/{{ product.slug }}/"
+layout: base.html
+---
+<div>
+  <div class="container" x-data="productModule()" x-init="loadProduct('{{product.id}}')">
+    <div class="flex justify-center items-center py-40" x-show="isLoading">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+    </div>
+    <template x-if="product">
+      <div>
+        <div class="flex flex-wrap items-center justify-center lg:justify-start pt-10 sm:pt-12">
+          <a href="/"
+            class="transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
+            Home
+          </a>
+          {%- for category in product.categories -%}
+          {%- if forloop.first == true -%}
+          <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+          {%- endif -%}
+          <a href="/shop/{{ category.slug }}"
+            class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
+            {{ category.name }}
+          </a>
+          {%- if forloop.last != true and forloop.length > 1 -%}
+          <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+          {%- endif -%}
+          {%- endfor -%}
+          <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+          <span class="text-sm text-secondary font-hk">
+            {{ product.name }}
+          </span>
+        </div>
+        <div class="pt-10 sm:pt-12 pb-10 sm:pb-12 flex flex-col lg:flex-row justify-between -mx-5">
+          <div class="lg:w-1/2 flex flex-col-reverse sm:flex-row-reverse lg:flex-row justify-between px-5">
+            <div class="sm:pl-5 md:pl-4 lg:pl-0 lg:pr-2 xl:pr-3 flex flex-row sm:flex-col">
+              {%- for variant in product.variants %}
+              {%- if variant.image and variant.image.publicUrl -%}
+              <div class="w-28 sm:w-32 lg:w-24 xl:w-28 relative pb-5 mr-3 sm:pr-0">
+                <div class="bg-v-pink border border-grey relative rounded flex items-center justify-center w-full">
+                  <img class="cursor-pointer object-cover" @click="selectedImage = '{{ variant.image.publicUrl }}'"
+                    alt="product image" src="{{ variant.image.publicUrl }}">
+                </div>
+              </div>
+              {%- endif -%}
+              {% endfor %}
+            </div>
+            <div class="w-full relative pb-5 sm:pb-0">
+              <div class="bg-v-pink border border-grey relative rounded flex items-center justify-center">
+                <!-- aspect-w-1 aspect-h-1 -->
+                <img class="object-cover" alt="product image" :src="selectedImage"
+                  src="{{ product.variants[0].image.publicUrl }}">
+              </div>
+            </div>
+          </div>
+          <div class="lg:w-1/2 pt-8 lg:pt-0 px-5">
+            <div class="border-b border-grey-dark">
+              <div class="flex items-center">
+                <h2 class=" font-butler text-3xl md:text-4xl lg:text-4.5xl">{{ product.name }}</h2>
+              </div>
+              <div class="flex items-center pt-3">
+                <span class="font-hk text-secondary text-2xl"
+                  x-text="'₹' + product.variants[selectedVariant].price"></span>
+                <span class="font-hk text-grey-darker text-xl line-through pl-5"
+                  x-show="product.variants[selectedVariant].salePercentage > 0"
+                  x-text="'₹' + product.variants[selectedVariant].regularPrice"></span>
+                <span
+                  class="bg-primary rounded-full ml-8 px-5 py-2 leading-none font-hk font-bold text-white uppercase text-sm"
+                  x-show="product.variants[selectedVariant].salePercentage > 0"
+                  x-text="product.variants[selectedVariant].salePercentage + '% OFF'"></span>
+              </div>
+              <p class="font-hk text-secondary pt-3 pb-4">Shipping charges calculated at checkout.</p>
+            </div>
+            {%- if data.offers and data.offers.length > 0 %}
+            <div class="border-b border-grey-dark py-4">
+              <p class="font-hk text-secondary mb-2">Offers:</p>
+              <ul>
+                {%- for offer in data.offers -%}
+                <li>
+                  <p class="text-secondary pl-3">{{offer.offerText}}</p>
+                </li>
+                {%- endfor -%}
+              </ul>
+            </div>
+            {%- endif -%}
+            <div class="flex pb-5 mt-4">
+              <p class="font-hk text-secondary">Availability:</p>
+              <template x-if="stockStatus">
+                <p class="text-secondary pl-3" :class="'text-' + stockStatuses[stockStatus]['color'] + '-900'"
+                  x-text="stockStatuses[stockStatus]['name']"></p>
+              </template>
+              <template x-if="!stockStatus">
+                <p class="font-hk pl-3">Checking...</p>
+              </template>
+            </div>
+            {%- for option in product.options -%}
+            <div class="flex items-center justify-between pb-4">
+              <div class="w-1/3 sm:w-1/5">
+                <p class="font-hk text-secondary">{{option.optionName.optionName}}</p>
+              </div>
+              <div class="w-2/3 sm:w-5/6">
+                <select class="w-full sm:w-5/6 form-select text-secondary font-semibold" name="product_options"
+                  x-model="selectedProductOptions['{{option.optionName.optionName}}']" @change="changeProductOptions()">
+                  {%- for optionValue in option.optionValues %}
+                  <option value="{{optionValue.optionValue}}">
+                    {{optionValue.optionValue}}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            {%- endfor -%}
+            <div class="flex items-center justify-between pb-4" x-show="product.accessories.length>0">
+              <div class="w-1/3 sm:w-1/5">
+                <p class="font-hk text-secondary">Accessories</p>
+              </div>
+              <div class="w-2/3 sm:w-5/6">
+                <select class="w-full sm:w-5/6 form-select text-secondary font-semibold" name="product_accessories">
+                  {%- for accessory in product.accessories -%}
+                  <option value="{{accessory.id}}">{{accessory.name}} + ₹{{accessory.price}}</option>
+                  {%- endfor -%}
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center justify-between pb-4">
+              <div class="w-1/3 sm:w-1/5">
+                <p class="font-hk text-secondary">Quantity</p>
+              </div>
+              <div class="w-2/3 sm:w-5/6 flex">
+                <label for="quantity-form" class="block relative h-0 w-0 overflow-hidden">Quantity
+                  form</label>
+                <input type="number" id="quantity-form" name="quantity-form"
+                  class="form-input form-quantity rounded-r-none w-16 py-0 px-2 text-center text-secondary font-semibold"
+                  x-model="quantity" min="1" :max="stockQuantity" readonly>
+                <div class="flex flex-col">
+                  <span class="px-1 bg-white border border-l-0 border-grey-darker flex-1 rounded-tr cursor-pointer"
+                    @click="quantity < stockQuantity ? quantity++ : null">
+                    <i class="bx bxs-up-arrow text-xs text-primary pointer-events-none"></i>
+                  </span>
+                  <span
+                    class="px-1 bg-white flex-1 border border-t-0 border-l-0 rounded-br border-grey-darker cursor-pointer"
+                    @click="quantity> 1 ? quantity-- : null">
+                    <i class="bx bxs-down-arrow text-xs text-primary pointer-events-none"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="flex pb-8 group">
+              <a class="btn btn-outline mr-4 md:mr-6 cursor-pointer" @click="addToCart()" x-text="addToCartText">Add to
+                cart</a>
+              <a class="rounded-full btn btn-outline cursor-pointer" @click="addToWishList()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                    clip-rule="evenodd" />
+                </svg>
+              </a>
+            </div>
+            {%- if product.description != '' -%}
+            <div class="font-hk text-secondary pb-5">
+              {{ product.description }}
+              <div x-show="product.variants[selectedVariant].description"
+								x-html="product.variants[selectedVariant].description"></div>
+            </div>
+            {%- endif -%}
+            <div class="flex pb-4">
+              <p class="font-hk text-secondary">SKU:</p>
+              <p class="font-hkbold text-secondary pl-3">{{ product.sku }}</p>
+            </div>
+            <p class="font-hk text-secondary pb-4" x-show="product.categories.length>0">
+              <span class="pr-2">
+                {%- for category in product.categories -%}
+                {%- if forloop.first == true -%} Categories: &nbsp; {%- endif -%}
+                <a href="/shop/{{ category.slug}}"
+                  class="cursor-pointer transition-all border-b border-transparent hover:border-primary text-secondary hover:text-primary font-hk">{{
+                  category.name }}</a>
+                {%- if forloop.last != true and forloop.length > 1 -%} , &nbsp; {%- endif -%}
+                {%- endfor -%}
+              </span>
+            </p>
+            <p class="font-hk text-secondary pb-4 flex flex-wrap" x-show="product.tags.length>0">
+              <span class="pr-2">
+                Tags:
+              </span>
+              <template x-if="product.tags" x-for="tag in product.tags">
+                <a :href="'/search/?tag=' + tag.tag" class="bg-gray-100 px-3 py-1 rounded-full mr-2 mb-2"
+                  x-text="'#' + tag.tag"></a>
+              </template>
+            </p>
+          </div>
+        </div>
+        <div class="pb-10 sm:pb-12">
+          <div class="tabs flex flex-col sm:flex-row" role="tablist">
+
+            <span @click="activeTab = 'additional-information'"
+              class="tab-item bg-white hover:bg-grey-light px-10 py-5 text-center sm:text-left border-t-2 border-transparent font-hk font-bold text-secondary cursor-pointer transition-colors active"
+              :class="{ 'active': activeTab=== 'additional-information' }">
+              Additional Information
+            </span>
+
+            <span @click="activeTab = 'reviews'; reviews ? null : loadReview()"
+              class="tab-item bg-white hover:bg-grey-light px-10 py-5 text-center sm:text-left border-t-2 border-transparent font-hk font-bold text-secondary cursor-pointer transition-colors"
+              :class="{ 'active': activeTab=== 'reviews' }">
+              Reviews
+            </span>
+
+          </div>
+          <div class="tab-content relative">
+            <div x-show="activeTab === 'additional-information'"
+              :class="{ 'active': activeTab === 'additional-information' }"
+              class="prose max-w-none tab-pane bg-grey-light py-10 md:py-16 transition-opacity active" role="tabpanel">
+              <div class="w-5/6 mx-auto">
+                <div class="font-hk">
+                  {{ product.additionalInformation.document }}
+                </div>
+              </div>
+            </div>
+            <div x-show="activeTab === 'reviews'" :class="{ 'active': activeTab === 'reviews' }"
+              class="tab-pane bg-grey-light py-10 md:py-16 transition-opacity" role="tabpanel">
+
+              <div class="flex justify-center items-center py-10" x-show="reviewsLoading">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary">
+                </div>
+              </div>
+
+              <p class="w-5/6 mx-auto" x-show="reviewsEmpty">There are no reviews yet.</p>
+
+              <template x-if="reviews" x-for="index in Object.keys(reviews).sort().reverse()">
+                <div class="w-5/6 mx-auto border-b border-grey-darker pb-4 mb-4 text-center sm:text-left">
+                  <div class="flex justify-center sm:justify-start items-center pt-3 xl:pt-5">
+                    <i class="bx bxs-star text-primary"
+                      :class="reviews[index].rating >= 1 ? 'text-primary' : 'text-grey-darker'"></i>
+                    <i class="bx bxs-star text-primary"
+                      :class="reviews[index].rating >= 2 ? 'text-primary' : 'text-grey-darker'"></i>
+                    <i class="bx bxs-star text-primary"
+                      :class="reviews[index].rating >= 3 ? 'text-primary' : 'text-grey-darker'"></i>
+                    <i class="bx bxs-star text-primary"
+                      :class="reviews[index].rating >= 4 ? 'text-primary' : 'text-grey-darker'"></i>
+                    <i class="bx bxs-star text-primary"
+                      :class="reviews[index].rating >= 5 ? 'text-primary' : 'text-grey-darker'"></i>
+                  </div>
+                  <p class="font-semibold text-secondary text-lg pt-4" x-text="reviews[index].title">
+                  </p>
+                  <p class="font-hk text-secondary pt-4 whitespace-pre-line" x-text="reviews[index].message"></p>
+                  <div class="container grid grid-cols-3 md:grid-cols-8 gap-5 mx-auto pt-3">
+                    <template x-for="image in reviews[index].images">
+                      <div class="w-full rounded">
+                        <article tabindex="0"
+                          class="group w-full h-full rounded-md focus:outline-none focus:shadow-outline bg-gray-100 cursor-pointer relative text-transparent hover:text-white shadow-sm">
+                          <img class="w-full h-full sticky object-cover rounded-md bg-fixed" :src="image">
+                        </article>
+                      </div>
+                    </template>
+                  </div>
+                  <div class="flex justify-center sm:justify-start items-center pt-3">
+                    <p class="font-hk text-grey-darkest text-sm" x-text="'By ' + reviews[index].name"></p>
+                    <span class="font-hk text-grey-darkest text-sm block px-4">.</span>
+                    <p class="font-hk text-grey-darkest text-sm"
+                      x-text="new Date(reviews[index].createdOn).toLocaleTimeString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })">
+                    </p>
+                  </div>
+                </div>
+              </template>
+
+              <form class="w-5/6 mx-auto" id="new_review_form" @submit.prevent="submitReview()">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 pt-10">
+                  <div class="w-full">
+                    <label class="font-hk text-secondary text-sm block mb-2" for="name">Name</label>
+                    <input type="text" placeholder="Enter your Name" class="form-input" id="name"
+                      x-model="newReview.name" required>
+                  </div>
+                  <div class="w-full pt-10 sm:pt-0">
+                    <label class="font-hk text-secondary text-sm block mb-2" for="email">Email
+                      address</label>
+                    <input type="email" placeholder="Enter your email" class="form-input " id="email"
+                      x-model="newReview.email" required :readonly="getCookie('uid') && !getCookie('isAnonymous')">
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 pt-10">
+                  <div class="w-full">
+                    <label class="font-hk text-secondary text-sm block mb-2" for="review_title">Review Title</label>
+                    <input type="text" placeholder="Enter your review title" class="form-input " id="review_title"
+                      x-model="newReview.title" required>
+                  </div>
+                  <div class="w-full pt-10 sm:pt-0">
+                    <label class="font-hk text-secondary text-sm block mb-2">Images</label>
+                    <input type="file" multiple class="form-input bg-white" id="review_images"
+                      @change="uploadImages($event)">
+                  </div>
+                </div>
+                <div class="sm:w-12/25 pt-10">
+                  <label for="message" class="font-hk text-secondary text-sm block mb-2">Review
+                    Message</label>
+                  <textarea placeholder="Write your review here" class="form-textarea h-28" id="message"
+                    spellcheck="false" x-model="newReview.message" required></textarea>
+                </div>
+                <div class="sm:w-12/25 pt-10">
+                  <label class="font-hk text-secondary text-sm block mb-2">Rating</label>
+                  <div class="flex pt-4">
+                    <i class="bx bxs-star text-xl pr-1"
+                      :class="newReview.rating >= 1 ? 'text-primary' : 'text-grey-darker'"
+                      @click="newReview.rating = 1"></i>
+                    <i class="bx bxs-star text-xl pr-1"
+                      :class="newReview.rating >= 2 ? 'text-primary' : 'text-grey-darker'"
+                      @click="newReview.rating = 2;"></i>
+                    <i class="bx bxs-star text-xl pr-1"
+                      :class="newReview.rating >= 3 ? 'text-primary' : 'text-grey-darker'"
+                      @click="newReview.rating = 3"></i>
+                    <i class="bx bxs-star text-xl pr-1"
+                      :class="newReview.rating >= 4 ? 'text-primary' : 'text-grey-darker'"
+                      @click="newReview.rating = 4"></i>
+                    <i class="bx bxs-star text-xl" :class="newReview.rating >= 5 ? 'text-primary' : 'text-grey-darker'"
+                      @click="newReview.rating = 5"></i>
+                  </div>
+                </div>
+                <div class="w-5/6 pt-8 md:pt-10 pb-4 text-center sm:text-left">
+                  <button type="submit" class="btn btn-primary"
+                    x-text="submittingReview ? 'Submitting...' : 'Submit Review'">Submit
+                    Review</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        {%- if product.relatedProducts.length != 0 %}
+        <div>
+          <div class="flex flex-col sm:flex-row justify-between items-center sm:pb-4 lg:pb-0 mb-12 sm:mb-10">
+            <div class="text-center sm:text-left">
+              <h2 class=" font-butler  text-secondary text-3xl md:text-4xl lg:text-4.5xl">Related Products
+              </h2>
+            </div>
+          </div>
+          <div class="product-slider relative" x-data x-init="
+						new Glide($el, {
+							type: 'carousel',
+							startAt: 0,
+							perView: 4,
+							gap: 0,
+							peek: {
+								before: 50,
+								after: 50,
+							},
+							breakpoints: {
+								1024: {
+									perView: 3,
+									peek: {
+										before: 20,
+										after: 20,
+									},
+								},
+								768: {
+									perView: 2,
+									peek: {
+										before: 10,
+										after: 10,
+									},
+								},
+								600: {
+									perView: 1,
+									peek: {
+										before: 0,
+										after: 0,
+									},
+								},
+							},
+						}).mount();
+						">
+            <div class="glide__track" data-glide-el="track">
+              <div class="pt-12 relative glide__slides">
+                {%- for relatedProduct in product.relatedProducts %}
+                <div class="relative group glide__slide pt-16 md:pt-0">
+                  <div class="sm:px-5 lg:px-4" x-data="productTileStockModule()"
+                    x-init='loadProduct(JSON.parse(unescape("{{relatedProduct | dumpJSON}}")))'>
+                    {% include product_tile.html %}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div data-glide-el="controls">
+              <div
+                class="transition-all shadow-md rounded-full absolute left-25 sm:left-35 md:left-0 top-0 md:top-50 transform -translate-y-1/2 bg-grey hover:bg-primary border border-grey-dark z-30 cursor-pointer group"
+                data-glide-dir="<">
+                <div class="h-12 w-12 flex items-center justify-center">
+                  <i
+                    class="bx bx-chevron-left text-primary transition-colors group-hover:text-white text-3xl leading-none"></i>
+                </div>
+              </div>
+              <div
+                class="transition-all shadow-md rounded-full absolute right-25 sm:right-35 md:right-0 top-0 md:top-50 transform -translate-y-1/2 bg-grey hover:bg-primary border border-grey-dark z-30 cursor-pointer group"
+                data-glide-dir=">">
+                <div class="h-12 w-12 flex items-center justify-center">
+                  <i
+                    class="bx bx-chevron-right text-primary transition-colors group-hover:text-white text-3xl leading-none"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif -%}
+      </div>
+    </template>
+  </div>
+</div>

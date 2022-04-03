@@ -1,9 +1,0 @@
----
-permalink: /api/on_sale_products.json
----
-{
-{%- for product in data.onSaleList -%}
-"{{product.id}}": true
-{%- unless forloop.last -%},{%- endunless -%}	
-{%- endfor -%}
-}

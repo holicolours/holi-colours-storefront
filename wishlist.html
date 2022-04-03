@@ -4,108 +4,111 @@ title: "Wishlist | Holi Colours Jewellery"
 ---
 
 <div x-data="wishlistModule()" x-init="loadWishlist()">
-    <div class="container border-t border-grey-dark">
-        <div class="lg:w-2/3 flex-1 pt-10 md:pt-12 mx-auto mb-12">
-            <h1 class="font-hkbold text-secondary text-2xl pb-10 md:pb-12 text-center sm:text-left">My Wishlist</h1>
-            <div class="flex justify-center items-center py-40" x-show="isLoading">
-                <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
-            </div>
-            <div class="flex flex-col justify-center items-center pt-5" x-show="!isLoading && empty" x-cloak>
-                <span class="font-hkbold text-secondary text-xl w-full text-center mb-3">Your wishlist is currently
-                    empty!</span>
-                <a href="/collections" class="btn btn-outline">Continue Shopping</a>
-            </div>
-            <div x-show="!isLoading && !empty">
-                <table class="w-full leading-normal rounded-md whitespace-nowrap" x-cloak>
-                    <thead class="hidden md:table-header-group">
-                        <tr>
-                            <th
-                                class="px-5 py-3 w-1/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Products
-                            </th>
-                            <th
-                                class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            </th>
-                            <th
-                                class="px-5 py-3 w-2/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Price
-                            </th>
-                            <th
-                                class="px-5 py-3 w-2/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Stock Status
-                            </th>
-                            <th
-                                class="py-3 w-2/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                Actions
-                            </th>
-                            <th
-                                class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-t border-grey-darker">
-                        <template x-for="(product, index) in wishlist" :key="index">
-                            <tr class="grid grid-cols-8 md:table-row border-b border-grey-darker">
-                                <td class="px-5 py-5 bg-white text-sm col-span-2 m-auto">
-                                    <div class="w-full w-auto">
-                                        <img class="w-full h-full" :src="product.image" alt="" />
-                                    </div>
-                                </td>
-                                <td class="md:px-5 py-5 bg-white text-sm col-span-4 m-auto">
-                                    <div class="flex items-center">
-                                        <div class="ml-3">
-                                            <a :href="'/products/' + product.slug" class="text-gray-900 whitespace-normal font-bold" x-text="product.name">
-                                            </a>
-                                            <div class="flex text-sm text-gray-500 items-center mt-2"
-                                                x-show="product.variants.length > 1">
-                                                <label for="select_variant"
-                                                    class="block text-xs font-medium text-gray-700 mr-3">Variant:</label>
-                                                <select id="select_variant"
-                                                    class="mt-1 block w-full py-1 pl-3 pr-10 border border-grey-darker bg-white sm:text-sm"
-                                                    x-model="product.selectedVariant" @change="changeVariant(product)">
-                                                    <template x-for="(variant, index) in product.variants" :key="index">
-                                                        <option :value="index"
-                                                            :selected="index == product.selectedVariant"
-                                                            x-text="variant.name"></option>
-                                                    </template>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-5 md:pt-5 bg-white text-sm md:text-right col-span-2 m-auto">
-                                    <p class="text-gray-900 text-xs whitespace-no-wrap pb-1 md:hidden">Price:
-                                    </p>
-                                    <p class="text-gray-900 whitespace-no-wrap" x-text="'₹' + product.price">
-                                    </p>
-                                </td>
-                                <td class="px-5 pb-5 bg-white text-sm col-span-2 m-auto">
-                                    <span class="relative inline-block px-3 py-1 font-semibold leading-tight"
-                                        :class="'text-' + stockStatuses[product.stockStatus]['color'] + '-900'">
-                                        <span aria-hidden class="absolute inset-0 opacity-50 rounded-full"
-                                            :class="'bg-' + stockStatuses[product.stockStatus]['color'] + '-200'"></span>
-                                        <span class="relative"
-                                            x-text="stockStatuses[product.stockStatus]['name']"></span>
-                                    </span>
-                                </td>
-                                <td class="pb-5 bg-white text-sm col-span-4 ml-auto">
-                                    <a class="btn btn-primary px-2 py-2 cursor-pointer" @click="addToCart(product)">Add
-                                        to Cart</a>
-                                </td>
-                                <td class="px-5 pb-5 bg-white text-sm col-span-2 m-auto">
-                                    <span class="cursor-pointer" @click="removeFromWishlist(product.id)">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mx-auto" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </span>
-                                </td>
-                            </tr>
+  <div class="container border-t border-grey-dark">
+    <div class="lg:w-2/3 flex-1 pt-10 md:pt-12 mx-auto mb-12">
+      <h1 class="font-hkbold text-secondary text-2xl pb-10 md:pb-12 text-center sm:text-left">My Wishlist</h1>
+      <div class="flex justify-center items-center py-40" x-show="isLoading">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
+      </div>
+      <div class="flex flex-col justify-center items-center pt-5" x-show="!isLoading && empty" x-cloak>
+        <span class="font-hkbold text-secondary text-xl w-full text-center mb-3">Your wishlist is currently
+          empty!</span>
+        <a href="/shop" class="btn btn-outline">Continue Shopping</a>
+      </div>
+      <div x-show="!isLoading && !empty">
+        <table class="w-full leading-normal rounded-md whitespace-nowrap" x-cloak>
+          <thead class="hidden md:table-header-group">
+            <tr>
+              <th
+                class="px-5 py-3 w-1/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Products
+              </th>
+              <th class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              </th>
+              <th
+                class="px-5 py-3 w-2/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Price
+              </th>
+              <th
+                class="px-5 py-3 w-2/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Stock Status
+              </th>
+              <th class="py-3 w-2/12 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
+              <th class="px-5 py-3 bg-white text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+              </th>
+            </tr>
+          </thead>
+          <tbody class="border-t border-grey-darker">
+            <template x-for="(product, index) in wishlist" :key="index">
+              <tr class="grid grid-cols-8 md:table-row border-b border-grey-darker">
+                <td class="px-5 py-5 bg-white text-sm col-span-2 m-auto">
+                  <div class="w-full w-auto">
+                    <img class="w-full h-full" :src="product.image" alt="" />
+                  </div>
+                </td>
+                <td class="md:px-5 py-5 bg-white text-sm col-span-4 m-auto">
+                  <div class="flex items-center">
+                    <div class="ml-3">
+                      <p>
+                        <a :href="'/products/' + product.slug" class="text-gray-900 whitespace-normal font-bold"
+                          x-text="product.name">
+                        </a>
+                        <span
+                          class="bg-primary rounded-full px-2 leading-none font-hk font-bold text-white uppercase text-xs"
+                          x-show="product.salePercentage" x-text="product.salePercentage + '% off'">
+                        </span>
+                        <template x-for="accessory in product.accessories">
+                          <span class="bg-grey rounded-full px-2 leading-none font-hk font-bold border text-xs"
+                            x-text="'+ ' + accessory.name">
+                          </span>
                         </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                      </p>
+                      <div class="flex flex-wrap text-sm text-gray-500 items-center mt-2"
+                        x-show="product.variantOptions.length > 1">
+                        <template x-for="option in product.variantOptions">
+                          <span
+                            class="bg-grey border rounded-full px-2 py-1 mr-2 mt-1 sm:mt-0 leading-none font-hk font-bold text-black text-xs"
+                            x-text="option.attribute + ': ' + option.value">
+                          </span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-5 py-5 md:pt-5 bg-white text-sm md:text-right col-span-2 m-auto">
+                  <p class="text-gray-900 text-xs whitespace-no-wrap pb-1 md:hidden">Price:
+                  </p>
+                  <p class="text-gray-900 whitespace-no-wrap" x-text="'₹' + product.price">
+                  </p>
+                </td>
+                <td class="px-5 pb-5 bg-white text-sm col-span-2 m-auto">
+                  <span class="relative inline-block px-3 py-1 font-semibold leading-tight"
+                    :class="'text-' + stockStatuses[product.stockStatus]['color'] + '-900'">
+                    <span aria-hidden class="absolute inset-0 opacity-50 rounded-full"
+                      :class="'bg-' + stockStatuses[product.stockStatus]['color'] + '-200'"></span>
+                    <span class="relative" x-text="stockStatuses[product.stockStatus]['name']"></span>
+                  </span>
+                </td>
+                <td class="pb-5 bg-white text-sm col-span-4 ml-auto">
+                  <a class="btn btn-primary px-2 py-2 cursor-pointer" @click="addToCart(product)">Add
+                    to Cart</a>
+                </td>
+                <td class="px-5 pb-5 bg-white text-sm col-span-2 m-auto">
+                  <span class="cursor-pointer" @click="removeFromWishlist(product.id, product.vid)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:mx-auto" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </span>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
 </div>

@@ -1,0 +1,10 @@
+---
+pagination:
+    data: data.categories
+    size: 1
+    alias: category
+permalink: /shop/{{ category.slug }}/
+layout: base.html
+---
+
+{% include search_product_listing.html, search: false, category: category %}

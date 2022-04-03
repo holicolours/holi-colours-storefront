@@ -1,9 +1,11 @@
 const searchFilter = require("./filters/searchFilter");
+const dumpJSON = require("./filters/dumpJSON");
 const fs = require('fs');
 
 module.exports = function (config) {
     config.addPassthroughCopy("assets");
     config.addFilter("search", searchFilter);
+    config.addFilter("dumpJSON", dumpJSON);
 
     config.on('afterBuild', () => {
         console.log('=================afterBuild=================');

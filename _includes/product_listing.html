@@ -2,9 +2,9 @@
     <div class="container flex flex-col md:flex-row" x-data="{showFilters: false}" x-cloak>
         <div class="w-full md:w-1/4 fixed inset-y-0 left-0 z-50 overflow-scroll md:z-auto md:static md:overflow-auto md:block"
             :class="[ showFilters ? '' : 'hidden' ]" style="background-color: rgba(0,0,0,0.5)">
-            <div class="cursor-pointer fixed right-0 mt-5 mr-5 rounded-full p-1 bg-white" x-show="showFilters" @click="showFilters = false">
-                <svg class="fill-current" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-                    viewBox="0 0 18 18">
+            <div class="cursor-pointer fixed right-0 mt-5 mr-5 rounded-full p-1 bg-white" x-show="showFilters"
+                @click="showFilters = false">
+                <svg class="fill-current" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
                     <path
                         d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z">
                     </path>
@@ -13,23 +13,26 @@
             <div class="px-5 py-10 md:px-0 flex flex-col justify-start bg-white w-3/4 h-full md:w-full">
                 <p class="font-hk text-secondary text-xl md:text-2xl leading-none block">Categories</p>
                 <ul class="pt-8 list-reset">
-                    {%- for cid in data.orderedCategories %} {%- if data.categories[cid] and
-                    data.categories[cid].noOfProducts > 0 %}
+                    {%- for category in data.categories %}
+                    {%- if category.productsCount > 0 %}
                     <li class="pb-3 block">
-                        <a href="/collections/{{ data.categories[cid].slug }}"
-                            class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">{{data.categories[cid].name}}
-                            ({{data.categories[cid].noOfProducts}})</a>
+                        <a href="/shop/{{ category.slug }}"
+                            class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">{{
+                            category.name }}
+                            ({{ category.productsCount }})</a>
                     </li>
-                    {% endif -%} {% endfor %}
+                    {% endif -%}
+                    {% endfor %}
                 </ul>
                 <p class="pt-8 font-hk text-secondary text-xl md:text-2xl leading-none block">Product Tags</p>
                 <ul class="pt-8 list-reset">
-                    {%- for tag in data.productTags %} {%- if tag %}
+                    {%- for tag in data.tags %}
                     <li class="pb-3 block">
-                        <a href="/search/?tag={{ tag }}"
-                            class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">#{{tag}}</a>
+                        <a href="/search/?tag={{ tag.tag }}"
+                            class="font-hk text-secondary text-lg transition-colors hover:text-primary text-base tracking-wide">#{{
+                            tag.tag }}</a>
                     </li>
-                    {% endif -%} {% endfor %}
+                    {% endfor %}
                 </ul>
             </div>
         </div>
@@ -44,22 +47,22 @@
                 <div class="flex items-center justify-center sm:justify-end w-80" x-data="{sort: '{{sort}}'}">
                     <span class="font-hk text-secondary md:text-lg mr-2 my-auto inline-block">Sort by:</span>
                     <select class="w-2/3 form-select" onchange="javascript:location.href = this.value;">
-                        <option value="/collections/" {%- if sort==''> 0 %}selected{% endif %}>
+                        <option value="/shop/" {%- if sort==''> 0 %}selected{% endif %}>
                             Best Seller
                         </option>
-                        <option value="/collections/price_low_to_high" {%- if sort=='price_low_to_high'> 0 %}selected{%
+                        <option value="/shop/price_low_to_high" {%- if sort=='price_low_to_high'> 0 %}selected{%
                             endif %}>
                             Price: Low - High
                         </option>
-                        <option value="/collections/price_high_to_low" {%- if sort=='price_high_to_low'> 0 %}selected{%
+                        <option value="/shop/price_high_to_low" {%- if sort=='price_high_to_low'> 0 %}selected{%
                             endif %}>
                             Price: High - Low
                         </option>
-                        <option value="/collections/date_old_to_new" {%- if sort=='date_old_to_new'> 0 %}selected{%
+                        <option value="/shop/date_old_to_new" {%- if sort=='date_old_to_new'> 0 %}selected{%
                             endif %}>
                             Date: Old to New
                         </option>
-                        <option value="/collections/date_new_to_old" {%- if sort=='date_new_to_old'> 0 %}selected{%
+                        <option value="/shop/date_new_to_old" {%- if sort=='date_new_to_old'> 0 %}selected{%
                             endif %}>
                             Date: New to Old
                         </option>
@@ -68,37 +71,9 @@
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
                 {%- for product in products %}
-                <div class="w-full relative group lg:last:hidden xl:last:block">
-                    <div class="relative rounded flex justify-center items-center">
-                        <div class="w-full h-72 bg-center bg-no-repeat bg-cover"
-                            style="background-image:url({{product.image}})">
-                        </div>
-                        {%- if product.salePercentage %}
-                        <span
-                            class="absolute top-0 right-0 bg-white px-5 py-1 mt-4 mr-4 rounded-full font-hk font-bold  text-v-green text-sm uppercase tracking-wide">{{product.salePercentage}}%
-                            OFF</span> {% endif -%}
-                        <div
-                            class="absolute opacity-0 transition-opacity group-hover:opacity-100 flex justify-center items-center py-28 inset-0 group bg-secondary bg-opacity-85">
-                            <button @click="addToCart({{ product.id }}, {{product.defaultVariant}}, 1)"
-                                class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
-                                <img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6" alt="icon cart">
-                            </button>
-                            <a href="/products/{{ product.slug }}"
-                                class="bg-white hover:bg-primary-light rounded-full px-3 py-3 flex items-center transition-all mr-3">
-                                <img src="/assets/img/icons/icon-search.svg" class="h-6 w-6" alt="icon search">
-                            </a>
-                            <button @click="addToWishList({{ product.id }}, {{product.defaultVariant}})"
-                                class="bg-white hover:bg-primary-light  rounded-full px-3 py-3 flex items-center transition-all ">
-                                <img src="/assets/img/icons/icon-heart.svg" class="h-6 w-6" alt="icon heart">
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center pt-6">
-                        <a href="/products/{{ product.slug }}">
-                            <h3 class="font-hk text-base text-secondary">{{ product.name }}</h3>
-                        </a>
-                        <span class="font-hk font-bold text-primary text-xl">₹{{ product.regularPrice }}</span>
-                    </div>
+                <div class="w-full relative group lg:last:hidden xl:last:block" x-data="productTileStockModule()"
+                    x-init='loadProduct(JSON.parse(unescape("{{product | dumpJSON}}")))'>
+                    {% include product_tile.html %}
                 </div>
                 {%- endfor %}
             </div>

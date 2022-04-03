@@ -29,44 +29,44 @@ title: "Account Details | Holi Colours Jewellery"
                     <template x-if="!isLoading">
                         <form class="mt-8" @submit.prevent="saveAccount()">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div class="">
+                                <div>
                                     <label for="first_name" class="font-hk text-secondary block mb-2">First
                                         Name</label>
                                     <input type="text" class="form-input" id="first_name"
-                                        x-model="account.userInfo.firstName" required>
+                                        x-model="account.firstName" required>
                                 </div>
-                                <div class="">
+                                <div>
                                     <label for="last_name" class="font-hk text-secondary block mb-2">Last
                                         Name</label>
                                     <input type="text" class="form-input" id="last_name"
-                                        x-model="account.userInfo.lastName" required>
+                                        x-model="account.lastName" required>
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                                <div class="">
+                                <div>
                                     <label for="email" class="font-hk text-secondary block mb-2">Email Address</label>
-                                    <input type="email" class="form-input" id="email" x-model="account.userInfo.email"
+                                    <input type="email" class="form-input" id="email" x-model="account.email"
                                         readonly>
                                 </div>
-                                <div class="">
+                                <div>
                                     <label for="phone_number" class="font-hk text-secondary block mb-2">Phone
                                         Number</label>
                                     <input type="tel" class="form-input" id="phone_number"
-                                        x-model="account.userInfo.phoneNumber" required pattern="[0-9]{10}">
+                                        x-model="account.phoneNumber" required pattern="[0-9]{10}">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                                <div class="">
+                                <div>
                                     <label for="alternate_phone_number" class="font-hk text-secondary block mb-2">Alternate Phone
                                         Number</label>
                                     <input type="tel" class="form-input" id="alternate_phone_number"
-                                        x-model="account.userInfo.alternatePhoneNumber" required pattern="[0-9]{10}">
+                                        x-model="account.alternatePhoneNumber" required pattern="[0-9]{10}">
                                 </div>
-                                <div class="" x-show="account.userInfo['enableCreditPoints']">
+                                <div x-show="account.enableCreditPoints">
                                     <label for="credit_points" class="font-hk text-secondary block mb-2">Credit
                                         Points</label>
                                     <input type="number" class="form-input" id="credit_points"
-                                        x-model="account.userInfo.creditPoints" readonly>
+                                        x-model="account.creditPoints" readonly>
                                 </div>
                             </div>
                             <div class="my-8">
@@ -88,12 +88,12 @@ title: "Account Details | Holi Colours Jewellery"
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                                        <div class="">
+                                        <div>
                                             <label for="city" class="font-hk text-secondary block mb-2">City</label>
                                             <input type="text" class="form-input" id="city"
                                                 x-model="account.shipToAddress.city">
                                         </div>
-                                        <div class="">
+                                        <div>
                                             <label for="zip" class="font-hk text-secondary block mb-2">Zip
                                                 Code</label>
                                             <input type="text" class="form-input" id="zip"
@@ -101,7 +101,7 @@ title: "Account Details | Holi Colours Jewellery"
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                                        <div class="">
+                                        <div>
                                             <label for="country"
                                                 class="font-hk text-secondary block mb-2">Country</label>
                                             <select class="form-input" id="country"
@@ -113,7 +113,7 @@ title: "Account Details | Holi Colours Jewellery"
                                                 </template>
                                             </select>
                                         </div>
-                                        <div class="">
+                                        <div>
                                             <label for="state" class="font-hk text-secondary block mb-2">State</label>
                                             <select class="form-input" id="state" x-model="account.shipToAddress.state">
                                                 <option value="" selected hidden></option>
