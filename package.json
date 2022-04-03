@@ -16,6 +16,7 @@
     "escape-html": "^1.0.3",
     "firebase-admin": "^9.11.0",
     "googleapis": "^39.2.0",
+    "graphql": "^16.3.0",
     "graphql-request": "^4.0.0",
     "node-fetch": "^2.6.1",
     "nodemailer": "^6.6.3",
