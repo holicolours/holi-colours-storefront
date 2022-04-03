@@ -3,4 +3,3 @@
 
 [functions]
   directory = "functions"
-  included_files = ["emails/email-templates/**"]

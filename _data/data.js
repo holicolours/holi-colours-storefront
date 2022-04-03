@@ -3,7 +3,7 @@ var escapeHtml = require('escape-html');
 var Text = require('slate').Text;
 var gqlClient = require('graphql-request');
 var gql = gqlClient.gql;
-var gqlEndPoint = 'http://localhost:3000/api/graphql';
+const { gqlEndPoint } = process.env;
 
 const serialize = node => {
   if (Text.isText(node)) {
