@@ -54,9 +54,11 @@ function getCookie(cname) {
 
 var uiConfig = {
   callbacks: {
-    signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+    signInSuccessWithAuthResult: async function (authResult, redirectUrl) {
+      console.log(authResult);
       if (authResult.user) {
         console.log('signInSuccessWithAuthResult');
+        await database.relogin(authResult.credential);
         handleSignedInUser(authResult.user);
       }
       return false;
@@ -69,9 +71,7 @@ var uiConfig = {
       var anonymousUser = await firebase.auth().currentUser;
       var anonymousUserData = await database.getUserCart(anonymousUser.uid);
       await database.updateCart(anonymousUser.uid, null);
-      var cred = error.credential;
-      var newUser = await firebase.auth().signInWithCredential(cred);
-      await database.relogin();
+      var newUser = await database.relogin(error.credential);
       if (anonymousUserData) {
         await database.updateCart(newUser.user.uid, anonymousUserData);
       }
@@ -119,26 +119,28 @@ var handleSignedInUser = async function (user) {
     setCookie('uid', '', 365);
     setCookie('isAnonymous', '', 365);
   }
-  if (!getCookie('uid')) {
-    if (!database.isUserExists(user.uid)) {
-      const updates = {};
-      updates[`users/${user.uid}/email`] = user.email;
-      updates[`users/${user.uid}/firstName`] = user.displayName;
-      updates[`users/${user.uid}/phoneNumber`] = '';
-      let updated = await database.updateData(updates);
-      if (!updated) {
-        console.log(error);
-        alert('Error creating user! Please clear your browser cache and retry again.');
-      } else {
-        setCookie('uid', user.uid, 365);
-        //TO-DO: Create customer in Admin Site
-      }
+  await database.authenticate();
+  let isUserExists = await database.isUserExists(user.uid);
+  console.log('main.js isUserExists', isUserExists);
+  if (!isUserExists) {
+    const updates = {};
+    // updates[`users/${user.uid}/email`] = user.email;
+    updates[`users/${user.uid}/firstName`] = user.displayName;
+    updates[`users/${user.uid}/phoneNumber`] = '';
+    let updated = await database.updateData(updates);
+    console.log('User Creation Response: ', updated);
+    if (!updated) {
+      alert('Error creating user! Please clear your browser cache and retry again.');
     } else {
       setCookie('uid', user.uid, 365);
-      if (window.location.pathname == '/checkout/') {
-        window.location.reload();
-      }
+      //TO-DO: Create customer in Admin Site
     }
+  } else {
+    setCookie('uid', user.uid, 365);
+    console.log('User: ' + user.uid);
+    // if (window.location.pathname == '/checkout/') {
+    //   window.location.reload();
+    // }
   }
   document.getElementById('login-modal').style.display = 'none';
   if (checkoutPendingLogin) {
@@ -492,7 +494,7 @@ function productModule() {
           this.stockQuantity = await database.getStock(this.selectedSKU);
           this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
           this.checkSubscription();
-          if (this.quantity > this.stockQuantity) {
+          if (this.stockQuantity && this.stockQuantity != 0 && this.quantity > this.stockQuantity) {
             this.quantity = this.stockQuantity;
           }
         }
@@ -1160,11 +1162,10 @@ function accountModule() {
 function orderModule() {
   return {
     isLoading: true,
-    empty: true,
     orderList: [],
-    orders: null,
+    orders: {},
     orderId: null,
-    order: null,
+    order: {},
     statuses: {
       'PP': {
         name: 'Pending payment',
@@ -1199,8 +1200,7 @@ function orderModule() {
     currentPage: 1,
     async loadOrders() {
       let ordersSnapshot = await database.getUserOrders(getCookie('uid'));
-      this.empty = ordersSnapshot ? false : true;
-      this.orderList = Object.keys(ordersSnapshot);
+      this.orderList = ordersSnapshot ? Object.keys(ordersSnapshot) : [];
       this.orderList.sort(function (a, b) {
         return b - a;
       });
@@ -1260,7 +1260,11 @@ function orderModule() {
 function paymentStatusModule() {
   return {
     orderId: null,
-    order: {},
+    order: {
+      cart: {
+        products: []
+      }
+    },
     status: null,
     errorMessage: null,
     showSummary: false,
@@ -1274,7 +1278,6 @@ function paymentStatusModule() {
     },
     shippingZones: [],
     async loadOrder() {
-      this.order = [];
       this.isLoading = true;
       const urlSearchParams = new URLSearchParams(window.location.search);
       const params = Object.fromEntries(urlSearchParams.entries());
@@ -1284,7 +1287,7 @@ function paymentStatusModule() {
       this.errorMessage = params['errorMessage'];
       if (this.status == 'Success') {
         this.order = await database.getOrder(this.orderId);
-        console.log(this.order)
+        console.log(this.order);
         this.shippingZones = await database.getShippingZones();
         this.isLoading = false;
       } else {

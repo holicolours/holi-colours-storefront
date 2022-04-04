@@ -54,11 +54,15 @@ exports.handler = async (event, context) => {
 
       let cartList = await dbRef.child("carts").child(order.customer.uid).once('value').then((snapshot) => { return snapshot.val(); });
 
-      order.cart.products.forEach(p => {
+      order.cart.products.forEach(async p => {
         let stockQuantity = await dbRef.child("stock").child(p.details.sku).once('value').then((snapshot) => { return snapshot.val(); });
 
         if (stockQuantity >= p.quantity) {
           updates[`stock/${p.details.sku}`] = firebase.database.ServerValue.increment(-p.quantity);
+          updates[`sync/stock/${p.details.sku}`] = {
+            orderNumber: orderId,
+            stockQuantity: -p.quantity
+          };
         } else {
           if (order.status != 'OH') {
             order.status = 'OH';
@@ -139,8 +143,11 @@ exports.handler = async (event, context) => {
     updates[`orders/${orderId}/status`] = order.status;
     updates[`orders/${orderId}/lastUpdatedOn`] = order.lastUpdatedOn;
     updates[`orders/${orderId}/notes`] = order.notes;
+    updates[`sync/orders/${orderId}`] = ['payment', 'status', 'lastUpdatedOn', 'notes'];
 
     await dbRef.update(updates);
+
+    // throw order;
 
     return {
       statusCode: 302,

@@ -10,7 +10,7 @@
     </div>
     <div
         class="absolute inset-0 opacity-0 group-hover:opacity-100 flex justify-center items-center bg-secondary bg-opacity-85 transition-opacity">
-        <button @click="addToCart(product.id, product.defaultVariantId)"
+        <button @click="addToCart(product.id, product.defaultVariantId, product.sku)"
             class="bg-white hover:bg-primary-light rounded-full p-3 flex items-center transition-all mr-3">
             <img src="/assets/img/icons/icon-cart.svg " class="h-6 w-6"
                 alt="icon cart" />

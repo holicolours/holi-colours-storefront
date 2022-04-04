@@ -84,24 +84,21 @@ title: "Payment Status | Holi Colours Jewellery"
                 </p>
               </div>
             </div>
-            <!-- <div class="flex flex-col sm:flex-row justify-between py-2" x-show="order.payment">
-                            <div class="w-full sm:w-1/5">
-                                <p class="font-hk text-secondary font-bold">Payment Information</p>
-                            </div>
-                            <div class="w-full sm:w-3/5 overflow-x-scroll sm:overflow-auto">
-                                <p class="font-hk text-secondary"
-                                    x-text="'PayTM Transaction ID: ' + order.payment.result.TXNID"></p>
-                                <p class="font-hk text-secondary"
-                                    x-text="'Bank Name: ' + order.payment.result.BANKNAME"></p>
-                                <p class="font-hk text-secondary"
-                                    x-text="'Bank Transaction ID: ' + order.payment.result.BANKTXNID"></p>
-                                <p class="font-hk text-secondary"
-                                    x-text="'Payment Mode: ' + paymentMode[order.payment.result.PAYMENTMODE]">
-                                </p>
-                                <p class="font-hk text-secondary" x-text="'Amount: ' + order.payment.result.TXNAMOUNT">
-                                </p>
-                            </div>
-                        </div> -->
+            <div class="flex flex-col sm:flex-row justify-between py-2" x-show="order.payment">
+              <div class="w-full sm:w-1/5">
+                <p class="font-hk text-secondary font-bold">Payment Information</p>
+              </div>
+              <div class="w-full sm:w-3/5 overflow-x-scroll sm:overflow-auto">
+                <p class="font-hk text-secondary" x-text="'PayTM Transaction ID: ' + order.payment.result.TXNID"></p>
+                <p class="font-hk text-secondary" x-text="'Bank Name: ' + order.payment.result.BANKNAME"></p>
+                <p class="font-hk text-secondary" x-text="'Bank Transaction ID: ' + order.payment.result.BANKTXNID"></p>
+                <p class="font-hk text-secondary"
+                  x-text="'Payment Mode: ' + paymentMode[order.payment.result.PAYMENTMODE]">
+                </p>
+                <p class="font-hk text-secondary" x-text="'Amount: ' + order.payment.result.TXNAMOUNT">
+                </p>
+              </div>
+            </div>
           </div>
           <p class="font-hkbold text-secondary text-xl pb-5 md:pb-6 text-center sm:text-left">What
             happens next</p>
@@ -148,21 +145,14 @@ title: "Payment Status | Holi Colours Jewellery"
                       </div>
                       <div class="ml-3">
                         <p>
-                          <span class="text-gray-900 whitespace-no-wrap" x-text="product.details.product">
-                          </span>
+                          <a :href="'/products/' + product.details.slug" class="text-gray-900 whitespace-no-wrap"
+                            x-text="product.details.productName">
+                          </a>
                           <span
                             class="bg-primary rounded-full px-2 leading-none font-hk font-bold text-white uppercase text-xs"
                             x-show="product.details.salePercentage" x-text="product.details.salePercentage + '% off'">
                           </span>
-                          <template x-for="accessory in product.details.accessories">
-                            <span class="bg-grey rounded-full px-2 leading-none font-hk font-bold border text-xs"
-                              x-text="'+ ' + accessory">
-                            </span>
-                          </template>
                         </p>
-                        <div class="text-sm text-gray-500" x-text="'Variant: ' + product.details.variant"
-                          x-show="product.details.variant && product.details.variant != 'Simple Product'">
-                        </div>
                       </div>
                     </div>
                   </td>

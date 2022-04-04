@@ -7,9 +7,11 @@ if (window.location.host == "localhost") {
 }
 
 var database = {
-  relogin: async function () {
+  relogin: async function (credential) {
     idToken = null;
+    var newUser = await firebase.auth().signInWithCredential(credential);
     await database.authenticate();
+    return newUser;
   },
   authenticate: async function () {
     if (!idToken) {
@@ -136,7 +138,8 @@ var database = {
   isUserExists: async function (uid) {
     let apiURL = `${databaseURL}/users/${uid}/email.json`;
     let user = await database.read(apiURL, true);
-    return user ? true : false;
+    let result = user ? true : false;
+    return result;
   },
   getUser: async function (uid) {
     let apiURL = `${databaseURL}/users/${uid}.json`;
@@ -214,6 +217,8 @@ var database = {
       accessories: accessories,
       freebie: freebie
     };
+
+    console.log(productObject);
 
     return productObject;
   },

@@ -83,7 +83,7 @@ title: "Checkout | Holi Colours Jewellery"
                         </template>
                       </p>
                       <div class="flex flex-wrap text-sm text-gray-500 items-center mt-2"
-                        x-show="product.variantOptions.length > 1">
+                        x-show="product.variantOptions.length > 0">
                         <template x-for="option in product.variantOptions">
                           <span
                             class="bg-grey border rounded-full px-2 py-1 mr-2 mt-1 sm:mt-0 leading-none font-hk font-bold text-black text-xs"
@@ -214,7 +214,7 @@ title: "Checkout | Holi Colours Jewellery"
                 <div class="flex flex-col lg:flex-row justify-between">
                   <input type="tel" id="phone" placeholder="Phone Number" required
                     class="form-input mb-4 sm:mb-5 sm:mr-3" x-model="order.customer.phoneNumber" pattern="[0-9]{10}">
-                  <input type="tel" id="alternate_phone" placeholder="Alternate Phone Number" required
+                  <input type="tel" id="alternate_phone" placeholder="Alternate Phone Number"
                     class="form-input mb-4 sm:mb-5" x-model="order.customer.alternatePhoneNumber" pattern="[0-9]{10}">
                 </div>
                 <h4

@@ -33,12 +33,16 @@ if (!firebase.apps.length) {
 
 exports.handler = async (event, context) => {
   try {
+    var db = firebase.database();
+    var dbRef = db.ref();
+
     const productQuery = gql`query productQuery($idList:[ID!]) {
       products( 
         where: { id: { in: $idList } }
       ) {
         id
         name
+        slug
         status
         defaultVariant
         variants {
@@ -130,6 +134,7 @@ exports.handler = async (event, context) => {
     let order = JSON.parse(event.body);
 
     order.status = 'PP';
+    order.createdOn = new Date().getTime();
     order.cart.quantity = order.cart.products.map(p => p.quantity).reduce((sum, a) => sum + a, 0);
     order.cart.subTotal = 0;
     order.cart.discount = 0;
@@ -182,7 +187,7 @@ exports.handler = async (event, context) => {
 
     let orderItemsInput = [];
 
-    order.cart.products.forEach(p => {
+    order.cart.products.forEach(async p => {
       let product = products.filter(v => v.id == p.id);
       let variant;
       let accessories = [];
@@ -241,12 +246,13 @@ exports.handler = async (event, context) => {
       if (variant.title != 'Simple Product') {
         p.details.productName += ' (' + variant.title + ')';
       }
-      if (accessories) {
+      if (accessories && accessories.length > 0) {
         p.details.productName += ' + ' + accessories.map(v => v.name).join(', + ');
       }
       p.details.product = product.name;
       p.details.variant = variant.title;
       p.details.sku = variant.sku.sku;
+      p.details.slug = product.slug;
       p.details.accessories = accessories.map(v => v.name);
       p.details.image = variant.image ? variant.image.publicUrl : product.variants[product.defaultVariantIndex].image.publicUrl;
       p.details.price = variant.price;
@@ -294,9 +300,6 @@ exports.handler = async (event, context) => {
     }
 
     order.cart.total = order.cart.subTotal + order.shipping.charge - order.cart.discount;
-
-    var db = firebase.database();
-    var dbRef = db.ref();
 
     let orderInputs = {};
 
@@ -395,6 +398,7 @@ exports.handler = async (event, context) => {
       updates[`users/${order.customer.uid}/orders/${orderId}`] = true;
     }
     updates[`orders/${orderId}`] = order;
+    updates[`sync/orders/${orderId}`] = true;
 
     await dbRef.update(updates);
 
