@@ -3,13 +3,13 @@ const PaytmChecksum = require('paytmchecksum');
 const firebase = require('firebase-admin');
 const gqlClient = require('graphql-request');
 const gql = gqlClient.gql;
-const gqlEndPoint = 'http://localhost:3000/api/graphql';
 const {
   PAYTM_MID,
   PAYTM_MKEY,
   PAYTM_SITE_NAME,
   PAYTM_CALLBACK_URL,
-  PAYTM_PAYMENT_URL
+  PAYTM_PAYMENT_URL,
+  gqlEndPoint
 } = process.env;
 const serviceAccount = {
   "type": "service_account",
