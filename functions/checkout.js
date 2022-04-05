@@ -185,8 +185,6 @@ exports.handler = async (event, context) => {
     })
       .then(res => res.shippingMethod);
 
-    let orderItemsInput = [];
-
     order.cart.products.forEach(async p => {
       let product = products.filter(v => v.id == p.id);
       let variant;
@@ -265,18 +263,6 @@ exports.handler = async (event, context) => {
       } else if (stockQuantity < p.quantity) {
         throw `Only ${stockQuantity} item(s) are in stock for ${p.details.productName}`;
       }
-
-      orderItemsInput.push({
-        item: p.details.productName,
-        sku: {
-          "connect": {
-            "sku": p.details.sku
-          }
-        },
-        quantity: p.quantity,
-        unitPrice: variant.price,
-        total: p.quantity * variant.price
-      });
     });
 
     if (shippingMethod.zones.some(v => v.stateCode == order.customer.shipToAddress.state && v.countryCode == order.customer.shipToAddress.country)) {
@@ -301,37 +287,12 @@ exports.handler = async (event, context) => {
 
     order.cart.total = order.cart.subTotal + order.shipping.charge - order.cart.discount;
 
-    let orderInputs = {};
-
     let orderSequence = await dbRef.child("sequence").child("orders")
       .transaction(function (currentValue) {
         return (currentValue || 0) + 1;
       });
 
     let orderId = orderSequence.snapshot.val().toString();
-
-    orderInputs['orderNumber'] = orderId;
-    orderInputs['status'] = "PP";
-    orderInputs['items'] = {
-      "create": orderItemsInput
-    };
-    orderInputs['subTotal'] = order.cart.subTotal;
-    orderInputs['shippingMethod'] = order.shipping.methodName;
-    orderInputs['shippingCharge'] = order.shipping.charge;
-    orderInputs['discount'] = order.cart.discount;
-    orderInputs['total'] = order.cart.total;
-    orderInputs['customer'] = null; //TO-DO
-    orderInputs['customerFirstName'] = order.customer.firstName;
-    orderInputs['customerLastName'] = order.customer.lastName;
-    orderInputs['customerEmail'] = order.customer.email;
-    orderInputs['customerPhoneNumber'] = order.customer.phoneNumber;
-    orderInputs['customerAlternatePhoneNumber'] = order.customer.alternatePhoneNumber;
-    orderInputs['shipToAddress1'] = order.customer.shipToAddress.address1;
-    orderInputs['shipToAddress2'] = order.customer.shipToAddress.address2;
-    orderInputs['shipToCity'] = order.customer.shipToAddress.city;
-    orderInputs['shipToState'] = order.customer.shipToAddress.state;
-    orderInputs['shipToCountry'] = order.customer.shipToAddress.country;
-    orderInputs['shipToPostalCode'] = order.customer.shipToAddress.postalCode;
 
     var paytmParams = {};
 
@@ -387,22 +348,15 @@ exports.handler = async (event, context) => {
       txnToken: txnToken
     }
 
-    let createOrder = await gqlClient.request(gqlEndPoint, createOrderMutation, {
-      "order": orderInputs
-    })
-      .then(res => res.createOrder);
-
-    console.log(createOrder);
-
     if (userRegistered != null) {
-      updates[`users/${order.customer.uid}/orders/${orderId}`] = true;
+      updates[`customers/${order.customer.uid}/orders/${orderId}`] = true;
     }
     updates[`orders/${orderId}`] = order;
-    updates[`sync/orders/${orderId}`] = true;
+    updates[`sync/orders/${orderId}`] = 'create';
 
     await dbRef.update(updates);
 
-    // throw orderInputs;
+    // throw null;
 
     return {
       statusCode: 200,

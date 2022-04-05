@@ -276,7 +276,7 @@ layout: base.html
                     <label class="font-hk text-secondary text-sm block mb-2" for="email">Email
                       address</label>
                     <input type="email" placeholder="Enter your email" class="form-input " id="email"
-                      x-model="newReview.email" required :readonly="getCookie('uid') && !getCookie('isAnonymous')">
+                      x-model="newReview.email" required :readonly="isSignedIn()">
                   </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 pt-10">

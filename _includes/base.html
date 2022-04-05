@@ -133,17 +133,18 @@
                                 <div class="relative flex rounded-b bg-white p-8 shadow-lg transition-all">
                                     {%- for rootCategory in data.shopByCategory %}
                                     <div class="relative z-20 flex-1">
-                                        <a href="/shop/{{rootCategory.slug}}" class="font-hkbold mb-2 text-base text-secondary">{{rootCategory.name}}</h4>
-                                        {%- if rootCategory.categories.length > 0 %}
-                                        <ul>
-                                            {%- for childCategory in rootCategory.categories %}
-                                            <li>
-                                                <a href="/shop/{{childCategory.slug}}"
-                                                    class="border-b border-transparent font-hk text-sm leading-loose text-secondary-lighter hover:border-secondary-lighter">{{childCategory.name}}</a>
-                                            </li>
-                                            {% endfor %}
-                                        </ul>
-                                        {% endif -%}
+                                        <a href="/shop/{{rootCategory.slug}}"
+                                            class="font-hkbold mb-2 text-base text-secondary">{{rootCategory.name}}</h4>
+                                            {%- if rootCategory.categories.length > 0 %}
+                                            <ul>
+                                                {%- for childCategory in rootCategory.categories %}
+                                                <li>
+                                                    <a href="/shop/{{childCategory.slug}}"
+                                                        class="border-b border-transparent font-hk text-sm leading-loose text-secondary-lighter hover:border-secondary-lighter">{{childCategory.name}}</a>
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                            {% endif -%}
                                     </div>
                                     {% endfor %}
                                 </div>
@@ -206,10 +207,11 @@
                 <a href="/contact#faq"
                     class="w-full py-3 cursor-pointer font-hk font-medium text-secondary border-b border-grey-dark block">FAQ
                 </a>
-                <a href="/contact" class="w-full py-3 cursor-pointer font-hk font-medium text-secondary block"
-                    :class="[!(getCookie('uid') && !getCookie('isAnonymous')) ? 'border-b border-grey-dark' : '']">Contact
+                <a href="/contact"
+                    class="w-full py-3 cursor-pointer font-hk font-medium text-secondary  border-b border-grey-dark block">Contact
+                    Us
                 </a>
-                <div class="mt-4 mb-2" x-show="!(getCookie('uid') && !getCookie('isAnonymous'))">
+                <div class="mt-4 mb-2" x-show="!isSignedIn()">
                     <a @click="logIn()" class="btn btn-primary w-full" aria-label="Login button">Login Account</a>
                 </div>
             </div>
@@ -255,6 +257,11 @@
                     <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
                 </div>
                 <div id="firebaseui-container" class="hidden"></div>
+                <div id="firebaseui-guest" class="relative flex justify-center mt-6">
+                    <a href="/checkout" class="btn btn-primary cursor-pointer px-5 py-2" style="text-transform: capitalize;">
+                        <span>Continue as a Guest</span>
+                    </a>
+                </div>
 
             </div>
             <!--/Dialog -->
@@ -410,7 +417,6 @@
         integrity="sha256-Ev8y2mML/gGa4LFVZgNpMTjKwj34q4pC4DcseWeRb9w=" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide@3.4.1/dist/css/glide.theme.min.css"
         integrity="sha256-sw/JiPOV1ZfcXjqBJT1vqaA4vBGeiqn+b7PDhVv4OA4=" crossorigin="anonymous" />
-    <script src="/assets/js/database.js"></script>
     <script src="/assets/js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.x.x/dist/alpine.min.js" defer></script>
 </body>

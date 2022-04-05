@@ -1,4 +1,5 @@
-let checkoutPendingLogin = false;
+let databaseURL = null;
+let idToken = null;
 
 const devFirebaseConfig = {
   apiKey: "AIzaSyAkfxQ2E3adYmlfYOy3uhRf6ENZ6VQ5a4U",
@@ -10,7 +11,7 @@ const devFirebaseConfig = {
   appId: "1:30340203484:web:37b0125a160be9f3ba8519",
   measurementId: "G-H81HK8R7E6"
 };
-const prdfirebaseConfig = {
+const prdFirebaseConfig = {
   apiKey: "AIzaSyAVKIXxd68CdLlJfzCcPtw47-dkJh2xJm0",
   authDomain: "holi-colours-jewellery.firebaseapp.com",
   projectId: "holi-colours-jewellery",
@@ -23,11 +24,387 @@ const prdfirebaseConfig = {
 
 if (window.location.host == "localhost") {
   firebase.initializeApp(devFirebaseConfig);
+  databaseURL = devFirebaseConfig.databaseURL;
 } else {
-  firebase.initializeApp(prdfirebaseConfig);
+  firebase.initializeApp(prdFirebaseConfig);
+  databaseURL = prdFirebaseConfig.databaseURL;
 }
 
 const messaging = firebase.messaging();
+
+var commerce = {
+  authenticateCustomer: async function () {
+    if (!idToken) {
+      while (firebase.auth().currentUser === null) {
+        await new Promise(resolve => requestAnimationFrame(resolve))
+      }
+      idToken = await firebase.auth().currentUser.getIdToken().then(function (token) {
+        return token;
+      }).catch(function (error) {
+        console.log('Error authenticating!', error);
+      });
+    }
+  },
+  deAuthenticateCustomer: function () {
+    idToken = null;
+  },
+  read: async function (apiURL, auth = false) {
+    if (auth) {
+      await commerce.authenticateCustomer();
+      apiURL += `?auth=${idToken}`;
+    }
+    let result = await fetch(apiURL)
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .catch((error) => {
+        console.log('Error!. Response: ', error);
+      });
+    return result;
+  },
+  put: async function (apiURL, data, auth = false) {
+    if (auth) {
+      await commerce.authenticateCustomer();
+      apiURL += `?auth=${idToken}`;
+    }
+    let result = await fetch(apiURL, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .catch((error) => {
+        console.log('Error!. Response: ', error);
+      });
+    return result;
+  },
+  update: async function (apiURL, data, auth = false) {
+    if (auth) {
+      await commerce.authenticateCustomer();
+      apiURL += `?auth=${idToken}`;
+    }
+    let result = await fetch(apiURL, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .catch((error) => {
+        console.log('Error!. Response: ', error);
+      });
+    return result;
+  },
+  post: async function (apiURL, data, auth = false) {
+    if (auth) {
+      await commerce.authenticateCustomer();
+      apiURL += `?auth=${idToken}`;
+    }
+    let result = await fetch(apiURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw response;
+        }
+      })
+      .catch((error) => {
+        console.log('Error!. Response: ', error);
+      });
+    return result;
+  },
+  checkSubscription: async function (topic, token) {
+    let apiURL = `${databaseURL}/topics/${topic}/${token}.json`;
+    let subscription = await commerce.read(apiURL, true);
+    return subscription ? true : false;
+  },
+  getStock: async function (sku) {
+    let apiURL = `${databaseURL}/stock/${sku}.json`;
+    let stockQuantity = await commerce.read(apiURL);
+    return stockQuantity;
+  },
+  getAllReviews: async function (productId) {
+    let apiURL = `${databaseURL}/products/${productId}/reviews.json`;
+    let reviews = await commerce.read(apiURL);
+    return reviews;
+  },
+  getReview: async function (reviewId) {
+    let apiURL = `${databaseURL}/reviews/${reviewId}.json`;
+    let review = await commerce.read(apiURL);
+    return review;
+  },
+  isCustomerExists: async function (uid) {
+    let apiURL = `${databaseURL}/customers/${uid}/email.json`;
+    let user = await commerce.read(apiURL, true);
+    let result = user ? true : false;
+    return result;
+  },
+  getUser: async function (uid) {
+    let apiURL = `${databaseURL}/customers/${uid}.json`;
+    let user = await commerce.read(apiURL, true);
+    return user;
+  },
+  getUserOrders: async function (uid) {
+    let apiURL = `${databaseURL}/customers/${uid}/orders.json`;
+    let userOrders = await commerce.read(apiURL, true);
+    return userOrders;
+  },
+  getOffers: async function () {
+    let apiURL = `/api/offers.json`;
+    let offers = await commerce.read(apiURL, false);
+    return offers;
+  },
+  getOrder: async function (orderId) {
+    let apiURL = `${databaseURL}/orders/${orderId}.json`;
+    let order = await commerce.read(apiURL, true);
+    return order;
+  },
+  getProductVariant: async function (product, vid, userCart, freebie = false) {
+    let pid = product.id;
+    let variant = product.variants.filter(v => v.id == vid)[0];
+
+    if (!variant) {
+      console.warn(`Variant ${vid} not found`);
+      return null;
+    }
+
+    let accessories = [];
+    accessories = product.accessories.filter(v => {
+      return userCart.accessories && userCart.accessories.length > 0 && userCart.accessories.includes(v.id);
+    });
+    if (Array.isArray(accessories) && accessories.length == 0) {
+      let defaultAccessory = product.accessories.filter(v => v.price == 0)
+      if (Array.isArray(defaultAccessory) && defaultAccessory.length > 0) {
+        accessories = [defaultAccessory[0]];
+      } else {
+        accessories = [];
+      }
+    }
+    if (Array.isArray(accessories) && accessories.length > 0) {
+      let accessoriesPrice = accessories.map(v => v.price).reduce((partialSum, a) => partialSum + a, 0);
+      if (accessoriesPrice) {
+        variant.price += accessoriesPrice;
+      }
+    }
+
+    if (freebie) {
+      variant.price = 0;
+    }
+
+    let variantOptions = variant.options.map((o) => ({
+      attribute: o.optionName.optionName,
+      value: o.optionValue.optionValue
+    }));
+
+    let stockQuantity = await commerce.getStock(variant.sku.sku);
+
+    let productObject = {
+      id: product.id,
+      vid: vid,
+      sku: variant.sku.sku,
+      name: product.name,
+      fullName: variant.title != 'Simple Product' ? `${product.name} (${variant.title})` : product.name,
+      slug: product.slug,
+      image: variant.image ? variant.image.publicUrl : product.variants[product.defaultVariantIndex].image.publicUrl,
+      price: variant.price,
+      salePercentage: variant.salePercentage,
+      quantity: userCart.quantity,
+      weight: variant.weight,
+      stockQuantity: stockQuantity,
+      variantOptions: variantOptions,
+      accessories: accessories,
+      freebie: freebie
+    };
+
+    return productObject;
+  },
+  getUserCart: async function (uid) {
+    let userCart;
+    if (isSignedIn()) {
+      let apiURL = `${databaseURL}/carts/${uid}.json`;
+      userCart = await commerce.read(apiURL, true);
+    } else {
+      userCart = JSON.parse(window.localStorage.getItem("cart")) || {};
+    }
+    let cart = {
+      products: [],
+      quantity: 0,
+      subTotal: 0,
+      shipping: 0,
+      discount: 0,
+      total: 0,
+      weight: 0,
+      isOnSale: false,
+      freeShipping: false,
+      offerCoupon: null
+    };
+
+    for (var pid in userCart) {
+      let product = await commerce.getProduct(pid);
+
+      if (!product) {
+        console.warn(`Product ${pid} not found!`);
+        continue;
+      }
+
+      for (var vid in userCart[pid]) {
+        let productObject = await commerce.getProductVariant(product, vid, userCart[pid][vid]);
+        if (productObject) {
+          cart.products.push(productObject);
+          cart.quantity += productObject.quantity;
+          cart.subTotal += productObject.quantity * productObject.price;
+          cart.total = cart.subTotal - cart.discount;
+          cart.weight += productObject.weight;
+        }
+      }
+
+      if (!cart.isOnSale && product.isOnSale) {
+        cart.isOnSale = true;
+      }
+    }
+    return cart;
+  },
+  applyOfferToCart: async function (cart) {
+    let offers;
+    if (!cart.isOnSale) {
+      offers = await commerce.getOffers();
+      offers.sort(function (a, b) {
+        return b.minimumItemsPerOrder - a.minimumItemsPerOrder;
+      });
+      console.log('Sorted Offers: ', offers);
+    }
+
+    if (!cart.isOnSale && offers && offers.length > 0) {
+      offers.some(offer => {
+        if (cart.quantity >= offer.minimumItemsPerOrder) {
+          if (offer.freeShipping == 'Y') {
+            cart.freeShipping = true;
+            cart.offerCoupon = offer.couponCode;
+          }
+          if (offer.discountAmount > 0) {
+            cart.discount += offer.discountAmount;
+            cart.offerCoupon = offer.couponCode;
+          }
+          if (offer.freebieProducts && offer.freebieProducts.length > 0) {
+            offer.freebieProducts.map(v => v.id).forEach(async pid => {
+              let product = await commerce.getProduct(pid);
+              if (!product) {
+                console.warn(`Product ${pid} not found!`);
+              } else {
+                let productObject = await commerce.getProductVariant(product, product.defaultVariantId, { accessories: [], quantity: 1 }, true);
+                if (productObject) {
+                  cart.products.push(productObject);
+                  cart.quantity += productObject.quantity;
+                  cart.subTotal += productObject.quantity * productObject.price;
+                  cart.weight += productObject.weight;
+                }
+              }
+            });
+            cart.offerCoupon = offer.couponCode;
+          }
+        }
+        return cart.offerCoupon;
+      });
+      cart.total = cart.subTotal - cart.discount;
+    }
+    return cart;
+  },
+  checkCartStock: async function (cart) {
+    cart.products.forEach(async p => {
+      p.stockQuantity = await commerce.getStock(p.sku);
+      this.checkoutLoading = false;
+      if (!p.stockQuantity || p.stockQuantity <= 0) {
+        alert(p.fullName + ' is not in stock!');
+        return false;
+      } else if (p.stockQuantity < p.quantity) {
+        alert('Only ' + p.stockQuantity + ' item(s) are in stock for ' + p.fullName);
+        return false;
+      }
+    });
+    return true;
+  },
+  getUserWishlist: async function (uid) {
+    let userWishlist;
+    if (isSignedIn()) {
+      let apiURL = `${databaseURL}/wishlist/${uid}.json`;
+      userWishlist = await commerce.read(apiURL, true);
+    } else {
+      userWishlist = JSON.parse(window.localStorage.getItem("wishlist"));
+    }
+    return userWishlist;
+  },
+  addToCart: async function (uid, pid, vid, productDetails) {
+    if (uid) {
+      let apiURL = `${databaseURL}/carts/${uid}/${pid}/${vid}.json`;
+      let updatedCart = await commerce.put(apiURL, productDetails, true);
+      return updatedCart;
+    } else {
+      let localCart = JSON.parse(window.localStorage.getItem("cart")) || {};
+      if (!localCart[pid]) localCart[pid] = {};
+      localCart[pid][vid] = productDetails;
+      window.localStorage.setItem("cart", JSON.stringify(localCart));
+      return true;
+    }
+  },
+  addToWishList: async function (uid, pid, vid, productDetails) {
+    if (uid) {
+      let apiURL = `${databaseURL}/wishlist/${uid}/${pid}/${vid}.json`;
+      let updatedWishList = await commerce.put(apiURL, productDetails, true);
+      return updatedWishList;
+    } else {
+      let localWishList = JSON.parse(window.localStorage.getItem("wishlist")) || {};
+      if (!localWishList[pid]) localWishList[pid] = {};
+      localWishList[pid][vid] = productDetails;
+      window.localStorage.setItem("wishlist", JSON.stringify(localWishList));
+      return true;
+    }
+  },
+  updateData: async function (data) {
+    let apiURL = `${databaseURL}/.json`;
+    let updated = await commerce.update(apiURL, data, true);
+    return updated;
+  },
+  addNewReview: async function () {
+    let apiURL = `${databaseURL}/reviews.json`;
+    let newReview = await commerce.post(apiURL, {}, true);
+    return newReview['name'];
+  },
+  getProduct: async function (productId) {
+    let apiURL = `/api/products/${productId}.json`;
+    let product = await commerce.read(apiURL);
+    return product;
+  },
+  getShippingZones: async function () {
+    let apiURL = `/api/shipping-zones.json`;
+    let shippingZones = await commerce.read(apiURL);
+    return shippingZones;
+  }
+};
 
 function setCookie(cname, cvalue, exdays) {
   const d = new Date();
@@ -52,32 +429,65 @@ function getCookie(cname) {
   return "";
 }
 
+function isSignedIn() {
+  return getCookie('uid') != 'null' && getCookie('uid') != '' && getCookie('uid') != null ? true : false;
+}
+
+function setCustomerId(cid) {
+  setCookie('uid', cid, 7);
+}
+
+function getCustomerId() {
+  return isSignedIn() ? getCookie('uid') : null;
+}
+
+function logIn(title = 'Login or Create an Account') {
+  if (isSignedIn()) {
+    window.location.href = '/account/';
+  } else {
+    ui.start('#firebaseui-container', uiConfig);
+    document.getElementById('login-modal').style.display = 'flex';
+    document.getElementById('login-modal-title').innerText = title;
+    if (window.location.pathname.startsWith("/cart/") || window.location.pathname.startsWith("/checkout/")) {
+      document.getElementById('firebaseui-guest').style.display = 'flex';
+    } else {
+      document.getElementById('firebaseui-guest').style.display = 'none';
+    }
+  }
+}
+
+function logOut() {
+  firebase.auth().signOut().then(() => {
+    setCustomerId(null);
+    window.location.href = '/';
+  }).catch((error) => {
+    console.log(error);
+  });
+}
+
 var uiConfig = {
   callbacks: {
     signInSuccessWithAuthResult: async function (authResult, redirectUrl) {
       console.log(authResult);
       if (authResult.user) {
-        console.log('signInSuccessWithAuthResult');
-        await database.relogin(authResult.credential);
+        await commerce.authenticateCustomer();
         handleSignedInUser(authResult.user);
+        let localCart = JSON.parse(window.localStorage.getItem("cart"));
+        let localWishList = JSON.parse(window.localStorage.getItem("wishlist"));
+        if (Object.keys(localCart).length != 0) {
+          const updates = {};
+          updates[`carts/${authResult.user.uid}`] = localCart;
+          let updated = await commerce.updateData(updates);
+          window.localStorage.setItem("cart", null);
+        }
+        if (Object.keys(localWishList).length != 0) {
+          const updates = {};
+          updates[`wishlist/${authResult.user.uid}`] = localWishList;
+          let updated = await commerce.updateData(updates);
+          window.localStorage.setItem("wishlist", null);
+        }
       }
       return false;
-    },
-    signInFailure: async function (error) {
-      console.log(error);
-      if (error.code != 'firebaseui/anonymous-upgrade-merge-conflict') {
-        return Promise.resolve();
-      }
-      var anonymousUser = await firebase.auth().currentUser;
-      var anonymousUserData = await database.getUserCart(anonymousUser.uid);
-      await database.updateCart(anonymousUser.uid, null);
-      var newUser = await database.relogin(error.credential);
-      if (anonymousUserData) {
-        await database.updateCart(newUser.user.uid, anonymousUserData);
-      }
-      anonymousUser.delete();
-      anonymousUserData = null;
-      handleSignedInUser(firebase.auth().currentUser);
     }
   },
   signInFlow: 'popup',
@@ -91,7 +501,6 @@ var uiConfig = {
       requireDisplayName: true
     }
   ],
-  autoUpgradeAnonymousUsers: true,
   credentialHelper: firebaseui.auth.CredentialHelper.GOOGLE_YOLO,
   tosUrl: '/terms-and-conditions/',
   privacyPolicyUrl: '/privacy-policy/'
@@ -100,91 +509,46 @@ var uiConfig = {
 var ui = new firebaseui.auth.AuthUI(firebase.auth());
 ui.disableAutoSignIn();
 
-var handleAnonymousUser = async function (user) {
-  setCookie('uid', user.uid, 365);
-  setCookie('isAnonymous', 'true', 365);
-  console.log('Anonymous User: ' + user.uid);
-  if (window.location.pathname.startsWith("/account/")) {
-    window.location.href = '/';
-  }
-  document.getElementById('firebaseui-loading').style.display = 'none';
-  document.getElementById('firebaseui-container').style.display = 'block';
-};
-
 var handleSignedInUser = async function (user) {
-  document.getElementById('firebaseui-loading').style.display = 'none';
-  document.getElementById('firebaseui-container').style.display = 'block';
-  console.log('User is signed in: ' + user.uid);
-  if (getCookie('isAnonymous')) {
-    setCookie('uid', '', 365);
-    setCookie('isAnonymous', '', 365);
-  }
-  await database.authenticate();
-  let isUserExists = await database.isUserExists(user.uid);
-  console.log('main.js isUserExists', isUserExists);
-  if (!isUserExists) {
+  setCustomerId(user.uid)
+  await commerce.authenticateCustomer();
+  console.log('User is signed in: ' + getCustomerId());
+
+  let isCustomerExists = await commerce.isCustomerExists(user.uid);
+  console.log('isCustomerExists: ' + isCustomerExists);
+
+  if (!isCustomerExists) {
     const updates = {};
-    // updates[`users/${user.uid}/email`] = user.email;
-    updates[`users/${user.uid}/firstName`] = user.displayName;
-    updates[`users/${user.uid}/phoneNumber`] = '';
-    let updated = await database.updateData(updates);
+    updates[`sync/customers/${user.uid}`] = 'create';
+    let updated = await commerce.updateData(updates);
     console.log('User Creation Response: ', updated);
     if (!updated) {
-      alert('Error creating user! Please clear your browser cache and retry again.');
-    } else {
-      setCookie('uid', user.uid, 365);
-      //TO-DO: Create customer in Admin Site
+      alert('Error creating user! Please retry again.');
     }
-  } else {
-    setCookie('uid', user.uid, 365);
-    console.log('User: ' + user.uid);
-    // if (window.location.pathname == '/checkout/') {
-    //   window.location.reload();
-    // }
   }
+
   document.getElementById('login-modal').style.display = 'none';
-  if (checkoutPendingLogin) {
-    window.location.href = '/checkout/';
-  }
 };
 
 var handleSignedOutUser = function () {
-  setCookie('uid', '', 365);
-  setCookie('isAnonymous', '', 365);
+  setCustomerId(null);
+  commerce.deAuthenticateCustomer();
   console.log('User is not signed in');
   if (window.location.pathname.startsWith("/account/")) {
     window.location.href = '/';
   }
-  firebase.auth().signInAnonymously();
 };
 
 firebase.auth().onAuthStateChanged(async function (user) {
-  console.log('onAuthStateChanged');
+  document.getElementById('firebaseui-loading').style.display = 'none';
+  document.getElementById('firebaseui-container').style.display = 'block';
+
   if (user) {
-    user.isAnonymous ? handleAnonymousUser(user) : await handleSignedInUser(user);
+    await handleSignedInUser(user);
   } else {
     handleSignedOutUser();
   }
 });
-
-function logIn(title = 'Login or Create an Account') {
-  if (getCookie('uid') && !getCookie('isAnonymous')) {
-    window.location.href = '/account/';
-  } else {
-    ui.start('#firebaseui-container', uiConfig);
-    document.getElementById('login-modal').style.display = 'flex';
-    document.getElementById('login-modal-title').innerText = title;
-  }
-}
-
-function logOut() {
-  firebase.auth().signOut().then(() => {
-    setCookie('uid', '', 365);
-    window.location.href = '/';
-  }).catch((error) => {
-    console.log(error);
-  });
-}
 
 async function redirectToCartConfirm() {
   var r = confirm("Item added to cart! Do you want to view the cart?");
@@ -200,9 +564,9 @@ async function addToCart(pid, vid, sku, quantity = 1, accessories = [], redirect
     accessories: accessories,
     lastUpdatedDate: new Date().getTime(),
   };
-  let stockQuantity = await database.getStock(sku);
+  let stockQuantity = await commerce.getStock(sku);
   if (stockQuantity != 0 && stockQuantity >= quantity) {
-    updatedCart = await database.addToCart(getCookie('uid'), pid, vid, productDetails);
+    updatedCart = await commerce.addToCart(getCustomerId(), pid, vid, productDetails);
     if (updatedCart) {
       if (redirectToCart) redirectToCartConfirm();
       return true;
@@ -218,7 +582,7 @@ async function addToWishList(pid, vid, accessories = []) {
     accessories: accessories,
     lastUpdatedDate: new Date().getTime()
   };
-  let updatedWishList = await database.addToWishList(getCookie('uid'), pid, vid, productDetails);
+  let updatedWishList = await commerce.addToWishList(getCustomerId(), pid, vid, productDetails);
   console.log(updatedWishList);
   if (updatedWishList) {
     var r = confirm("Item added to wishlist! Do you want to view the wishlist?");
@@ -234,7 +598,7 @@ function productTileStockModule() {
     stockQuantity: 0,
     async loadProduct(product) {
       this.product = product;
-      this.stockQuantity = await database.getStock(this.product.sku);
+      this.stockQuantity = await commerce.getStock(this.product.sku);
       this.product.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
     }
   }
@@ -354,7 +718,7 @@ function searchModule() {
       let end = this.noOfItemsPerPage * page;
       let currentPageResults = this.results.slice(start, end);
       currentPageResults.forEach(async (result) => {
-        let stockQuantity = await database.getStock(this.productsObject[result.doc.id].sku);
+        let stockQuantity = await commerce.getStock(this.productsObject[result.doc.id].sku);
         this.productsObject[result.doc.id].stockStatus = stockQuantity > 0 ? 'IS' : 'OS';
         this.products.push(this.productsObject[result.doc.id]);
       });
@@ -436,7 +800,7 @@ function productModule() {
     email: null,
     reviews: null,
     newReview: {
-      uid: getCookie('uid'),
+      uid: getCustomerId(),
       pid: '',
       name: '',
       email: '',
@@ -453,7 +817,7 @@ function productModule() {
     async loadProduct(productId) {
       this.productId = productId;
       this.newReview.pid = this.productId;
-      this.product = await database.getProduct(productId);
+      this.product = await commerce.getProduct(productId);
       console.log('Product: ', this.product);
       document.title = this.product.name + " | Holi Colours Jewellery"
       this.selectedVariant = this.product.defaultVariantIndex;
@@ -465,7 +829,7 @@ function productModule() {
       });
       this.changeProductOptions();
       this.isLoading = false;
-      this.stockQuantity = await database.getStock(this.selectedSKU);
+      this.stockQuantity = await commerce.getStock(this.selectedSKU);
       this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
       this.checkSubscription();
     },
@@ -491,7 +855,7 @@ function productModule() {
           this.stockStatus = null;
           this.selectedSKU = variant.sku.sku;
           console.log(this.selectedSKU);
-          this.stockQuantity = await database.getStock(this.selectedSKU);
+          this.stockQuantity = await commerce.getStock(this.selectedSKU);
           this.stockStatus = this.stockQuantity > 0 ? 'IS' : 'OS';
           this.checkSubscription();
           if (this.stockQuantity && this.stockQuantity != 0 && this.quantity > this.stockQuantity) {
@@ -504,7 +868,7 @@ function productModule() {
       this.addToCartText = this.stockStatus == 'IS' ? 'Add To Cart' : 'Notify Me on Stock';
       if (this.stockStatus == 'OS' && Notification.permission == 'granted') {
         let token = await getRegistrationToken();
-        if (token && await database.checkSubscription(`stock-${this.selectedSKU}`, token)) {
+        if (token && await commerce.checkSubscription(`stock-${this.selectedSKU}`, token)) {
           this.addToCartText = '✔ Notify Me on Stock';
         }
       }
@@ -555,10 +919,10 @@ function productModule() {
     async loadReview() {
       this.reviewsLoading = true;
       this.reviews = {};
-      this.product.reviews = await database.getAllReviews(this.productId);
+      this.product.reviews = await commerce.getAllReviews(this.productId);
       if (this.product.reviews) {
         Object.keys(this.product.reviews).forEach(async (reviewId) => {
-          this.reviews[reviewId] = await database.getReview(reviewId);
+          this.reviews[reviewId] = await commerce.getReview(reviewId);
           if (this.reviews[reviewId].images == undefined) {
             this.reviews[reviewId].images = [];
           }
@@ -566,8 +930,8 @@ function productModule() {
       } else {
         this.reviewsEmpty = true;
       }
-      if (!getCookie('isAnonymous')) {
-        let user = await database.getUser(getCookie('uid'));
+      if (isSignedIn()) {
+        let user = await commerce.getUser(getCustomerId());
         if (user && user['userInfo']) {
           this.displayName = user.firstName;
           this.email = user.email;
@@ -601,7 +965,7 @@ function productModule() {
 
       this.submittingReview = true;
 
-      var newReviewKey = await database.addNewReview();
+      var newReviewKey = await commerce.addNewReview();
       console.log(newReviewKey);
 
       for (let i in this.newReview.images) {
@@ -617,7 +981,7 @@ function productModule() {
       updates[`reviews/${newReviewKey}`] = this.newReview;
       updates[`products/${this.productId}/reviews/${newReviewKey}`] = true;
 
-      let updated = await database.updateData(updates);
+      let updated = await commerce.updateData(updates);
 
       if (!updated) {
         alert('Error submitting review! Please try again after sometime.');
@@ -627,7 +991,7 @@ function productModule() {
         this.reviews[newReviewKey] = this.newReview;
         document.querySelector("#new_review_form").reset();
         this.newReview = {
-          uid: getCookie('uid'),
+          uid: getCustomerId(),
           pid: this.projectId,
           name: '',
           email: '',
@@ -662,14 +1026,9 @@ function cartModule() {
     isLoading: true,
     checkoutLoading: false,
     async loadCart() {
-      if (getCookie('uid')) {
-        this.isLoading = true;
-        this.cart = await database.getUserCart(getCookie('uid'));
-        console.log(this.cart);
-        this.isLoading = false;
-      } else {
-        this.isLoading = false;
-      }
+      this.isLoading = true;
+      this.cart = await commerce.getUserCart(getCustomerId());
+      this.isLoading = false;
     },
     async updateCart() {
       this.cart.quantity = 0;
@@ -677,27 +1036,45 @@ function cartModule() {
       this.cart.total = 0;
       let updates = {};
       this.cart.products.filter(p => p.quantity == null).forEach(p => {
-        updates[`carts/${getCookie('uid')}/${p.id}/${p.vid}`] = null;
+        if (isSignedIn()) {
+          updates[`carts/${getCustomerId()}/${p.id}/${p.vid}`] = null;
+        } else {
+          let localCart = JSON.parse(window.localStorage.getItem("cart"));
+          delete localCart[p.id][p.vid];
+          Object.keys(localCart).forEach(pid => {
+            if (Object.keys(localCart[pid]).length == 0) {
+              delete localCart[pid];
+            }
+          });
+          window.localStorage.setItem("cart", JSON.stringify(localCart));
+        }
       });
       this.cart.products = this.cart.products.filter(p => p.quantity && p.quantity > 0);
       this.cart.products.forEach(p => {
-        updates[`carts/${getCookie('uid')}/${p.id}/${p.vid}/quantity`] = p.quantity;
+        if (isSignedIn()) {
+          updates[`carts/${getCustomerId()}/${p.id}/${p.vid}/quantity`] = p.quantity;
+        } else {
+          let localCart = JSON.parse(window.localStorage.getItem("cart"));
+          localCart[p.id][p.vid].quantity = p.quantity;
+          window.localStorage.setItem("cart", JSON.stringify(localCart));
+        }
         this.cart.quantity += p.quantity;
         this.cart.subTotal += p.quantity * p.price;
       });
       this.cart.total = this.cart.subTotal - this.cart.discount;
-      await database.updateData(updates);
+      if (isSignedIn()) {
+        await commerce.updateData(updates);
+      }
     },
     async checkout() {
       this.checkoutLoading = true;
       await this.updateCart();
-      let inStock = await database.checkCartStock(this.cart);
+      let inStock = await commerce.checkCartStock(this.cart);
       this.checkoutLoading = false;
       if (!inStock) return;
-      if (getCookie('uid') && !getCookie('isAnonymous')) {
+      if (isSignedIn()) {
         window.location.href = '/checkout';
       } else {
-        checkoutPendingLogin = true;
         logIn('Login or Create an Account');
       }
     }
@@ -720,87 +1097,94 @@ function wishlistModule() {
       }
     },
     async loadWishlist() {
-      if (getCookie('uid')) {
-        this.wishlist = [];
-        this.isLoading = true;
-        this.empty = true;
+      this.wishlist = [];
+      this.isLoading = true;
+      this.empty = true;
 
-        let wishlist = await database.getUserWishlist(getCookie('uid'));
-        this.empty = wishlist ? false : true;
+      let wishlist = await commerce.getUserWishlist(getCustomerId());
+      this.empty = wishlist ? false : true;
 
-        for (var productId in wishlist) {
-          fetch(`/api/products/${productId}.json`)
-            .then(response => {
-              if (response.ok) {
-                return response.json();
-              } else {
-                throw new Error(`Product ${productId} Not Found`);
-              }
-            })
-            .then(async (product) => {
-              let pid = product.id;
-              for (var vid in wishlist[pid]) {
-                let variant = product.variants.filter(v => v.id == vid)[0];
-                let accessories = [];
-                accessories = product.accessories.filter(v => {
-                  return wishlist[pid][vid].accessories && wishlist[pid][vid].accessories.length > 0 && wishlist[pid][vid].accessories.includes(v.id);
-                });
-                if (Array.isArray(accessories) && accessories.length == 0) {
-                  let defaultAccessory = product.accessories.filter(v => v.price == 0)
-                  if (Array.isArray(defaultAccessory) && defaultAccessory.length > 0) {
-                    accessories = [defaultAccessory[0]];
-                  } else {
-                    accessories = [];
-                  }
+      for (var productId in wishlist) {
+        fetch(`/api/products/${productId}.json`)
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            } else {
+              throw new Error(`Product ${productId} Not Found`);
+            }
+          })
+          .then(async (product) => {
+            let pid = product.id;
+            for (var vid in wishlist[pid]) {
+              let variant = product.variants.filter(v => v.id == vid)[0];
+              let accessories = [];
+              accessories = product.accessories.filter(v => {
+                return wishlist[pid][vid].accessories && wishlist[pid][vid].accessories.length > 0 && wishlist[pid][vid].accessories.includes(v.id);
+              });
+              if (Array.isArray(accessories) && accessories.length == 0) {
+                let defaultAccessory = product.accessories.filter(v => v.price == 0)
+                if (Array.isArray(defaultAccessory) && defaultAccessory.length > 0) {
+                  accessories = [defaultAccessory[0]];
+                } else {
+                  accessories = [];
                 }
-
-                console.log(accessories);
-
-                let variantOptions = variant.options.map((o) => ({
-                  attribute: o.optionName.optionName,
-                  value: o.optionValue.optionValue
-                }));
-
-                if (!variant) {
-                  throw new Error(`Variant ${vid} Not Found`);
-                }
-
-                let stockQuantity = await database.getStock(variant.sku.sku);
-                let stockStatus = stockQuantity > 0 ? 'IS' : 'OS';
-
-                let productObject = {
-                  id: product.id,
-                  vid: vid,
-                  sku: variant.sku.sku,
-                  name: product.name,
-                  slug: product.slug,
-                  image: variant.image.publicUrl,
-                  price: variant.price,
-                  salePercentage: variant.salePercentage,
-                  variantOptions: variantOptions,
-                  stockQuantity: stockQuantity,
-                  stockStatus: stockStatus,
-                  accessories: accessories
-                };
-
-                this.wishlist.push(productObject);
               }
-            })
-            .catch((error) => {
-              console.log(error)
-            });
-          ;
-        }
-        console.log(this.wishlist);
-        this.isLoading = false;
-      } else {
-        this.isLoading = false;
+
+              console.log(accessories);
+
+              let variantOptions = variant.options.map((o) => ({
+                attribute: o.optionName.optionName,
+                value: o.optionValue.optionValue
+              }));
+
+              if (!variant) {
+                throw new Error(`Variant ${vid} Not Found`);
+              }
+
+              let stockQuantity = await commerce.getStock(variant.sku.sku);
+              let stockStatus = stockQuantity > 0 ? 'IS' : 'OS';
+
+              let productObject = {
+                id: product.id,
+                vid: vid,
+                sku: variant.sku.sku,
+                name: product.name,
+                slug: product.slug,
+                image: variant.image.publicUrl,
+                price: variant.price,
+                salePercentage: variant.salePercentage,
+                variantOptions: variantOptions,
+                stockQuantity: stockQuantity,
+                stockStatus: stockStatus,
+                accessories: accessories
+              };
+
+              this.wishlist.push(productObject);
+            }
+          })
+          .catch((error) => {
+            console.log(error)
+          });
+        ;
       }
+      console.log(this.wishlist);
+      this.isLoading = false;
     },
     async removeFromWishlist(pid, vid) {
-      let updates = {};
-      updates[`wishlist/${getCookie('uid')}/${pid}/${vid}`] = null;
-      await database.updateData(updates);
+      if (isSignedIn()) {
+        let updates = {};
+        updates[`wishlist/${getCustomerId()}/${pid}/${vid}`] = null;
+        await commerce.updateData(updates);
+      } else {
+        let localWishList = JSON.parse(window.localStorage.getItem("wishlist"));
+        delete localWishList[pid][vid];
+        Object.keys(localWishList).forEach(productId => {
+          if (Object.keys(localWishList[productId]).length == 0) {
+            delete localWishList[productId];
+          }
+        });
+        window.localStorage.setItem("wishlist", JSON.stringify(localWishList));
+      }
       this.wishlist.some((p, i) => {
         if (p.id == pid && p.vid == vid) {
           this.wishlist.splice(i, 1);
@@ -865,7 +1249,7 @@ function checkoutModule() {
           postalCode: null,
           country: null
         },
-        uid: getCookie('uid')
+        uid: getCustomerId()
       },
       shipping: {
         methodId: null,
@@ -875,7 +1259,7 @@ function checkoutModule() {
     showSummary: false,
     isLoading: false,
     page: 'customer-info',
-    saveCustomerInfo: getCookie('uid') && !getCookie('isAnonymous'),
+    saveCustomerInfo: isSignedIn(),
     shippingZones: [],
     shippingMethodsList: null,
     paytmTxn: {
@@ -886,55 +1270,50 @@ function checkoutModule() {
     },
     isPGLoading: false,
     async loadCart() {
-      if (getCookie('uid')) {
-        this.cart = [];
-        this.isLoading = true;
+      this.cart = [];
+      this.isLoading = true;
 
-        this.cart = await database.getUserCart(getCookie('uid'));
+      this.cart = await commerce.getUserCart(getCustomerId());
 
-        if (this.cart.products.length == 0) {
-          window.location.href = '/cart';
-          return;
-        }
+      if (this.cart.products.length == 0) {
+        window.location.href = '/cart';
+        return;
+      }
 
-        this.cart = await database.applyOfferToCart(this.cart);
+      this.cart = await commerce.applyOfferToCart(this.cart);
 
-        this.shippingZones = await database.getShippingZones();
+      this.shippingZones = await commerce.getShippingZones();
 
-        if (!getCookie('isAnonymous')) {
-          let user = await database.getUser(getCookie('uid'));
-          if (user) {
-            this.order.customer.firstName = user.firstName;
-            this.order.customer.lastName = user.lastName;
-            this.order.customer.email = user.email;
-            this.order.customer.phoneNumber = user.phoneNumber;
-            this.order.customer.alternatePhoneNumber = user.alternatePhoneNumber;
-            this.order.customer.enableCreditPoints = user.enableCreditPoints;
-            this.order.customer.creditPoints = user.creditPoints;
-            if (user['shipToAddress']) {
-              this.order.customer.shipToAddress = user.shipToAddress;
-            }
+      if (isSignedIn()) {
+        let user = await commerce.getUser(getCustomerId());
+        if (user) {
+          this.order.customer.firstName = user.firstName;
+          this.order.customer.lastName = user.lastName;
+          this.order.customer.email = user.email;
+          this.order.customer.phoneNumber = user.phoneNumber;
+          this.order.customer.alternatePhoneNumber = user.alternatePhoneNumber;
+          this.order.customer.enableCreditPoints = user.enableCreditPoints;
+          this.order.customer.creditPoints = user.creditPoints;
+          if (user['shipToAddress']) {
+            this.order.customer.shipToAddress = user.shipToAddress;
           }
         }
-
-        this.isLoading = false;
-      } else {
-        window.location.href = '/cart';
-        this.isLoading = false;
       }
+
+      this.isLoading = false;
     },
     async goToShipping() {
       if (this.order.customer.shipToAddress.address1 && this.order.customer.shipToAddress.address2 && this.order.customer.shipToAddress.city && this.order.customer.shipToAddress.postalCode && this.order.customer.shipToAddress.state && this.order.customer.shipToAddress.country) {
         this.page = 'shipping-method';
         this.loadShippingMethods();
-        if (this.saveCustomerInfo && !getCookie('isAnonymous')) {
+        if (this.saveCustomerInfo && isSignedIn()) {
           const updates = {};
-          updates[`users/${getCookie('uid')}/firstName`] = this.order.customer.firstName;
-          updates[`users/${getCookie('uid')}/lastName`] = this.order.customer.lastName;
-          updates[`users/${getCookie('uid')}/phoneNumber`] = this.order.customer.phoneNumber;
-          updates[`users/${getCookie('uid')}/alternatePhoneNumber`] = this.order.customer.alternatePhoneNumber;
-          updates[`users/${getCookie('uid')}/shipToAddress`] = this.order.customer.shipToAddress;
-          await database.updateData(updates);
+          updates[`customers/${getCustomerId()}/firstName`] = this.order.customer.firstName;
+          updates[`customers/${getCustomerId()}/lastName`] = this.order.customer.lastName;
+          updates[`customers/${getCustomerId()}/phoneNumber`] = this.order.customer.phoneNumber;
+          updates[`customers/${getCustomerId()}/alternatePhoneNumber`] = this.order.customer.alternatePhoneNumber;
+          updates[`customers/${getCustomerId()}/shipToAddress`] = this.order.customer.shipToAddress;
+          await commerce.updateData(updates);
         }
         window.scroll({
           top: 0,
@@ -1019,7 +1398,7 @@ function checkoutModule() {
     async initiatePayment(paytmForm) {
       this.isPGLoading = true;
 
-      let inStock = await database.checkCartStock(this.cart);
+      let inStock = await commerce.checkCartStock(this.cart);
       if (!inStock) {
         this.isPGLoading = false;
         return;
@@ -1101,9 +1480,9 @@ function accountModule() {
     async loadAccount() {
       this.isLoading = true;
 
-      this.shippingZones = await database.getShippingZones();
+      this.shippingZones = await commerce.getShippingZones();
 
-      let user = await database.getUser(getCookie('uid'));
+      let user = await commerce.getUser(getCustomerId());
       if (user) {
         this.account.firstName = user.firstName;
         this.account.lastName = user.lastName;
@@ -1147,12 +1526,12 @@ function accountModule() {
       }
       this.saving = true;
       const updates = {};
-      updates[`users/${getCookie('uid')}/firstName`] = this.account.firstName;
-      updates[`users/${getCookie('uid')}/lastName`] = this.account.lastName;
-      updates[`users/${getCookie('uid')}/phoneNumber`] = this.account.phoneNumber;
-      updates[`users/${getCookie('uid')}/alternatePhoneNumber`] = this.account.alternatePhoneNumber;
-      updates[`users/${getCookie('uid')}/shipToAddress`] = this.account.shipToAddress;
-      await database.updateData(updates);
+      updates[`customers/${getCustomerId()}/firstName`] = this.account.firstName;
+      updates[`customers/${getCustomerId()}/lastName`] = this.account.lastName;
+      updates[`customers/${getCustomerId()}/phoneNumber`] = this.account.phoneNumber;
+      updates[`customers/${getCustomerId()}/alternatePhoneNumber`] = this.account.alternatePhoneNumber;
+      updates[`customers/${getCustomerId()}/shipToAddress`] = this.account.shipToAddress;
+      await commerce.updateData(updates);
       this.saving = false;
       alert('Saved!');
     }
@@ -1199,7 +1578,7 @@ function orderModule() {
     noOfItemsPerPage: 5,
     currentPage: 1,
     async loadOrders() {
-      let ordersSnapshot = await database.getUserOrders(getCookie('uid'));
+      let ordersSnapshot = await commerce.getUserOrders(getCustomerId());
       this.orderList = ordersSnapshot ? Object.keys(ordersSnapshot) : [];
       this.orderList.sort(function (a, b) {
         return b - a;
@@ -1216,7 +1595,7 @@ function orderModule() {
       let end = this.noOfItemsPerPage * page;
       let currentPageResults = this.orderList.slice(start, end);
       currentPageResults.forEach(async (orderId) => {
-        this.orders[orderId] = await database.getOrder(orderId);
+        this.orders[orderId] = await commerce.getOrder(orderId);
       });
       this.isLoading = false;
     },
@@ -1286,9 +1665,9 @@ function paymentStatusModule() {
       this.status = params['status'];
       this.errorMessage = params['errorMessage'];
       if (this.status == 'Success') {
-        this.order = await database.getOrder(this.orderId);
+        this.order = await commerce.getOrder(this.orderId);
         console.log(this.order);
-        this.shippingZones = await database.getShippingZones();
+        this.shippingZones = await commerce.getShippingZones();
         this.isLoading = false;
       } else {
         this.isLoading = false;
@@ -1345,7 +1724,7 @@ async function subscribeToNotification(topic) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      uid: getCookie('uid'),
+      uid: getCustomerId(),
       registrationTokens: [token],
       topic: topic
     })
@@ -1378,7 +1757,7 @@ function subscribeModule() {
       this.subscribeText = 'Subscribe';
       if (Notification.permission == 'granted') {
         let token = await getRegistrationToken();
-        if (token && await database.checkSubscription('newsletter', token)) {
+        if (token && await commerce.checkSubscription('newsletter', token)) {
           this.subscribeText = 'Subscribed!';
         }
       }

@@ -195,7 +195,7 @@ title: "Checkout | Holi Colours Jewellery"
                   information
                 </h1>
                 <p class="font-hk text-secondary mb-4 lg:mb-0"
-                  x-show="!(getCookie('uid') && !getCookie('isAnonymous'))">
+                  x-show="!isSignedIn()">
                   Already have an account?
                   <a @click="logIn()" class="font-hk text-primary cursor-pointer">Log in</a>
                 </p>
@@ -210,7 +210,7 @@ title: "Checkout | Holi Colours Jewellery"
                     x-model="order.customer.lastName" required>
                 </div>
                 <input type="email" placeholder="Email Address" class="form-input mb-4 sm:mb-5" id="email"
-                  x-model="order.customer.email" required :readonly="getCookie('uid') && !getCookie('isAnonymous')">
+                  x-model="order.customer.email" required :readonly="isSignedIn()">
                 <div class="flex flex-col lg:flex-row justify-between">
                   <input type="tel" id="phone" placeholder="Phone Number" required
                     class="form-input mb-4 sm:mb-5 sm:mr-3" x-model="order.customer.phoneNumber" pattern="[0-9]{10}">
@@ -249,7 +249,7 @@ title: "Checkout | Holi Colours Jewellery"
                     </template>
                   </select>
                 </div>
-                <div class="flex items-start pt-2 mb-4 sm:mb-5" x-show="getCookie('uid') && !getCookie('isAnonymous')">
+                <!-- <div class="flex items-start pt-2 mb-4 sm:mb-5" x-show="isSignedIn()">
                   <div class="flex items-center h-5">
                     <input type="checkbox" class="form-checkbox h-4 w-4 border-grey-darker rounded" id="save_info"
                       name="save_info" x-model="saveCustomerInfo">
@@ -259,7 +259,7 @@ title: "Checkout | Holi Colours Jewellery"
                       Save this information for next time
                     </label>
                   </div>
-                </div>
+                </div> -->
                 <h4
                   class="font-hk font-medium text-secondary text-xl md:text-2xl text-center sm:text-left mb-4 sm:mb-5">
                   Additional Information</h4>

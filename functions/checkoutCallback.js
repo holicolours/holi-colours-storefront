@@ -103,16 +103,16 @@ exports.handler = async (event, context) => {
         if (userRegistered != null && configEnableCreditPoints) {
           let configNumberOfCPUsers = await dbRef.child("config").child("numberOfCPUsers").once('value').then((snapshot) => { return snapshot.val() });
           if (configNumberOfCPUsers > 0) {
-            updates[`users/${order.customer.uid}/enableCreditPoints`] = true;
+            updates[`customers/${order.customer.uid}/enableCreditPoints`] = true;
             updates[`config/numberOfCPUsers`] = firebase.database.ServerValue.increment(-1);
             userEnableCreditPoints = true;
           }
         }
 
         if (userRegistered != null && userEnableCreditPoints && order.cart.redeemCreditPoints >= 100 && order.cart.redeemCreditPoints <= userCreditPoints) {
-          updates[`users/${order.customer.uid}/creditPoints`] = firebase.database.ServerValue.increment(-order.cart.redeemCreditPoints);
+          updates[`customers/${order.customer.uid}/creditPoints`] = firebase.database.ServerValue.increment(-order.cart.redeemCreditPoints);
         } else if (userRegistered != null && userEnableCreditPoints && configMaxCreditPoints > userCreditPoints) {
-          updates[`users/${order.customer.uid}/creditPoints`] = firebase.database.ServerValue.increment(configCreditPointsPerOrder);
+          updates[`customers/${order.customer.uid}/creditPoints`] = firebase.database.ServerValue.increment(configCreditPointsPerOrder);
           updates[`orders/${orderId}/cart/rewardCreditPoints`] = configCreditPointsPerOrder;
         }
       }
