@@ -18,6 +18,11 @@ layout: base.html
             class="transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
             Home
           </a>
+          <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>
+          <a href="/shop/"
+            class="transition-all border-b border-transparent hover:border-primary text-sm text-secondary hover:text-primary font-hk">
+            Shop
+          </a>
           {%- for category in product.categories -%}
           {%- if forloop.first == true -%}
           <i class="bx bx-chevron-right text-sm text-secondary px-2"></i>

@@ -262,6 +262,12 @@ module.exports = async function () {
     .then(res => res.shippingZones);
 
   products.forEach(product => {
+    if (Array.isArray(product.variants) && product.variants.length == 0) {
+      console.log('Product has no variants: ' + product.name);
+      delete product;
+      return;
+    }
+
     prdObject[product.id] = product;
 
     if (product.additionalInformation && product.additionalInformation.document) {
@@ -361,7 +367,7 @@ module.exports = async function () {
       id: category.id,
       name: category.name,
       slug: category.slug,
-      products: category.products.map(product => ({ id: product.id })),
+      products: category.products.filter(product => product).map(product => ({ id: product.id })),
     }
   });
 
